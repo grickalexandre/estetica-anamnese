@@ -1,0 +1,45 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // ===== CLÍNICAS =====
+    match /clinicas/{clinicaId} {
+      // Permitir leitura para todos
+      allow read: if true;
+      
+      // Permitir escrita para todos (desenvolvimento)
+      allow write: if true;
+    }
+    
+    // ===== USUÁRIOS =====
+    match /usuarios/{userId} {
+      // Permitir leitura para todos
+      allow read: if true;
+      
+      // Permitir escrita para todos (desenvolvimento)
+      allow write: if true;
+    }
+    
+    // ===== CONFIGURAÇÕES =====
+    match /configuracoes/{clinicaId} {
+      // Permitir leitura para todos
+      allow read: if true;
+      
+      // Permitir escrita para todos (desenvolvimento)
+      allow write: if true;
+    }
+    
+    // ===== ANAMNESES =====
+    match /anamneses/{anamneseId} {
+      // Permitir leitura para todos
+      allow read: if true;
+      
+      // Permitir criação se clinicaId existe
+      allow create: if request.resource.data.clinicaId is string
+                    && request.resource.data.clinicaId.size() > 0;
+      
+      // Permitir atualização e exclusão
+      allow update, delete: if true;
+    }
+  }
+}

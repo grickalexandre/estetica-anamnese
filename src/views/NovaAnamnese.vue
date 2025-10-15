@@ -226,8 +226,10 @@ import { useRouter } from 'vue-router'
 import { db, storage } from '../firebase.js'
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore'
 import { ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage'
+import { useClinica } from '../composables/useClinica.js'
 
 const router = useRouter()
+const { clinicaId } = useClinica()
 const error = ref('')
 const success = ref('')
 const salvando = ref(false)
@@ -292,10 +294,11 @@ const salvarAnamnese = async () => {
       fotoURL = await getDownloadURL(fotoRef)
     }
 
-    // Salvar no Firestore
+    // Salvar no Firestore com clinicaId
     const dadosAnamnese = {
       ...formulario.value,
       fotoURL,
+      clinicaId: clinicaId.value || 'demo',
       dataCriacao: serverTimestamp()
     }
 
