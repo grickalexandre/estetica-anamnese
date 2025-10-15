@@ -210,27 +210,10 @@ const carregarAnamneses = async () => {
       return
     }
     
-    // Primeiro, vamos tentar buscar TODAS as anamneses para debug
-    console.log('Buscando TODAS as anamneses para debug...')
-    const allQuery = query(collection(db, 'anamneses'))
-    const allSnapshot = await getDocs(allQuery)
-    console.log('Total de anamneses no banco:', allSnapshot.size)
-    
-    allSnapshot.docs.forEach(doc => {
-      const data = doc.data()
-      console.log('Anamnese encontrada:', {
-        id: doc.id,
-        nome: data.nome,
-        clinicaId: data.clinicaId,
-        dataCriacao: data.dataCriacao
-      })
-    })
-    
-    // Agora a consulta filtrada
+    // Consulta simples sem orderBy primeiro (para evitar problemas de índice)
     const q = query(
       collection(db, 'anamneses'),
-      where('clinicaId', '==', clinicaId.value),
-      orderBy('dataCriacao', 'desc')
+      where('clinicaId', '==', clinicaId.value)
     )
     const querySnapshot = await getDocs(q)
     
@@ -241,7 +224,14 @@ const carregarAnamneses = async () => {
       ...doc.data()
     }))
     
-    console.log('Anamneses carregadas:', anamneses.value.length)
+    // Ordenar manualmente por data
+    anamneses.value.sort((a, b) => {
+      const dataA = a.dataCriacao?.toDate ? a.dataCriacao.toDate() : new Date(a.dataCriacao)
+      const dataB = b.dataCriacao?.toDate ? b.dataCriacao.toDate() : new Date(b.dataCriacao)
+      return dataB - dataA
+    })
+    
+    console.log('Anamneses carregadas e ordenadas:', anamneses.value.length)
   } catch (err) {
     console.error('Erro ao carregar anamneses:', err)
   } finally {
