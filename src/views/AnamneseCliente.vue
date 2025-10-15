@@ -178,12 +178,12 @@
 
 <script setup>
 import { ref } from 'vue'
-import { db, storage } from '../firebase.js'
+import { db } from '../firebase.js'
 import { collection, addDoc, serverTimestamp, query, where, getDocs } from 'firebase/firestore'
-import { ref as storageRef, uploadBytesResumable, getDownloadURL } from 'firebase/storage'
 import { useConfiguracoes } from '../composables/useConfiguracoes'
 import { useClinica } from '../composables/useClinica.js'
 import { compressAnamneseImage, isValidImage } from '../utils/imageCompressor.js'
+import { uploadToCloudinary } from '../utils/cloudinary.js'
 
 const { configuracoes, carregando } = useConfiguracoes()
 const { clinicaId } = useClinica()
@@ -252,7 +252,7 @@ const removerFoto = (index) => {
   fotosFiles.value.splice(index, 1)
 }
 
-// Função para fazer upload das fotos
+// Função para fazer upload das fotos (Cloudinary)
 const uploadFotos = async () => {
   if (fotosFiles.value.length === 0) return []
   
@@ -265,36 +265,16 @@ const uploadFotos = async () => {
     try {
       // Comprimir imagem
       const compressedFile = await compressAnamneseImage(file)
-      
-      // Criar referência no Storage
-      const timestamp = Date.now()
-      const fileName = `anamneses/${formulario.value.telefone}_${timestamp}_${i}.webp`
-      const fileRef = storageRef(storage, fileName)
-      
-      // Upload com progresso
-      const uploadTask = uploadBytesResumable(fileRef, compressedFile)
-      
-      const downloadURL = await new Promise((resolve, reject) => {
-        uploadTask.on(
-          'state_changed',
-          (snapshot) => {
-            const progress = Math.round(
-              ((i + snapshot.bytesTransferred / snapshot.totalBytes) / totalFotos) * 100
-            )
-            uploadProgress.value = progress
-          },
-          (error) => {
-            console.error('Erro no upload:', error)
-            reject(error)
-          },
-          async () => {
-            const url = await getDownloadURL(uploadTask.snapshot.ref)
-            resolve(url)
-          }
-        )
+      // Upload com barra de progresso simples
+      const progressBase = (i / totalFotos) * 100
+      uploadProgress.value = Math.round(progressBase + 5)
+      const url = await uploadToCloudinary(compressedFile, {
+        preset: 'pacientes',
+        folder: 'estetica/anamneses',
+        cloudName: 'dkliyeyoq'
       })
-      
-      fotosURLs.push(downloadURL)
+      uploadProgress.value = Math.round(((i + 1) / totalFotos) * 100)
+      fotosURLs.push(url)
     } catch (err) {
       console.error('Erro ao comprimir/upload foto:', err)
     }

@@ -57,22 +57,29 @@ export function useAuth() {
    */
   const register = async (dados) => {
     try {
+      console.log('Iniciando registro com dados:', dados)
+      
       // Criar usuário no Firebase Auth
+      console.log('Criando usuário no Firebase Auth...')
       const userCredential = await createUserWithEmailAndPassword(
         auth,
         dados.email,
         dados.senha
       )
+      console.log('Usuário criado:', userCredential.user.uid)
 
       // Atualizar nome do usuário
+      console.log('Atualizando perfil do usuário...')
       await updateProfile(userCredential.user, {
         displayName: dados.nome
       })
 
       // Gerar clinicaId único
       const clinicaId = dados.slug || generateSlug(dados.nomeClinica)
+      console.log('ClinicaId gerado:', clinicaId)
 
       // Criar documento da clínica
+      console.log('Criando documento da clínica...')
       await setDoc(doc(db, 'clinicas', clinicaId), {
         id: clinicaId,
         nome: dados.nomeClinica,
@@ -92,8 +99,10 @@ export function useAuth() {
           telefone: dados.telefone || ''
         }
       })
+      console.log('Clínica criada com sucesso')
 
       // Criar perfil do usuário
+      console.log('Criando perfil do usuário...')
       await setDoc(doc(db, 'usuarios', userCredential.user.uid), {
         uid: userCredential.user.uid,
         nome: dados.nome,
@@ -103,8 +112,10 @@ export function useAuth() {
         plano: dados.plano || 'free',
         dataCriacao: serverTimestamp()
       })
+      console.log('Perfil do usuário criado')
 
       // Criar configurações iniciais da clínica
+      console.log('Criando configurações iniciais...')
       await setDoc(doc(db, 'configuracoes', clinicaId), {
         clinicaId: clinicaId,
         nomeClinica: dados.nomeClinica,
@@ -125,10 +136,13 @@ export function useAuth() {
         observacoesHorarios: '',
         dataCriacao: serverTimestamp()
       })
+      console.log('Configurações criadas com sucesso')
 
       return { success: true, clinicaId }
     } catch (error) {
-      console.error('Erro ao registrar:', error)
+      console.error('Erro detalhado ao registrar:', error)
+      console.error('Código do erro:', error.code)
+      console.error('Mensagem do erro:', error.message)
       throw error
     }
   }

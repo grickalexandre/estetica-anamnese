@@ -111,7 +111,8 @@ const handleLogin = async () => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  /* Neutro: branco/cinza */
+  background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
   padding: 20px;
   gap: 40px;
 }
@@ -164,8 +165,8 @@ const handleLogin = async () => {
 
 .form-group input:focus {
   outline: none;
-  border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  border-color: rgba(0,0,0,0.3);
+  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.06);
 }
 
 .btn {
@@ -184,13 +185,13 @@ const handleLogin = async () => {
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
+  background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+  color: #ffffff;
 }
 
 .btn-primary:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.22);
 }
 
 .btn:disabled {
@@ -222,7 +223,7 @@ const handleLogin = async () => {
 }
 
 .link {
-  color: #667eea;
+  color: #111827;
   text-decoration: none;
   font-weight: 600;
   display: inline-flex;
@@ -232,18 +233,18 @@ const handleLogin = async () => {
 }
 
 .link:hover {
-  color: #764ba2;
+  color: #374151;
   transform: translateX(4px);
 }
 
 .auth-info {
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(10px);
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(8px);
   border-radius: 20px;
   padding: 30px;
   width: 100%;
   max-width: 350px;
-  color: white;
+  color: #374151;
 }
 
 .auth-info h3 {
@@ -271,7 +272,7 @@ const handleLogin = async () => {
 }
 
 .auth-info li i {
-  color: #4ade80;
+  color: #34d399;
   font-size: 16px;
 }
 

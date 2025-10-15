@@ -138,9 +138,9 @@ const downgradePlano = async () => {
 .current-plan {
   text-align: center;
   padding: 30px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
   border-radius: 15px;
-  color: white;
+  color: #1d1d1f;
   margin-bottom: 40px;
   position: relative;
 }
@@ -148,7 +148,7 @@ const downgradePlano = async () => {
 .plan-badge {
   display: inline-block;
   padding: 6px 16px;
-  background: rgba(255, 255, 255, 0.2);
+  background: #e5e7eb;
   border-radius: 20px;
   font-size: 12px;
   font-weight: 600;
@@ -156,7 +156,7 @@ const downgradePlano = async () => {
 }
 
 .plan-badge.premium {
-  background: linear-gradient(135deg, #f59e0b 0%, #fb923c 100%);
+  background: linear-gradient(135deg, #FDE68A 0%, #FCD34D 100%);
 }
 
 .current-plan h2 {
@@ -185,17 +185,17 @@ const downgradePlano = async () => {
 }
 
 .plan-column.current {
-  border-color: #667eea;
-  box-shadow: 0 10px 30px rgba(102, 126, 234, 0.2);
+  border-color: #111827;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
 }
 
 .plan-column.premium {
-  border-color: #f59e0b;
+  border-color: #FDE68A;
 }
 
 .plan-column.premium.current {
-  border-color: #f59e0b;
-  box-shadow: 0 10px 30px rgba(245, 158, 11, 0.3);
+  border-color: #fcd34d;
+  box-shadow: 0 10px 30px rgba(252, 211, 77, 0.45);
 }
 
 .plan-badge-corner {
@@ -303,8 +303,8 @@ const downgradePlano = async () => {
 }
 
 .btn-premium {
-  background: linear-gradient(135deg, #f59e0b 0%, #fb923c 100%);
-  color: white;
+  background: linear-gradient(135deg, #FDE68A 0%, #FCD34D 100%);
+  color: #374151;
 }
 
 .btn-premium:hover:not(:disabled) {

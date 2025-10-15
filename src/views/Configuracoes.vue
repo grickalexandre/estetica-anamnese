@@ -154,10 +154,10 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import { db, storage } from '../firebase.js'
+import { db } from '../firebase.js'
 import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore'
-import { ref as storageRef, uploadBytesResumable, getDownloadURL, deleteObject } from 'firebase/storage'
 import { compressProfileImage, isValidImage } from '../utils/imageCompressor.js'
+import { uploadToCloudinary } from '../utils/cloudinary.js'
 import { useClinica } from '../composables/useClinica.js'
 
 const { clinicaId } = useClinica()
@@ -235,41 +235,21 @@ const removerFoto = () => {
   configuracoes.value.fotoProfissional = ''
 }
 
-// Função para fazer upload da foto
+// Função para fazer upload da foto (Cloudinary)
 const uploadFoto = async () => {
   if (!fotoFile.value) return configuracoes.value.fotoProfissional
 
   try {
-    // Comprimir imagem
     const compressedFile = await compressProfileImage(fotoFile.value)
-
-    // Criar referência no Storage
-    const timestamp = Date.now()
-    const fileName = `profissionais/foto_${timestamp}.webp`
-    const fileRef = storageRef(storage, fileName)
-
-    // Upload com progresso
-    const uploadTask = uploadBytesResumable(fileRef, compressedFile)
-
-    return new Promise((resolve, reject) => {
-      uploadTask.on(
-        'state_changed',
-        (snapshot) => {
-          uploadProgress.value = Math.round(
-            (snapshot.bytesTransferred / snapshot.totalBytes) * 100
-          )
-        },
-        (error) => {
-          console.error('Erro no upload:', error)
-          reject(error)
-        },
-        async () => {
-          const downloadURL = await getDownloadURL(uploadTask.snapshot.ref)
-          uploadProgress.value = 0
-          resolve(downloadURL)
-        }
-      )
+    uploadProgress.value = 10
+    const url = await uploadToCloudinary(compressedFile, {
+      preset: 'profissionais',
+      folder: 'estetica/profissionais',
+      cloudName: 'dkliyeyoq'
     })
+    uploadProgress.value = 100
+    setTimeout(() => (uploadProgress.value = 0), 400)
+    return url
   } catch (err) {
     console.error('Erro ao comprimir/upload:', err)
     throw err

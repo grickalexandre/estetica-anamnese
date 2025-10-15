@@ -237,7 +237,7 @@ const handleCadastro = async () => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
   padding: 40px 20px;
 }
 
@@ -287,32 +287,32 @@ const handleCadastro = async () => {
 }
 
 .plan-card:hover {
-  border-color: #667eea;
+  border-color: #d1d5db;
   transform: translateY(-4px);
-  box-shadow: 0 10px 30px rgba(102, 126, 234, 0.2);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
 }
 
 .plan-card.active {
-  border-color: #667eea;
-  background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
-  box-shadow: 0 10px 30px rgba(102, 126, 234, 0.2);
+  border-color: #111827;
+  background: linear-gradient(135deg, rgba(17, 24, 39, 0.06) 0%, rgba(0, 0, 0, 0.03) 100%);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
 }
 
 .plan-card.premium {
-  border-color: #f59e0b;
+  border-color: #FDE68A;
 }
 
 .plan-card.premium.active {
-  border-color: #f59e0b;
-  background: linear-gradient(135deg, rgba(245, 158, 11, 0.05) 0%, rgba(251, 146, 60, 0.05) 100%);
+  border-color: #FDE68A;
+  background: linear-gradient(135deg, rgba(253, 230, 138, 0.50) 0%, rgba(253, 186, 116, 0.30) 100%);
 }
 
 .plan-badge {
   position: absolute;
   top: -10px;
   right: 20px;
-  background: #667eea;
-  color: white;
+  background: #e5e7eb;
+  color: #374151;
   padding: 4px 12px;
   border-radius: 20px;
   font-size: 12px;
@@ -320,7 +320,7 @@ const handleCadastro = async () => {
 }
 
 .premium-badge {
-  background: linear-gradient(135deg, #f59e0b 0%, #fb923c 100%);
+  background: linear-gradient(135deg, #FDE68A 0%, #FCD34D 100%);
 }
 
 .plan-card h3 {
@@ -434,8 +434,8 @@ const handleCadastro = async () => {
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
+  background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+  color: #ffffff;
 }
 
 .btn-primary:hover:not(:disabled) {
@@ -482,7 +482,7 @@ const handleCadastro = async () => {
 }
 
 .link {
-  color: #667eea;
+  color: #111827;
   text-decoration: none;
   font-weight: 600;
   display: inline-flex;
@@ -492,7 +492,7 @@ const handleCadastro = async () => {
 }
 
 .link:hover {
-  color: #764ba2;
+  color: #374151;
 }
 
 @media (max-width: 768px) {
