@@ -203,7 +203,12 @@ const anamnesesAgrupadas = computed(() => {
 
 const carregarAnamneses = async () => {
   try {
-    if (!clinicaId.value) return
+    console.log('Carregando anamneses para clinicaId:', clinicaId.value)
+    
+    if (!clinicaId.value) {
+      console.warn('clinicaId não definido')
+      return
+    }
     
     const q = query(
       collection(db, 'anamneses'),
@@ -212,12 +217,16 @@ const carregarAnamneses = async () => {
     )
     const querySnapshot = await getDocs(q)
     
+    console.log('Anamneses encontradas:', querySnapshot.size)
+    
     anamneses.value = querySnapshot.docs.map(doc => ({
       id: doc.id,
       ...doc.data()
     }))
+    
+    console.log('Anamneses carregadas:', anamneses.value.length)
   } catch (err) {
-    console.error('Erro ao carregar:', err)
+    console.error('Erro ao carregar anamneses:', err)
   } finally {
     carregando.value = false
   }

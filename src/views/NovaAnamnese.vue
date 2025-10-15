@@ -283,16 +283,20 @@ const salvarAnamnese = async () => {
     error.value = ''
     success.value = ''
 
+    console.log('Salvando anamnese com clinicaId:', clinicaId.value)
+
     let fotoURL = null
 
     // Upload da foto via Cloudinary (sem usar Firebase Storage)
     if (fotoFile.value) {
+      console.log('Fazendo upload da foto...')
       const compressed = await compressAnamneseImage(fotoFile.value)
       fotoURL = await uploadToCloudinary(compressed, {
         preset: 'pacientes',
         folder: 'estetica/anamneses',
         cloudName: 'dkliyeyoq'
       })
+      console.log('Foto enviada:', fotoURL)
     }
 
     // Salvar no Firestore com clinicaId
@@ -303,7 +307,10 @@ const salvarAnamnese = async () => {
       dataCriacao: serverTimestamp()
     }
 
-    await addDoc(collection(db, 'anamneses'), dadosAnamnese)
+    console.log('Dados da anamnese:', dadosAnamnese)
+
+    const docRef = await addDoc(collection(db, 'anamneses'), dadosAnamnese)
+    console.log('Anamnese salva com ID:', docRef.id)
 
     success.value = 'Anamnese salva com sucesso!'
     
@@ -312,7 +319,7 @@ const salvarAnamnese = async () => {
     }, 1500)
 
   } catch (err) {
-    console.error('Erro ao salvar:', err)
+    console.error('Erro ao salvar anamnese:', err)
     error.value = 'Erro ao salvar anamnese. Verifique a configuração do Firebase.'
   } finally {
     salvando.value = false
