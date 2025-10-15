@@ -223,9 +223,10 @@
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { db, storage } from '../firebase.js'
+import { db } from '../firebase.js'
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore'
-import { ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage'
+import { compressAnamneseImage } from '../utils/imageCompressor.js'
+import { uploadToCloudinary } from '../utils/cloudinary.js'
 import { useClinica } from '../composables/useClinica.js'
 
 const router = useRouter()
@@ -284,14 +285,14 @@ const salvarAnamnese = async () => {
 
     let fotoURL = null
 
-    // Upload da foto se houver
+    // Upload da foto via Cloudinary (sem usar Firebase Storage)
     if (fotoFile.value) {
-      const timestamp = Date.now()
-      const nomeArquivo = `pacientes/${timestamp}_${fotoFile.value.name}`
-      const fotoRef = storageRef(storage, nomeArquivo)
-      
-      await uploadBytes(fotoRef, fotoFile.value)
-      fotoURL = await getDownloadURL(fotoRef)
+      const compressed = await compressAnamneseImage(fotoFile.value)
+      fotoURL = await uploadToCloudinary(compressed, {
+        preset: 'pacientes',
+        folder: 'estetica/anamneses',
+        cloudName: 'dkliyeyoq'
+      })
     }
 
     // Salvar no Firestore com clinicaId
