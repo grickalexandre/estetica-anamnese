@@ -20,10 +20,13 @@ export function useClinica() {
    * - localhost:3000?clinica=clinica1 -> clinicaId = 'clinica1' (dev)
    */
   const detectarClinica = () => {
+    console.log('Detectando clínica...')
+    
     // 1. Tentar pegar da URL query (para desenvolvimento)
     const urlParams = new URLSearchParams(window.location.search)
     const clinicaParam = urlParams.get('clinica')
     if (clinicaParam) {
+      console.log('Clínica detectada via URL query:', clinicaParam)
       return clinicaParam
     }
 
@@ -33,6 +36,7 @@ export function useClinica() {
     
     // Se for subdomínio (ex: clinica1.estetica.com.br)
     if (parts.length > 2 && parts[0] !== 'www') {
+      console.log('Clínica detectada via subdomínio:', parts[0])
       return parts[0]
     }
 
@@ -40,11 +44,14 @@ export function useClinica() {
     const path = window.location.pathname
     const pathParts = path.split('/').filter(p => p)
     if (pathParts.length > 0 && pathParts[0] !== 'anamnese-cliente') {
+      console.log('Clínica detectada via path:', pathParts[0])
       return pathParts[0]
     }
 
     // 4. Fallback: usar clinicaId padrão (pode ser configurado)
-    return localStorage.getItem('clinicaId') || 'demo'
+    const fallback = localStorage.getItem('clinicaId') || 'demo'
+    console.log('Usando clínica fallback:', fallback)
+    return fallback
   }
 
   /**

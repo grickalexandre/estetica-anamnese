@@ -240,14 +240,19 @@ const handleLogout = async () => {
 }
 
 onMounted(async () => {
+  console.log('App.vue: Inicializando...')
+  
   // Inicializar autenticação
   initAuth()
   
   // Inicializar contexto da clínica
+  console.log('App.vue: Inicializando clínica...')
   await inicializarClinica()
+  console.log('App.vue: Clínica inicializada, clinicaId:', clinicaId.value)
   
   // Atualizar contador de pendentes apenas para área administrativa
   if (!isClientPage.value) {
+    console.log('App.vue: Atualizando contador de pendentes...')
     updatePendingCount()
   }
 })
