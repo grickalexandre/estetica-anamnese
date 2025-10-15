@@ -210,6 +210,23 @@ const carregarAnamneses = async () => {
       return
     }
     
+    // Primeiro, vamos tentar buscar TODAS as anamneses para debug
+    console.log('Buscando TODAS as anamneses para debug...')
+    const allQuery = query(collection(db, 'anamneses'))
+    const allSnapshot = await getDocs(allQuery)
+    console.log('Total de anamneses no banco:', allSnapshot.size)
+    
+    allSnapshot.docs.forEach(doc => {
+      const data = doc.data()
+      console.log('Anamnese encontrada:', {
+        id: doc.id,
+        nome: data.nome,
+        clinicaId: data.clinicaId,
+        dataCriacao: data.dataCriacao
+      })
+    })
+    
+    // Agora a consulta filtrada
     const q = query(
       collection(db, 'anamneses'),
       where('clinicaId', '==', clinicaId.value),
@@ -217,7 +234,7 @@ const carregarAnamneses = async () => {
     )
     const querySnapshot = await getDocs(q)
     
-    console.log('Anamneses encontradas:', querySnapshot.size)
+    console.log('Anamneses encontradas para clinicaId', clinicaId.value, ':', querySnapshot.size)
     
     anamneses.value = querySnapshot.docs.map(doc => ({
       id: doc.id,
