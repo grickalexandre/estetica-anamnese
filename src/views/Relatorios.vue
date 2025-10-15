@@ -134,6 +134,9 @@
 import { ref, onMounted, nextTick } from 'vue'
 import { db } from '../firebase.js'
 import { collection, getDocs, query, where, orderBy, limit } from 'firebase/firestore'
+import { useClinica } from '../composables/useClinica.js'
+
+const { clinicaId } = useClinica()
 
 const carregando = ref(true)
 const periodoFiltro = ref('30')
@@ -177,13 +180,22 @@ const carregarDados = async () => {
       dataInicio = new Date(agora.getTime() - (dias * 24 * 60 * 60 * 1000))
     }
 
-    // Query base
-    let q = query(collection(db, 'anamneses'), orderBy('dataCriacao', 'desc'))
+    if (!clinicaId.value) return
+    
+    // Query base com clinicaId
+    let q = query(
+      collection(db, 'anamneses'),
+      where('clinicaId', '==', clinicaId.value),
+      orderBy('dataCriacao', 'desc')
+    )
     
     if (dataInicio) {
-      q = query(collection(db, 'anamneses'), 
+      q = query(
+        collection(db, 'anamneses'),
+        where('clinicaId', '==', clinicaId.value),
         where('dataCriacao', '>=', dataInicio),
-        orderBy('dataCriacao', 'desc'))
+        orderBy('dataCriacao', 'desc')
+      )
     }
 
     const querySnapshot = await getDocs(q)

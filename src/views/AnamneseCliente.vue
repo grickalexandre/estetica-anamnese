@@ -182,9 +182,11 @@ import { db, storage } from '../firebase.js'
 import { collection, addDoc, serverTimestamp, query, where, getDocs } from 'firebase/firestore'
 import { ref as storageRef, uploadBytesResumable, getDownloadURL } from 'firebase/storage'
 import { useConfiguracoes } from '../composables/useConfiguracoes'
+import { useClinica } from '../composables/useClinica.js'
 import { compressAnamneseImage, isValidImage } from '../utils/imageCompressor.js'
 
 const { configuracoes, carregando } = useConfiguracoes()
+const { clinicaId } = useClinica()
 
 const error = ref('')
 const success = ref('')
@@ -308,9 +310,11 @@ const salvarAnamnese = async () => {
     error.value = ''
     success.value = ''
 
-    // Verificar se já existe anamnese para este paciente
+    // Verificar se já existe anamnese para este paciente na mesma clínica
+    const id = clinicaId.value || 'demo'
     const q = query(
       collection(db, 'anamneses'),
+      where('clinicaId', '==', id),
       where('nome', '==', formulario.value.nome),
       where('telefone', '==', formulario.value.telefone)
     )
@@ -335,9 +339,10 @@ const salvarAnamnese = async () => {
       formulario.value.fotos = fotosURLs
     }
 
-    // Salvar no Firestore
+    // Salvar no Firestore com clinicaId
     const dadosAnamnese = {
       ...formulario.value,
+      clinicaId: id,
       dataCriacao: serverTimestamp(),
       origem: 'cliente' // Marcar que foi preenchida pelo cliente
     }

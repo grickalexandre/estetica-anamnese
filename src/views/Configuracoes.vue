@@ -158,6 +158,9 @@ import { db, storage } from '../firebase.js'
 import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore'
 import { ref as storageRef, uploadBytesResumable, getDownloadURL, deleteObject } from 'firebase/storage'
 import { compressProfileImage, isValidImage } from '../utils/imageCompressor.js'
+import { useClinica } from '../composables/useClinica.js'
+
+const { clinicaId } = useClinica()
 
 const error = ref('')
 const success = ref('')
@@ -187,7 +190,8 @@ const configuracoes = ref({
 
 const carregarConfiguracoes = async () => {
   try {
-    const docRef = doc(db, 'configuracoes', 'clinica')
+    const id = clinicaId.value || 'demo'
+    const docRef = doc(db, 'configuracoes', id)
     const docSnap = await getDoc(docRef)
     
     if (docSnap.exists()) {
@@ -284,13 +288,15 @@ const salvarConfiguracoes = async () => {
       configuracoes.value.fotoProfissional = fotoURL
     }
 
-    // Salvar no Firestore
+    // Salvar no Firestore com clinicaId
+    const id = clinicaId.value || 'demo'
     const dadosConfiguracoes = {
       ...configuracoes.value,
+      clinicaId: id,
       dataAtualizacao: serverTimestamp()
     }
 
-    await setDoc(doc(db, 'configuracoes', 'clinica'), dadosConfiguracoes)
+    await setDoc(doc(db, 'configuracoes', id), dadosConfiguracoes)
 
     success.value = 'Configurações salvas com sucesso!'
     fotoFile.value = null

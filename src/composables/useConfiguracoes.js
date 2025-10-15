@@ -1,6 +1,7 @@
 import { ref, onMounted } from 'vue'
 import { doc, getDoc } from 'firebase/firestore'
 import { db } from '../firebase.js'
+import { useClinica } from './useClinica.js'
 
 const configuracoes = ref({
   nomeClinica: 'Clínica de Estética',
@@ -23,10 +24,15 @@ const configuracoes = ref({
 const carregando = ref(true)
 
 export function useConfiguracoes() {
+  const { clinicaId } = useClinica()
+  
   const carregarConfiguracoes = async () => {
     try {
       carregando.value = true
-      const docRef = doc(db, 'configuracoes', 'clinica')
+      
+      // Usar clinicaId para buscar configurações específicas
+      const id = clinicaId.value || 'demo'
+      const docRef = doc(db, 'configuracoes', id)
       const docSnap = await getDoc(docRef)
       
       if (docSnap.exists()) {

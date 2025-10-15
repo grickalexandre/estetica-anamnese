@@ -144,6 +144,7 @@ import { useRoute } from 'vue-router'
 import { db } from './firebase.js'
 import { collection, getDocs, query, where, orderBy, onSnapshot } from 'firebase/firestore'
 import { useConfiguracoes } from './composables/useConfiguracoes'
+import { useClinica } from './composables/useClinica.js'
 
 const route = useRoute()
 const pendingCount = ref(0)
@@ -155,6 +156,7 @@ const notification = ref({
 })
 
 const { configuracoes, carregando } = useConfiguracoes()
+const { clinicaId, inicializarClinica } = useClinica()
 const showClinicInfo = ref(false)
 
 const isClientPage = computed(() => {
@@ -184,8 +186,11 @@ const hideNotification = () => {
 
 const updatePendingCount = async () => {
   try {
+    if (!clinicaId.value) return
+    
     const q = query(
       collection(db, 'anamneses'),
+      where('clinicaId', '==', clinicaId.value),
       where('status', '==', 'pendente'),
       where('origem', '==', 'cliente')
     )
@@ -213,7 +218,11 @@ const updatePendingCount = async () => {
   }
 }
 
-onMounted(() => {
+onMounted(async () => {
+  // Inicializar contexto da clínica
+  await inicializarClinica()
+  
+  // Atualizar contador de pendentes apenas para área administrativa
   if (!isClientPage.value) {
     updatePendingCount()
   }

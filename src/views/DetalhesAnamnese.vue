@@ -138,6 +138,9 @@ import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { db } from '../firebase.js'
 import { doc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore'
+import { useClinica } from '../composables/useClinica.js'
+
+const { clinicaId } = useClinica()
 
 const route = useRoute()
 const anamnese = ref(null)

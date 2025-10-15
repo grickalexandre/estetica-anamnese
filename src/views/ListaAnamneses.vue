@@ -130,9 +130,11 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { db } from '../firebase.js'
-import { collection, getDocs, orderBy, query } from 'firebase/firestore'
+import { collection, getDocs, orderBy, query, where } from 'firebase/firestore'
+import { useClinica } from '../composables/useClinica.js'
 
 const router = useRouter()
+const { clinicaId } = useClinica()
 const anamneses = ref([])
 const busca = ref('')
 const filtroStatus = ref('')
@@ -201,7 +203,13 @@ const anamnesesAgrupadas = computed(() => {
 
 const carregarAnamneses = async () => {
   try {
-    const q = query(collection(db, 'anamneses'), orderBy('dataCriacao', 'desc'))
+    if (!clinicaId.value) return
+    
+    const q = query(
+      collection(db, 'anamneses'),
+      where('clinicaId', '==', clinicaId.value),
+      orderBy('dataCriacao', 'desc')
+    )
     const querySnapshot = await getDocs(q)
     
     anamneses.value = querySnapshot.docs.map(doc => ({
