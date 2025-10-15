@@ -142,7 +142,7 @@
 
 <script setup>
 import { ref } from 'vue'
-import { db } from '../firebase'
+import { db } from '../firebase.js'
 import { collection, addDoc, serverTimestamp, query, where, getDocs } from 'firebase/firestore'
 import { useConfiguracoes } from '../composables/useConfiguracoes'
 

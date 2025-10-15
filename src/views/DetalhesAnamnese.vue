@@ -136,7 +136,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
-import { db } from '../firebase'
+import { db } from '../firebase.js'
 import { doc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore'
 
 const route = useRoute()

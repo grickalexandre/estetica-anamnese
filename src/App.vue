@@ -141,7 +141,7 @@
 <script setup>
 import { ref, computed, watch, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
-import { db } from './firebase'
+import { db } from './firebase.js'
 import { collection, getDocs, query, where, orderBy, onSnapshot } from 'firebase/firestore'
 import { useConfiguracoes } from './composables/useConfiguracoes'
 

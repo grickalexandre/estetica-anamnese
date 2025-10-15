@@ -124,7 +124,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import { db } from '../firebase'
+import { db } from '../firebase.js'
 import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore'
 
 const error = ref('')

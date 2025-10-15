@@ -132,7 +132,7 @@
 
 <script setup>
 import { ref, onMounted, nextTick } from 'vue'
-import { db } from '../firebase'
+import { db } from '../firebase.js'
 import { collection, getDocs, query, where, orderBy, limit } from 'firebase/firestore'
 
 const carregando = ref(true)

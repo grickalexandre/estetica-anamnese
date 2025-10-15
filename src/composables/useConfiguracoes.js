@@ -1,6 +1,6 @@
 import { ref, onMounted } from 'vue'
-import { db } from '../firebase'
 import { doc, getDoc } from 'firebase/firestore'
+import { db } from '../firebase.js'
 
 const configuracoes = ref({
   nomeClinica: 'Clínica de Estética',
