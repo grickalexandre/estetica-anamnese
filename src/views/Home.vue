@@ -16,12 +16,10 @@
             Ver Pacientes
           </button>
         </router-link>
-        <a href="/anamnese-cliente" target="_blank">
-          <button class="btn btn-accent">
-            <i class="fas fa-user-plus"></i>
-            Link para Clientes
-          </button>
-        </a>
+        <button @click="copiarLinkCliente" class="btn btn-accent">
+          <i class="fas fa-copy"></i>
+          Copiar Link Cliente
+        </button>
         <router-link to="/relatorios">
           <button class="btn btn-secondary">
             <i class="fas fa-chart-bar"></i>
@@ -109,12 +107,53 @@
       </div>
     </div>
   </div>
+
+  <!-- Notificação de Link Copiado -->
+  <div v-if="showNotification" class="notification-overlay">
+    <div class="notification-card">
+      <i class="fas fa-check-circle"></i>
+      <span>{{ notificationMessage }}</span>
+    </div>
+  </div>
 </template>
 
 <script setup>
+import { ref } from 'vue'
 import { useConfiguracoes } from '../composables/useConfiguracoes'
+import { useClinica } from '../composables/useClinica.js'
 
 const { configuracoes, carregando } = useConfiguracoes()
+const { clinicaId } = useClinica()
+const showNotification = ref(false)
+const notificationMessage = ref('')
+
+const copiarLinkCliente = async () => {
+  try {
+    // Gerar o link baseado no clinicaId detectado
+    const baseUrl = window.location.origin
+    const linkCliente = `${baseUrl}/anamnese-cliente`
+    
+    // Copiar para a área de transferência
+    await navigator.clipboard.writeText(linkCliente)
+    
+    // Mostrar notificação de sucesso
+    notificationMessage.value = 'Link copiado para a área de transferência!'
+    showNotification.value = true
+    
+    setTimeout(() => {
+      showNotification.value = false
+    }, 3000)
+    
+    console.log('Link do cliente copiado:', linkCliente)
+  } catch (err) {
+    console.error('Erro ao copiar link:', err)
+    
+    // Fallback: mostrar o link em um prompt
+    const baseUrl = window.location.origin
+    const linkCliente = `${baseUrl}/anamnese-cliente`
+    alert(`Link do cliente: ${linkCliente}`)
+  }
+}
 </script>
 
 <style scoped>
@@ -163,6 +202,64 @@ const { configuracoes, carregando } = useConfiguracoes()
   
   .clinic-item div {
     font-size: 13px;
+  }
+}
+
+/* Notificação de Link Copiado */
+.notification-overlay {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 1000;
+  animation: slideIn 0.3s ease-out;
+}
+
+.notification-card {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-radius: 12px;
+  padding: 16px 20px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  border: 0.5px solid rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 280px;
+}
+
+.notification-card i {
+  color: #34c759;
+  font-size: 18px;
+}
+
+.notification-card span {
+  color: #1d1d1f;
+  font-weight: 500;
+  font-size: 14px;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@media (max-width: 768px) {
+  .notification-overlay {
+    top: 10px;
+    right: 10px;
+    left: 10px;
+  }
+  
+  .notification-card {
+    min-width: auto;
+    padding: 14px 16px;
   }
 }
 </style>

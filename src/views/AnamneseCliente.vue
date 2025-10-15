@@ -290,6 +290,8 @@ const salvarAnamnese = async () => {
     error.value = ''
     success.value = ''
 
+    console.log('Salvando anamnese do cliente com clinicaId:', clinicaId.value)
+
     // Verificar se já existe anamnese para este paciente na mesma clínica
     const id = clinicaId.value || 'demo'
     const q = query(
@@ -315,8 +317,10 @@ const salvarAnamnese = async () => {
 
     // Fazer upload das fotos se houver
     if (fotosFiles.value.length > 0) {
+      console.log('Fazendo upload de', fotosFiles.value.length, 'fotos...')
       const fotosURLs = await uploadFotos()
       formulario.value.fotos = fotosURLs
+      console.log('Fotos enviadas:', fotosURLs)
     }
 
     // Salvar no Firestore com clinicaId
@@ -327,7 +331,10 @@ const salvarAnamnese = async () => {
       origem: 'cliente' // Marcar que foi preenchida pelo cliente
     }
 
-    await addDoc(collection(db, 'anamneses'), dadosAnamnese)
+    console.log('Dados da anamnese do cliente:', dadosAnamnese)
+
+    const docRef = await addDoc(collection(db, 'anamneses'), dadosAnamnese)
+    console.log('Anamnese do cliente salva com ID:', docRef.id)
 
     success.value = 'Anamnese enviada com sucesso! Nossa equipe entrará em contato em breve.'
     
@@ -359,7 +366,7 @@ const salvarAnamnese = async () => {
     }, 3000)
 
   } catch (err) {
-    console.error('Erro ao salvar:', err)
+    console.error('Erro ao salvar anamnese do cliente:', err)
     error.value = 'Erro ao enviar anamnese. Tente novamente.'
   } finally {
     salvando.value = false
