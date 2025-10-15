@@ -56,6 +56,36 @@
 
         <!-- Informações do Proprietário -->
         <h2><i class="fas fa-user-md"></i> Informações do Proprietário</h2>
+        
+        <!-- Foto do Profissional -->
+        <div class="form-group">
+          <label>Foto do Profissional</label>
+          <div class="foto-upload">
+            <div v-if="fotoPreview || configuracoes.fotoProfissional" class="foto-preview">
+              <img :src="fotoPreview || configuracoes.fotoProfissional" alt="Foto do profissional">
+              <button type="button" @click="removerFoto" class="btn-remove-foto">
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
+            <label v-else for="foto-profissional" class="foto-placeholder">
+              <i class="fas fa-camera"></i>
+              <p>Clique para adicionar foto</p>
+              <p style="font-size: 12px; color: #718096;">JPG, PNG ou WebP (máx. 10MB)</p>
+            </label>
+            <input
+              id="foto-profissional"
+              type="file"
+              accept="image/*"
+              @change="handleFotoChange"
+              style="display: none"
+            >
+          </div>
+          <div v-if="uploadProgress > 0 && uploadProgress < 100" class="upload-progress">
+            <div class="progress-bar" :style="{ width: uploadProgress + '%' }"></div>
+            <span>{{ uploadProgress }}%</span>
+          </div>
+        </div>
+
         <div class="form-row">
           <div class="form-group">
             <label>Nome do Proprietário *</label>
@@ -124,12 +154,17 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import { db } from '../firebase.js'
+import { db, storage } from '../firebase.js'
 import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore'
+import { ref as storageRef, uploadBytesResumable, getDownloadURL, deleteObject } from 'firebase/storage'
+import { compressProfileImage, isValidImage } from '../utils/imageCompressor.js'
 
 const error = ref('')
 const success = ref('')
 const salvando = ref(false)
+const fotoFile = ref(null)
+const fotoPreview = ref(null)
+const uploadProgress = ref(0)
 
 const configuracoes = ref({
   nomeClinica: '',
@@ -141,6 +176,7 @@ const configuracoes = ref({
   website: '',
   nomeProprietario: '',
   registroProfissional: '',
+  fotoProfissional: '',
   formacao: '',
   experiencia: '',
   especialidades: '',
@@ -157,21 +193,96 @@ const carregarConfiguracoes = async () => {
     if (docSnap.exists()) {
       const dados = docSnap.data()
       configuracoes.value = { ...configuracoes.value, ...dados }
-      if (dados.fotoProprietarioURL) {
-        fotoProprietarioPreview.value = dados.fotoProprietarioURL
-      }
     }
   } catch (err) {
     console.error('Erro ao carregar configurações:', err)
   }
 }
 
+// Função para lidar com seleção de foto
+const handleFotoChange = async (event) => {
+  const file = event.target.files[0]
+  if (!file) return
+
+  try {
+    // Validar imagem
+    isValidImage(file)
+
+    // Mostrar preview
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      fotoPreview.value = e.target.result
+    }
+    reader.readAsDataURL(file)
+
+    // Armazenar arquivo para upload posterior
+    fotoFile.value = file
+    error.value = ''
+  } catch (err) {
+    error.value = err.message
+    event.target.value = ''
+  }
+}
+
+// Função para remover foto
+const removerFoto = () => {
+  fotoPreview.value = null
+  fotoFile.value = null
+  configuracoes.value.fotoProfissional = ''
+}
+
+// Função para fazer upload da foto
+const uploadFoto = async () => {
+  if (!fotoFile.value) return configuracoes.value.fotoProfissional
+
+  try {
+    // Comprimir imagem
+    const compressedFile = await compressProfileImage(fotoFile.value)
+
+    // Criar referência no Storage
+    const timestamp = Date.now()
+    const fileName = `profissionais/foto_${timestamp}.webp`
+    const fileRef = storageRef(storage, fileName)
+
+    // Upload com progresso
+    const uploadTask = uploadBytesResumable(fileRef, compressedFile)
+
+    return new Promise((resolve, reject) => {
+      uploadTask.on(
+        'state_changed',
+        (snapshot) => {
+          uploadProgress.value = Math.round(
+            (snapshot.bytesTransferred / snapshot.totalBytes) * 100
+          )
+        },
+        (error) => {
+          console.error('Erro no upload:', error)
+          reject(error)
+        },
+        async () => {
+          const downloadURL = await getDownloadURL(uploadTask.snapshot.ref)
+          uploadProgress.value = 0
+          resolve(downloadURL)
+        }
+      )
+    })
+  } catch (err) {
+    console.error('Erro ao comprimir/upload:', err)
+    throw err
+  }
+}
 
 const salvarConfiguracoes = async () => {
   try {
     salvando.value = true
     error.value = ''
     success.value = ''
+
+    // Fazer upload da foto se houver
+    if (fotoFile.value) {
+      const fotoURL = await uploadFoto()
+      configuracoes.value.fotoProfissional = fotoURL
+    }
 
     // Salvar no Firestore
     const dadosConfiguracoes = {
@@ -182,6 +293,7 @@ const salvarConfiguracoes = async () => {
     await setDoc(doc(db, 'configuracoes', 'clinica'), dadosConfiguracoes)
 
     success.value = 'Configurações salvas com sucesso!'
+    fotoFile.value = null
     
     setTimeout(() => {
       success.value = ''
@@ -253,6 +365,105 @@ onMounted(() => {
   border-radius: 8px;
   margin-bottom: 20px;
   border-left: 4px solid #065f46;
+}
+
+/* Estilos para upload de foto */
+.foto-upload {
+  margin-top: 10px;
+}
+
+.foto-preview {
+  position: relative;
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 3px solid #e5e7eb;
+}
+
+.foto-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.btn-remove-foto {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: rgba(220, 38, 38, 0.9);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.btn-remove-foto:hover {
+  background: rgba(220, 38, 38, 1);
+  transform: scale(1.1);
+}
+
+.foto-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 200px;
+  height: 200px;
+  border: 2px dashed #d1d5db;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: #f9fafb;
+}
+
+.foto-placeholder:hover {
+  border-color: #1d1d1f;
+  background: #f3f4f6;
+}
+
+.foto-placeholder i {
+  font-size: 32px;
+  color: #9ca3af;
+  margin-bottom: 10px;
+}
+
+.foto-placeholder p {
+  margin: 0;
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.upload-progress {
+  margin-top: 15px;
+  position: relative;
+  width: 200px;
+  height: 8px;
+  background: #e5e7eb;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #1d1d1f, #4b5563);
+  transition: width 0.3s ease;
+  border-radius: 4px;
+}
+
+.upload-progress span {
+  position: absolute;
+  top: -25px;
+  right: 0;
+  font-size: 12px;
+  color: #6b7280;
+  font-weight: 600;
 }
 
 @media (max-width: 768px) {

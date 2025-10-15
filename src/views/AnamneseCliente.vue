@@ -45,6 +45,42 @@
           </div>
         </div>
 
+        <!-- Upload de Fotos -->
+        <h2><i class="fas fa-camera"></i> Fotos (Opcional)</h2>
+        <div class="form-group">
+          <label>Fotos do rosto/área a ser tratada</label>
+          <p style="font-size: 13px; color: #718096; margin-bottom: 10px;">
+            Adicione até 4 fotos para auxiliar no diagnóstico
+          </p>
+          
+          <div class="fotos-grid">
+            <div v-for="(foto, index) in fotosPreview" :key="index" class="foto-item">
+              <img :src="foto" alt="Foto">
+              <button type="button" @click="removerFoto(index)" class="btn-remove-foto-small">
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
+            
+            <label v-if="fotosPreview.length < 4" for="fotos-paciente" class="foto-add">
+              <i class="fas fa-plus"></i>
+              <p>Adicionar foto</p>
+            </label>
+          </div>
+          
+          <input
+            id="fotos-paciente"
+            type="file"
+            accept="image/*"
+            multiple
+            @change="handleFotosChange"
+            style="display: none"
+          >
+          
+          <div v-if="uploadProgress > 0 && uploadProgress < 100" class="upload-progress">
+            <div class="progress-bar" :style="{ width: uploadProgress + '%' }"></div>
+            <span>{{ uploadProgress }}%</span>
+          </div>
+        </div>
 
         <!-- Histórico Médico -->
         <h2><i class="fas fa-hospital"></i> Histórico Médico</h2>
@@ -142,15 +178,20 @@
 
 <script setup>
 import { ref } from 'vue'
-import { db } from '../firebase.js'
+import { db, storage } from '../firebase.js'
 import { collection, addDoc, serverTimestamp, query, where, getDocs } from 'firebase/firestore'
+import { ref as storageRef, uploadBytesResumable, getDownloadURL } from 'firebase/storage'
 import { useConfiguracoes } from '../composables/useConfiguracoes'
+import { compressAnamneseImage, isValidImage } from '../utils/imageCompressor.js'
 
 const { configuracoes, carregando } = useConfiguracoes()
 
 const error = ref('')
 const success = ref('')
 const salvando = ref(false)
+const fotosFiles = ref([])
+const fotosPreview = ref([])
+const uploadProgress = ref(0)
 
 const formulario = ref({
   nome: '',
@@ -169,9 +210,97 @@ const formulario = ref({
   objetivos: '',
   procedimentosAnteriores: '',
   observacoes: '',
+  fotos: [],
   status: 'pendente' // Status inicial
 })
 
+// Função para lidar com seleção de fotos
+const handleFotosChange = async (event) => {
+  const files = Array.from(event.target.files)
+  
+  // Limitar a 4 fotos
+  const fotosDisponiveis = 4 - fotosPreview.value.length
+  const fotosParaAdicionar = files.slice(0, fotosDisponiveis)
+  
+  for (const file of fotosParaAdicionar) {
+    try {
+      // Validar imagem
+      isValidImage(file)
+      
+      // Mostrar preview
+      const reader = new FileReader()
+      reader.onload = (e) => {
+        fotosPreview.value.push(e.target.result)
+      }
+      reader.readAsDataURL(file)
+      
+      // Armazenar arquivo para upload posterior
+      fotosFiles.value.push(file)
+    } catch (err) {
+      error.value = err.message
+    }
+  }
+  
+  event.target.value = ''
+}
+
+// Função para remover foto
+const removerFoto = (index) => {
+  fotosPreview.value.splice(index, 1)
+  fotosFiles.value.splice(index, 1)
+}
+
+// Função para fazer upload das fotos
+const uploadFotos = async () => {
+  if (fotosFiles.value.length === 0) return []
+  
+  const fotosURLs = []
+  const totalFotos = fotosFiles.value.length
+  
+  for (let i = 0; i < fotosFiles.value.length; i++) {
+    const file = fotosFiles.value[i]
+    
+    try {
+      // Comprimir imagem
+      const compressedFile = await compressAnamneseImage(file)
+      
+      // Criar referência no Storage
+      const timestamp = Date.now()
+      const fileName = `anamneses/${formulario.value.telefone}_${timestamp}_${i}.webp`
+      const fileRef = storageRef(storage, fileName)
+      
+      // Upload com progresso
+      const uploadTask = uploadBytesResumable(fileRef, compressedFile)
+      
+      const downloadURL = await new Promise((resolve, reject) => {
+        uploadTask.on(
+          'state_changed',
+          (snapshot) => {
+            const progress = Math.round(
+              ((i + snapshot.bytesTransferred / snapshot.totalBytes) / totalFotos) * 100
+            )
+            uploadProgress.value = progress
+          },
+          (error) => {
+            console.error('Erro no upload:', error)
+            reject(error)
+          },
+          async () => {
+            const url = await getDownloadURL(uploadTask.snapshot.ref)
+            resolve(url)
+          }
+        )
+      })
+      
+      fotosURLs.push(downloadURL)
+    } catch (err) {
+      console.error('Erro ao comprimir/upload foto:', err)
+    }
+  }
+  
+  uploadProgress.value = 0
+  return fotosURLs
+}
 
 const salvarAnamnese = async () => {
   try {
@@ -198,6 +327,12 @@ const salvarAnamnese = async () => {
         salvando.value = false
         return
       }
+    }
+
+    // Fazer upload das fotos se houver
+    if (fotosFiles.value.length > 0) {
+      const fotosURLs = await uploadFotos()
+      formulario.value.fotos = fotosURLs
     }
 
     // Salvar no Firestore
@@ -230,8 +365,11 @@ const salvarAnamnese = async () => {
         objetivos: '',
         procedimentosAnteriores: '',
         observacoes: '',
+        fotos: [],
         status: 'pendente'
       }
+      fotosFiles.value = []
+      fotosPreview.value = []
       success.value = ''
     }, 3000)
 
@@ -518,6 +656,120 @@ h2:first-of-type {
   .form-group label {
     font-size: 16px;
   }
+  
+  .fotos-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .foto-item,
+  .foto-add {
+    width: 100%;
+    height: 150px;
+  }
+}
+
+/* Estilos para upload de fotos */
+.fotos-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 15px;
+  margin-top: 10px;
+}
+
+.foto-item {
+  position: relative;
+  width: 150px;
+  height: 150px;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 2px solid #e5e7eb;
+}
+
+.foto-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.btn-remove-foto-small {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: rgba(220, 38, 38, 0.9);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  font-size: 12px;
+}
+
+.btn-remove-foto-small:hover {
+  background: rgba(220, 38, 38, 1);
+  transform: scale(1.1);
+}
+
+.foto-add {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 150px;
+  height: 150px;
+  border: 2px dashed #d1d5db;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: #f9fafb;
+}
+
+.foto-add:hover {
+  border-color: #1d1d1f;
+  background: #f3f4f6;
+}
+
+.foto-add i {
+  font-size: 24px;
+  color: #9ca3af;
+  margin-bottom: 8px;
+}
+
+.foto-add p {
+  margin: 0;
+  color: #6b7280;
+  font-size: 13px;
+}
+
+.upload-progress {
+  margin-top: 15px;
+  position: relative;
+  width: 100%;
+  max-width: 300px;
+  height: 8px;
+  background: #e5e7eb;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #1d1d1f, #4b5563);
+  transition: width 0.3s ease;
+  border-radius: 4px;
+}
+
+.upload-progress span {
+  position: absolute;
+  top: -25px;
+  right: 0;
+  font-size: 12px;
+  color: #6b7280;
+  font-weight: 600;
 }
 
 </style>
