@@ -40,6 +40,15 @@
             <i class="fas fa-cog nav-icon"></i>
             <span class="nav-text">Configurações</span>
           </router-link>
+          <router-link to="/planos" class="nav-link" v-if="isAuthenticated">
+            <i class="fas fa-crown nav-icon"></i>
+            <span class="nav-text">Planos</span>
+            <span v-if="isFree" class="badge-free">FREE</span>
+          </router-link>
+          <button @click="handleLogout" class="nav-link logout-btn" v-if="isAuthenticated">
+            <i class="fas fa-sign-out-alt nav-icon"></i>
+            <span class="nav-text">Sair</span>
+          </button>
         </nav>
       </div>
       
@@ -140,13 +149,15 @@
 
 <script setup>
 import { ref, computed, watch, onMounted } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { db } from './firebase.js'
 import { collection, getDocs, query, where, orderBy, onSnapshot } from 'firebase/firestore'
 import { useConfiguracoes } from './composables/useConfiguracoes'
 import { useClinica } from './composables/useClinica.js'
+import { useAuth } from './composables/useAuth.js'
 
 const route = useRoute()
+const router = useRouter()
 const pendingCount = ref(0)
 const notification = ref({
   show: false,
@@ -157,6 +168,7 @@ const notification = ref({
 
 const { configuracoes, carregando } = useConfiguracoes()
 const { clinicaId, inicializarClinica } = useClinica()
+const { isAuthenticated, isFree, isPaid, logout, initAuth } = useAuth()
 const showClinicInfo = ref(false)
 
 const isClientPage = computed(() => {
@@ -218,7 +230,19 @@ const updatePendingCount = async () => {
   }
 }
 
+const handleLogout = async () => {
+  try {
+    await logout()
+    router.push('/login')
+  } catch (error) {
+    console.error('Erro ao fazer logout:', error)
+  }
+}
+
 onMounted(async () => {
+  // Inicializar autenticação
+  initAuth()
+  
   // Inicializar contexto da clínica
   await inicializarClinica()
   
@@ -276,6 +300,32 @@ watch(isClientPage, (newValue) => {
   background: rgba(29, 29, 31, 0.1);
   color: #1d1d1f;
   transform: scale(1.05);
+}
+
+.logout-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: inherit;
+  text-align: left;
+  width: 100%;
+}
+
+.logout-btn:hover {
+  background: rgba(220, 38, 38, 0.1);
+  color: #dc2626;
+}
+
+.badge-free {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  margin-left: auto;
 }
 
 .nav-link.router-link-active {
