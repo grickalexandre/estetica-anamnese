@@ -16,6 +16,7 @@ import ContasPagar from './views/ContasPagar.vue'
 import ContasReceber from './views/ContasReceber.vue'
 import FluxoCaixa from './views/FluxoCaixa.vue'
 import PlanoContas from './views/PlanoContas.vue'
+import RelatorioDRE from './views/RelatorioDRE.vue'
 import { auth } from './firebase.js'
 import './style.css'
 
@@ -39,7 +40,8 @@ const routes = [
   { path: '/financeiro/contas-pagar', component: ContasPagar, meta: { requiresAuth: true } },
   { path: '/financeiro/contas-receber', component: ContasReceber, meta: { requiresAuth: true } },
   { path: '/financeiro/fluxo-caixa', component: FluxoCaixa, meta: { requiresAuth: true } },
-  { path: '/financeiro/plano-contas', component: PlanoContas, meta: { requiresAuth: true } }
+  { path: '/financeiro/plano-contas', component: PlanoContas, meta: { requiresAuth: true } },
+  { path: '/financeiro/relatorio-dre', component: RelatorioDRE, meta: { requiresAuth: true } }
 ]
 
 const router = createRouter({

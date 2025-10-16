@@ -77,6 +77,10 @@
         <i class="fas fa-exchange-alt"></i>
         <span>Fluxo de Caixa</span>
       </router-link>
+      <router-link to="/financeiro/relatorio-dre" class="action-btn relatorio">
+        <i class="fas fa-file-invoice-dollar"></i>
+        <span>Relatório DRE</span>
+      </router-link>
     </div>
 
     <!-- Contas Vencendo (Próximos 7 dias) -->
@@ -165,6 +169,12 @@
         <i class="fas fa-sitemap"></i>
         <h3>Plano de Contas</h3>
         <p>Categorias e estrutura</p>
+      </router-link>
+
+      <router-link to="/financeiro/relatorio-dre" class="quick-link-card">
+        <i class="fas fa-file-invoice-dollar"></i>
+        <h3>Relatório DRE</h3>
+        <p>Demonstração de resultados</p>
       </router-link>
     </div>
   </div>
@@ -387,6 +397,10 @@ const formatarData = (data) => {
 
 .action-btn.fluxo {
   background: linear-gradient(135deg, #4caf50 0%, #43a047 100%);
+}
+
+.action-btn.relatorio {
+  background: linear-gradient(135deg, #ffa726 0%, #fb8c00 100%);
 }
 
 /* Vencimentos */
