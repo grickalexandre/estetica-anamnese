@@ -160,6 +160,12 @@
         <h3>Fluxo de Caixa</h3>
         <p>Movimentações diárias</p>
       </router-link>
+
+      <router-link to="/financeiro/plano-contas" class="quick-link-card">
+        <i class="fas fa-sitemap"></i>
+        <h3>Plano de Contas</h3>
+        <p>Categorias e estrutura</p>
+      </router-link>
     </div>
   </div>
 </template>
