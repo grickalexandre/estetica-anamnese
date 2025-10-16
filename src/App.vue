@@ -36,6 +36,10 @@
             <i class="fas fa-chart-bar nav-icon"></i>
             <span class="nav-text">Relatórios</span>
           </router-link>
+          <router-link to="/financeiro" class="nav-link">
+            <i class="fas fa-dollar-sign nav-icon"></i>
+            <span class="nav-text">Financeiro</span>
+          </router-link>
           <router-link to="/configuracoes" class="nav-link">
             <i class="fas fa-cog nav-icon"></i>
             <span class="nav-text">Configurações</span>
