@@ -176,6 +176,12 @@
         <h3>Relatório DRE</h3>
         <p>Demonstração de resultados</p>
       </router-link>
+
+      <router-link to="/financeiro/analise-tendencias" class="quick-link-card">
+        <i class="fas fa-chart-line"></i>
+        <h3>Análise de Tendências</h3>
+        <p>Evolução e comparativos</p>
+      </router-link>
     </div>
   </div>
 </template>
