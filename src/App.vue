@@ -19,26 +19,26 @@
           </div>
         </div>
         <nav class="nav">
-          <router-link to="/" class="nav-link">
-            <i class="fas fa-home nav-icon"></i>
-            <span class="nav-text">Início</span>
+          <router-link to="/dashboard" class="nav-link">
+            <i class="fas fa-chart-pie nav-icon"></i>
+            <span class="nav-text">Dashboard</span>
           </router-link>
-          <router-link to="/nova" class="nav-link">
-            <i class="fas fa-plus nav-icon"></i>
-            <span class="nav-text">Nova Anamnese</span>
+          <router-link to="/agenda" class="nav-link">
+            <i class="fas fa-calendar-alt nav-icon"></i>
+            <span class="nav-text">Agenda</span>
           </router-link>
           <router-link to="/lista" class="nav-link notification-badge">
             <i class="fas fa-users nav-icon"></i>
             <span class="nav-text">Pacientes</span>
             <span v-if="pendingCount > 0" class="notification-count">{{ pendingCount }}</span>
           </router-link>
-          <router-link to="/relatorios" class="nav-link">
-            <i class="fas fa-chart-bar nav-icon"></i>
-            <span class="nav-text">Relatórios</span>
-          </router-link>
           <router-link to="/financeiro" class="nav-link">
             <i class="fas fa-dollar-sign nav-icon"></i>
             <span class="nav-text">Financeiro</span>
+          </router-link>
+          <router-link to="/relatorios" class="nav-link">
+            <i class="fas fa-chart-bar nav-icon"></i>
+            <span class="nav-text">Relatórios</span>
           </router-link>
           <router-link to="/configuracoes" class="nav-link">
             <i class="fas fa-cog nav-icon"></i>

@@ -18,6 +18,8 @@ import FluxoCaixa from './views/FluxoCaixa.vue'
 import PlanoContas from './views/PlanoContas.vue'
 import RelatorioDRE from './views/RelatorioDRE.vue'
 import AnaliseTendencias from './views/AnaliseTendencias.vue'
+import Agenda from './views/Agenda.vue'
+import DashboardAnalitico from './views/DashboardAnalitico.vue'
 import { auth } from './firebase.js'
 import './style.css'
 
@@ -43,7 +45,13 @@ const routes = [
   { path: '/financeiro/fluxo-caixa', component: FluxoCaixa, meta: { requiresAuth: true } },
   { path: '/financeiro/plano-contas', component: PlanoContas, meta: { requiresAuth: true } },
   { path: '/financeiro/relatorio-dre', component: RelatorioDRE, meta: { requiresAuth: true } },
-  { path: '/financeiro/analise-tendencias', component: AnaliseTendencias, meta: { requiresAuth: true } }
+  { path: '/financeiro/analise-tendencias', component: AnaliseTendencias, meta: { requiresAuth: true } },
+  
+  // Rotas de agendamento
+  { path: '/agenda', component: Agenda, meta: { requiresAuth: true } },
+  
+  // Rotas de análise
+  { path: '/dashboard', component: DashboardAnalitico, meta: { requiresAuth: true } }
 ]
 
 const router = createRouter({

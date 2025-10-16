@@ -4,28 +4,28 @@
       <h1>{{ configuracoes.nomeClinica || 'Sistema de Anamnese' }}</h1>
       <p>Gestão completa de fichas de anamnese para sua clínica de estética</p>
       <div class="action-buttons">
-        <router-link to="/nova">
+        <router-link to="/dashboard">
           <button class="btn btn-primary">
-            <i class="fas fa-plus"></i>
-            Nova Anamnese
+            <i class="fas fa-chart-pie"></i>
+            Dashboard Analítico
           </button>
         </router-link>
-        <router-link to="/lista">
-          <button class="btn btn-secondary">
-            <i class="fas fa-users"></i>
-            Ver Pacientes
+        <router-link to="/agenda">
+          <button class="btn btn-primary">
+            <i class="fas fa-calendar-alt"></i>
+            Agenda
+          </button>
+        </router-link>
+        <router-link to="/financeiro">
+          <button class="btn btn-primary">
+            <i class="fas fa-dollar-sign"></i>
+            Financeiro
           </button>
         </router-link>
         <button @click="copiarLinkCliente" class="btn btn-accent">
           <i class="fas fa-copy"></i>
           Copiar Link Cliente
         </button>
-        <router-link to="/relatorios">
-          <button class="btn btn-secondary">
-            <i class="fas fa-chart-bar"></i>
-            Relatórios
-          </button>
-        </router-link>
       </div>
     </div>
   </div>
@@ -35,32 +35,36 @@
       <h2><i class="fas fa-star"></i> Funcionalidades</h2>
       <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-top: 20px;">
         <div>
-          <h3><i class="fas fa-clipboard-list"></i> Cadastro Completo</h3>
-          <p>Formulário completo de anamnese com todos os campos necessários</p>
+          <h3><i class="fas fa-chart-pie"></i> Dashboard Analítico</h3>
+          <p>KPIs e indicadores de performance em tempo real</p>
         </div>
         <div>
-          <h3><i class="fas fa-camera"></i> Fotos do Paciente</h3>
-          <p>Upload e armazenamento seguro de fotos dos pacientes</p>
+          <h3><i class="fas fa-calendar-alt"></i> Agenda Inteligente</h3>
+          <p>Calendário completo com controle de horários e conflitos</p>
         </div>
         <div>
-          <h3><i class="fas fa-search"></i> Busca Rápida</h3>
-          <p>Encontre rapidamente as fichas dos seus pacientes</p>
+          <h3><i class="fas fa-dollar-sign"></i> Gestão Financeira</h3>
+          <p>Contas a pagar/receber, DRE, fluxo de caixa e análises</p>
         </div>
         <div>
-          <h3><i class="fas fa-cloud"></i> Armazenamento em Nuvem</h3>
-          <p>Dados seguros com Firebase Firestore e Storage</p>
+          <h3><i class="fas fa-clipboard-list"></i> Anamneses</h3>
+          <p>Formulários completos com upload de fotos</p>
         </div>
         <div>
-          <h3><i class="fas fa-user-edit"></i> Anamnese do Cliente</h3>
-          <p>Link público para clientes preencherem suas anamneses</p>
+          <h3><i class="fas fa-file-invoice-dollar"></i> Relatórios</h3>
+          <p>DRE, tendências, exportação PDF e gráficos</p>
         </div>
         <div>
-          <h3><i class="fas fa-chart-line"></i> Controle de Status</h3>
-          <p>Acompanhe quais anamneses estão pendentes de análise</p>
+          <h3><i class="fas fa-sitemap"></i> Plano de Contas</h3>
+          <p>Estrutura DRE profissional e categorias</p>
         </div>
         <div>
-          <h3><i class="fas fa-chart-bar"></i> Relatórios e Estatísticas</h3>
-          <p>Visualize métricas e gráficos detalhados da clínica</p>
+          <h3><i class="fas fa-cloud"></i> Multi-tenancy</h3>
+          <p>Sistema SaaS com isolamento total de dados</p>
+        </div>
+        <div>
+          <h3><i class="fas fa-user-edit"></i> Link Público</h3>
+          <p>Clientes preenchem anamneses online</p>
         </div>
       </div>
     </div>

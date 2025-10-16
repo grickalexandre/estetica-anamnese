@@ -41,5 +41,40 @@ service cloud.firestore {
       // Permitir atualização e exclusão
       allow update, delete: if true;
     }
+    
+    // ===== AGENDAMENTOS =====
+    match /agendamentos/{agendamentoId} {
+      allow read, write: if true;
+    }
+    
+    // ===== ORÇAMENTOS =====
+    match /orcamentos/{orcamentoId} {
+      allow read, write: if true;
+    }
+    
+    // ===== PRONTUÁRIOS =====
+    match /prontuarios/{prontuarioId} {
+      allow read, write: if true;
+    }
+    
+    // ===== PLANO DE CONTAS =====
+    match /plano_contas/{categoriaId} {
+      allow read, write: if true;
+    }
+    
+    // ===== CONTAS A PAGAR =====
+    match /contas_pagar/{contaId} {
+      allow read, write: if true;
+    }
+    
+    // ===== CONTAS A RECEBER =====
+    match /contas_receber/{contaId} {
+      allow read, write: if true;
+    }
+    
+    // ===== MOVIMENTAÇÕES =====
+    match /movimentacoes/{movimentacaoId} {
+      allow read, write: if true;
+    }
   }
 }
