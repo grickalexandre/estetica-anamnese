@@ -5,10 +5,16 @@
         <h1><i class="fas fa-file-invoice-dollar"></i> DRE - Demonstração do Resultado do Exercício</h1>
         <p>Análise detalhada de receitas, despesas e resultados</p>
       </div>
-      <button @click="imprimirDRE" class="btn btn-secondary">
-        <i class="fas fa-print"></i>
-        Imprimir
-      </button>
+      <div class="header-actions">
+        <button @click="exportarPDF" class="btn btn-secondary">
+          <i class="fas fa-file-pdf"></i>
+          Exportar PDF
+        </button>
+        <button @click="imprimirDRE" class="btn btn-secondary">
+          <i class="fas fa-print"></i>
+          Imprimir
+        </button>
+      </div>
     </div>
 
     <!-- Seletor de Período -->
@@ -196,6 +202,11 @@
 <script setup>
 import { ref, onMounted, nextTick } from 'vue'
 import { useRelatoriosFinanceiros } from '../composables/useRelatoriosFinanceiros.js'
+import { Chart, registerables } from 'chart.js'
+import jsPDF from 'jspdf'
+import 'jspdf-autotable'
+
+Chart.register(...registerables)
 
 const { gerarDRE, carregando } = useRelatoriosFinanceiros()
 
@@ -277,11 +288,199 @@ const gerarRelatorio = async () => {
   }
 }
 
+let chartReceitasInstance = null
+let chartDespesasInstance = null
+
 const renderizarGraficos = () => {
-  // Nota: Para implementação completa, adicione Chart.js
-  // npm install chart.js
-  // Aqui deixo a estrutura pronta para quando adicionar
-  console.log('Gráficos prontos para renderizar com Chart.js')
+  if (!dre.value) return
+
+  // Destruir gráficos anteriores
+  if (chartReceitasInstance) chartReceitasInstance.destroy()
+  if (chartDespesasInstance) chartDespesasInstance.destroy()
+
+  // Gráfico de Receitas
+  if (chartReceitas.value) {
+    const ctxReceitas = chartReceitas.value.getContext('2d')
+    const datasReceitas = Object.entries(dre.value.receitas.porCategoria)
+    
+    chartReceitasInstance = new Chart(ctxReceitas, {
+      type: 'doughnut',
+      data: {
+        labels: datasReceitas.map(([cat]) => getNomeCategoria(cat, 'receita')),
+        datasets: [{
+          data: datasReceitas.map(([, dados]) => dados.total),
+          backgroundColor: [
+            '#667eea',
+            '#764ba2',
+            '#f093fb',
+            '#4facfe',
+            '#43e97b',
+            '#fa709a'
+          ],
+          borderWidth: 2,
+          borderColor: '#fff'
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        plugins: {
+          legend: {
+            position: 'bottom',
+            labels: {
+              padding: 15,
+              font: { size: 12 }
+            }
+          },
+          tooltip: {
+            callbacks: {
+              label: (context) => {
+                const label = context.label || ''
+                const value = context.parsed || 0
+                const total = context.dataset.data.reduce((a, b) => a + b, 0)
+                const percentage = ((value / total) * 100).toFixed(1)
+                return `${label}: R$ ${formatarMoeda(value)} (${percentage}%)`
+              }
+            }
+          }
+        }
+      }
+    })
+  }
+
+  // Gráfico de Despesas
+  if (chartDespesas.value) {
+    const ctxDespesas = chartDespesas.value.getContext('2d')
+    const datasDespesas = Object.entries(dre.value.despesas.porCategoria)
+    
+    chartDespesasInstance = new Chart(ctxDespesas, {
+      type: 'doughnut',
+      data: {
+        labels: datasDespesas.map(([cat]) => getNomeCategoria(cat, 'despesa')),
+        datasets: [{
+          data: datasDespesas.map(([, dados]) => dados.total),
+          backgroundColor: [
+            '#ff6b6b',
+            '#ee5a6f',
+            '#ff9a9e',
+            '#fad0c4',
+            '#ffecd2',
+            '#fcb69f'
+          ],
+          borderWidth: 2,
+          borderColor: '#fff'
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        plugins: {
+          legend: {
+            position: 'bottom',
+            labels: {
+              padding: 15,
+              font: { size: 12 }
+            }
+          },
+          tooltip: {
+            callbacks: {
+              label: (context) => {
+                const label = context.label || ''
+                const value = context.parsed || 0
+                const total = context.dataset.data.reduce((a, b) => a + b, 0)
+                const percentage = ((value / total) * 100).toFixed(1)
+                return `${label}: R$ ${formatarMoeda(value)} (${percentage}%)`
+              }
+            }
+          }
+        }
+      }
+    })
+  }
+}
+
+const exportarPDF = () => {
+  if (!dre.value) return
+
+  const doc = new jsPDF()
+  const pageWidth = doc.internal.pageSize.width
+  
+  // Cabeçalho
+  doc.setFontSize(18)
+  doc.setFont(undefined, 'bold')
+  doc.text('DRE - Demonstração do Resultado do Exercício', pageWidth / 2, 20, { align: 'center' })
+  
+  doc.setFontSize(10)
+  doc.setFont(undefined, 'normal')
+  doc.text(`Período: ${formatarPeriodo(dre.value.periodo.dataInicio, dre.value.periodo.dataFim)}`, pageWidth / 2, 28, { align: 'center' })
+  doc.text(`Gerado em: ${new Date().toLocaleString('pt-BR')}`, pageWidth / 2, 34, { align: 'center' })
+  
+  // Resumo
+  let y = 45
+  doc.setFontSize(12)
+  doc.setFont(undefined, 'bold')
+  doc.text('RESUMO EXECUTIVO', 14, y)
+  
+  y += 10
+  doc.setFontSize(10)
+  doc.setFont(undefined, 'normal')
+  doc.text(`Receita Total: R$ ${formatarMoeda(dre.value.receitas.total)}`, 14, y)
+  y += 6
+  doc.text(`Despesa Total: R$ ${formatarMoeda(dre.value.despesas.total)}`, 14, y)
+  y += 6
+  doc.setFont(undefined, 'bold')
+  const resultadoTexto = dre.value.resultado.lucroLiquido >= 0 ? 'LUCRO' : 'PREJUÍZO'
+  doc.text(`${resultadoTexto}: R$ ${formatarMoeda(dre.value.resultado.lucroLiquido)}`, 14, y)
+  y += 6
+  doc.setFont(undefined, 'normal')
+  doc.text(`Margem de Lucro: ${dre.value.resultado.margemLucro.toFixed(2)}%`, 14, y)
+  
+  // Tabela de Receitas
+  y += 15
+  doc.setFontSize(12)
+  doc.setFont(undefined, 'bold')
+  doc.text('RECEITAS OPERACIONAIS', 14, y)
+  
+  const receitasData = Object.entries(dre.value.receitas.porCategoria).map(([cat, dados]) => [
+    getNomeCategoria(cat, 'receita'),
+    dados.quantidade,
+    `R$ ${formatarMoeda(dados.total)}`
+  ])
+  
+  doc.autoTable({
+    startY: y + 5,
+    head: [['Categoria', 'Qtd', 'Valor']],
+    body: receitasData,
+    foot: [['TOTAL', dre.value.receitas.quantidade, `R$ ${formatarMoeda(dre.value.receitas.total)}`]],
+    theme: 'grid',
+    headStyles: { fillColor: [102, 126, 234] },
+    footStyles: { fillColor: [200, 200, 200], fontStyle: 'bold' }
+  })
+  
+  // Tabela de Despesas
+  y = doc.lastAutoTable.finalY + 15
+  doc.setFontSize(12)
+  doc.setFont(undefined, 'bold')
+  doc.text('DESPESAS OPERACIONAIS', 14, y)
+  
+  const despesasData = Object.entries(dre.value.despesas.porCategoria).map(([cat, dados]) => [
+    getNomeCategoria(cat, 'despesa'),
+    dados.quantidade,
+    `R$ ${formatarMoeda(dados.total)}`
+  ])
+  
+  doc.autoTable({
+    startY: y + 5,
+    head: [['Categoria', 'Qtd', 'Valor']],
+    body: despesasData,
+    foot: [['TOTAL', dre.value.despesas.quantidade, `R$ ${formatarMoeda(dre.value.despesas.total)}`]],
+    theme: 'grid',
+    headStyles: { fillColor: [255, 107, 107] },
+    footStyles: { fillColor: [200, 200, 200], fontStyle: 'bold' }
+  })
+  
+  // Salvar PDF
+  doc.save(`DRE_${dre.value.periodo.dataInicio}_${dre.value.periodo.dataFim}.pdf`)
 }
 
 const getNomeCategoria = (codigo, tipo) => {
@@ -326,6 +525,11 @@ const imprimirDRE = () => {
 .page-header p {
   color: #6e6e73;
   font-size: 15px;
+}
+
+.header-actions {
+  display: flex;
+  gap: 12px;
 }
 
 /* Seletor de Período */
