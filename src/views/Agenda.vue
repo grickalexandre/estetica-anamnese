@@ -2,10 +2,16 @@
   <div class="container agenda-container">
     <div class="page-header">
       <h1><i class="fas fa-calendar-alt"></i> Agenda</h1>
-      <button @click="abrirModalNovo" class="btn btn-primary">
-        <i class="fas fa-plus"></i>
-        Novo Agendamento
-      </button>
+      <div class="header-actions">
+        <router-link to="/registrar-atendimento" class="btn btn-success">
+          <i class="fas fa-user-md"></i>
+          Registrar Atendimento
+        </router-link>
+        <button @click="abrirModalNovo" class="btn btn-primary">
+          <i class="fas fa-plus"></i>
+          Novo Agendamento
+        </button>
+      </div>
     </div>
 
     <!-- Filtros e Visualização -->
@@ -437,6 +443,7 @@ const formatarHora = (dataHora) => {
 .agenda-container { max-width: 1600px; margin: 0 auto; padding: 20px; }
 .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
 .page-header h1 { font-size: 28px; color: #1d1d1f; display: flex; align-items: center; gap: 12px; }
+.header-actions { display: flex; gap: 12px; }
 .toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding: 16px; }
 .view-selector { display: flex; gap: 8px; }
 .view-btn { padding: 8px 16px; border: 1px solid #d2d2d7; background: white; border-radius: 8px; cursor: pointer; }

@@ -48,6 +48,9 @@
               <router-link to="/produtos" class="dropdown-item">
                 <i class="fas fa-box"></i> Produtos
               </router-link>
+              <router-link to="/procedimentos" class="dropdown-item">
+                <i class="fas fa-spa"></i> Procedimentos
+              </router-link>
             </div>
           </div>
           <router-link to="/financeiro" class="nav-link">

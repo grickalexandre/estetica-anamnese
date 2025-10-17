@@ -96,5 +96,15 @@ service cloud.firestore {
     match /movimentacoes_estoque/{movimentacaoId} {
       allow read, write: if true;
     }
+    
+    // ===== CATÁLOGO PROCEDIMENTOS =====
+    match /catalogo_procedimentos/{procedimentoId} {
+      allow read, write: if true;
+    }
+    
+    // ===== ATENDIMENTOS =====
+    match /atendimentos/{atendimentoId} {
+      allow read, write: if true;
+    }
   }
 }

@@ -164,29 +164,15 @@
             </div>
 
             <div class="form-group">
-              <label>Cliente/Paciente</label>
-              <div class="input-group">
-                <select v-model="formulario.clienteId" @change="selecionarCliente" class="select-vinculo">
-                  <option value="">📝 Digitar manualmente</option>
-                  <option value="novo">➕ Cadastrar novo cliente</option>
-                  <optgroup label="Clientes Cadastrados">
-                    <option v-for="cli in clientes" :key="cli.id" :value="cli.id">
-                      {{ cli.nome }} - {{ cli.telefone }}
-                    </option>
-                  </optgroup>
-                </select>
-              </div>
-              <input 
-                v-if="!formulario.clienteId || formulario.clienteId === ''" 
-                v-model="formulario.cliente" 
-                type="text" 
-                placeholder="Digite o nome do cliente"
-                class="input-manual"
-              >
-              <small v-if="clienteSelecionado" class="cliente-info">
-                <i class="fas fa-info-circle"></i>
-                {{ clienteSelecionado.telefone }} | Anamneses: {{ clienteSelecionado.totalAnamneses || 0 }} | Total Gasto: R$ {{ formatarMoeda(clienteSelecionado.totalGasto || 0) }}
-              </small>
+              <label>Cliente</label>
+              <select v-model="formulario.clienteId">
+                <option value="">Selecione ou deixe em branco</option>
+                <option v-for="cli in clientes" :key="cli.id" :value="cli.id">
+                  {{ cli.nome }}
+                </option>
+              </select>
+              <small>Ou digite manualmente:</small>
+              <input v-model="formulario.cliente" type="text" placeholder="Nome do cliente">
             </div>
           </div>
 
@@ -307,7 +293,6 @@ const modalBaixa = ref(false)
 const salvando = ref(false)
 const contaEditando = ref(null)
 const contaSelecionada = ref(null)
-const clienteSelecionado = ref(null)
 
 const filtros = ref({
   status: '',
@@ -374,31 +359,13 @@ const totalRecebido = computed(() => {
     .reduce((sum, c) => sum + (c.valorRecebido || c.valor || 0), 0)
 })
 
-const selecionarCliente = () => {
-  if (formulario.value.clienteId === 'novo') {
-    window.open('/clientes', '_blank')
-    formulario.value.clienteId = ''
-    return
-  }
-  
-  const cli = clientes.value.find(c => c.id === formulario.value.clienteId)
-  if (cli) {
-    clienteSelecionado.value = cli
-    formulario.value.cliente = cli.nome
-  } else {
-    clienteSelecionado.value = null
-  }
-}
-
 const abrirModalNova = () => {
   modalNova.value = true
   contaEditando.value = null
-  clienteSelecionado.value = null
   formulario.value = {
     descricao: '',
     categoria: '',
     cliente: '',
-    clienteId: '',
     valor: 0,
     dataVencimento: '',
     observacoes: '',
@@ -851,37 +818,6 @@ tbody td small {
 .empty-state p {
   font-size: 18px;
   margin-bottom: 24px;
-}
-
-.input-group {
-  margin-bottom: 8px;
-}
-
-.select-vinculo {
-  width: 100%;
-  padding: 10px 12px;
-  border: 1px solid #d2d2d7;
-  border-radius: 8px;
-  font-size: 14px;
-  background: white;
-}
-
-.input-manual {
-  margin-top: 8px;
-}
-
-.cliente-info {
-  display: block;
-  margin-top: 8px;
-  padding: 8px 12px;
-  background: rgba(52, 199, 89, 0.1);
-  border-radius: 6px;
-  color: #34c759;
-  font-size: 12px;
-}
-
-.cliente-info i {
-  margin-right: 6px;
 }
 
 @media (max-width: 768px) {
