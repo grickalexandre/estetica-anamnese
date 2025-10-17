@@ -175,14 +175,28 @@
 
             <div class="form-group">
               <label>Fornecedor</label>
-              <select v-model="formulario.fornecedorId">
-                <option value="">Selecione ou deixe em branco</option>
-                <option v-for="forn in fornecedores" :key="forn.id" :value="forn.id">
-                  {{ forn.nome }}
-                </option>
-              </select>
-              <small>Ou digite manualmente:</small>
-              <input v-model="formulario.fornecedor" type="text" placeholder="Nome do fornecedor">
+              <div class="input-group">
+                <select v-model="formulario.fornecedorId" @change="selecionarFornecedor" class="select-vinculo">
+                  <option value="">📝 Digitar manualmente</option>
+                  <option value="novo">➕ Cadastrar novo fornecedor</option>
+                  <optgroup label="Fornecedores Cadastrados">
+                    <option v-for="forn in fornecedores" :key="forn.id" :value="forn.id">
+                      {{ forn.nome }} - {{ forn.categoria }}
+                    </option>
+                  </optgroup>
+                </select>
+              </div>
+              <input 
+                v-if="!formulario.fornecedorId || formulario.fornecedorId === ''" 
+                v-model="formulario.fornecedor" 
+                type="text" 
+                placeholder="Digite o nome do fornecedor"
+                class="input-manual"
+              >
+              <small v-if="fornecedorSelecionado" class="fornecedor-info">
+                <i class="fas fa-info-circle"></i>
+                {{ fornecedorSelecionado.telefone }} | {{ fornecedorSelecionado.email || 'Sem email' }}
+              </small>
             </div>
           </div>
 
@@ -303,6 +317,7 @@ const modalBaixa = ref(false)
 const salvando = ref(false)
 const contaEditando = ref(null)
 const contaSelecionada = ref(null)
+const fornecedorSelecionado = ref(null)
 
 const filtros = ref({
   status: '',
@@ -369,13 +384,32 @@ const totalPago = computed(() => {
     .reduce((sum, c) => sum + (c.valorPago || c.valor || 0), 0)
 })
 
+const selecionarFornecedor = () => {
+  if (formulario.value.fornecedorId === 'novo') {
+    // Abrir cadastro de fornecedor em nova aba
+    window.open('/fornecedores', '_blank')
+    formulario.value.fornecedorId = ''
+    return
+  }
+  
+  const forn = fornecedores.value.find(f => f.id === formulario.value.fornecedorId)
+  if (forn) {
+    fornecedorSelecionado.value = forn
+    formulario.value.fornecedor = forn.nome
+  } else {
+    fornecedorSelecionado.value = null
+  }
+}
+
 const abrirModalNova = () => {
   modalNova.value = true
   contaEditando.value = null
+  fornecedorSelecionado.value = null
   formulario.value = {
     descricao: '',
     categoria: '',
     fornecedor: '',
+    fornecedorId: '',
     valor: 0,
     dataVencimento: '',
     observacoes: '',
@@ -833,6 +867,37 @@ tbody td small {
 .empty-state p {
   font-size: 18px;
   margin-bottom: 24px;
+}
+
+.input-group {
+  margin-bottom: 8px;
+}
+
+.select-vinculo {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #d2d2d7;
+  border-radius: 8px;
+  font-size: 14px;
+  background: white;
+}
+
+.input-manual {
+  margin-top: 8px;
+}
+
+.fornecedor-info {
+  display: block;
+  margin-top: 8px;
+  padding: 8px 12px;
+  background: rgba(102, 126, 234, 0.1);
+  border-radius: 6px;
+  color: #667eea;
+  font-size: 12px;
+}
+
+.fornecedor-info i {
+  margin-right: 6px;
 }
 
 @media (max-width: 768px) {
