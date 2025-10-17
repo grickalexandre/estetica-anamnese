@@ -228,9 +228,11 @@ import { collection, addDoc, serverTimestamp } from 'firebase/firestore'
 import { compressAnamneseImage } from '../utils/imageCompressor.js'
 import { uploadToCloudinary } from '../utils/cloudinary.js'
 import { useClinica } from '../composables/useClinica.js'
+import { useClientes } from '../composables/useClientes.js'
 
 const router = useRouter()
 const { clinicaId } = useClinica()
+const { buscarOuCriarCliente, atualizarCliente, incrementarAnamnese } = useClientes()
 const error = ref('')
 const success = ref('')
 const salvando = ref(false)
@@ -285,9 +287,14 @@ const salvarAnamnese = async () => {
 
     console.log('Salvando anamnese com clinicaId:', clinicaId.value)
 
+    // 1. Buscar ou criar cliente automaticamente
+    console.log('Buscando ou criando cliente:', formulario.value.nome, formulario.value.telefone)
+    const cliente = await buscarOuCriarCliente(formulario.value.nome, formulario.value.telefone)
+    console.log('Cliente:', cliente)
+
     let fotoURL = null
 
-    // Upload da foto via Cloudinary (sem usar Firebase Storage)
+    // 2. Upload da foto via Cloudinary
     if (fotoFile.value) {
       console.log('Fazendo upload da foto...')
       const compressed = await compressAnamneseImage(fotoFile.value)
@@ -299,11 +306,13 @@ const salvarAnamnese = async () => {
       console.log('Foto enviada:', fotoURL)
     }
 
-    // Salvar no Firestore com clinicaId
+    // 3. Salvar anamnese com vinculação ao cliente
     const dadosAnamnese = {
       ...formulario.value,
       fotoURL,
+      clienteId: cliente?.id || null, // Vincular ao cliente
       clinicaId: clinicaId.value || 'demo',
+      origem: 'profissional',
       dataCriacao: serverTimestamp()
     }
 
@@ -312,7 +321,19 @@ const salvarAnamnese = async () => {
     const docRef = await addDoc(collection(db, 'anamneses'), dadosAnamnese)
     console.log('Anamnese salva com ID:', docRef.id)
 
-    success.value = 'Anamnese salva com sucesso!'
+    // 4. Atualizar dados do cliente com informações da anamnese
+    if (cliente?.id) {
+      await atualizarCliente(cliente.id, {
+        email: formulario.value.email || cliente.email,
+        dataNascimento: formulario.value.dataNascimento || cliente.dataNascimento,
+        cpf: formulario.value.cpf || cliente.cpf,
+        endereco: formulario.value.endereco || cliente.endereco
+      })
+      // Incrementar contador de anamneses
+      await incrementarAnamnese(cliente.id)
+    }
+
+    success.value = 'Anamnese salva com sucesso! Cliente cadastrado/atualizado automaticamente.'
     
     setTimeout(() => {
       router.push('/lista')

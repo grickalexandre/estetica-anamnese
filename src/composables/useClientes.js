@@ -37,7 +37,9 @@ export function useClientes() {
         ativo: true,
         totalAtendimentos: 0,
         totalGasto: 0,
+        totalAnamneses: 0,
         ultimoAtendimento: null,
+        ultimaAnamnese: null,
         dataCriacao: serverTimestamp()
       }
       const docRef = await addDoc(collection(db, 'clientes'), cliente)
@@ -79,6 +81,46 @@ export function useClientes() {
     }
   }
 
-  return { clientes, carregando, buscarClientes, adicionarCliente, atualizarCliente, buscarOuCriarCliente }
+  const incrementarAnamnese = async (clienteId) => {
+    try {
+      const cliente = clientes.value.find(c => c.id === clienteId)
+      if (!cliente) return { success: false }
+
+      await updateDoc(doc(db, 'clientes', clienteId), {
+        totalAnamneses: (cliente.totalAnamneses || 0) + 1,
+        ultimaAnamnese: serverTimestamp()
+      })
+      return { success: true }
+    } catch (err) {
+      return { success: false, error: err.message }
+    }
+  }
+
+  const incrementarAtendimento = async (clienteId, valor = 0) => {
+    try {
+      const cliente = clientes.value.find(c => c.id === clienteId)
+      if (!cliente) return { success: false }
+
+      await updateDoc(doc(db, 'clientes', clienteId), {
+        totalAtendimentos: (cliente.totalAtendimentos || 0) + 1,
+        totalGasto: (cliente.totalGasto || 0) + valor,
+        ultimoAtendimento: serverTimestamp()
+      })
+      return { success: true }
+    } catch (err) {
+      return { success: false, error: err.message }
+    }
+  }
+
+  return { 
+    clientes, 
+    carregando, 
+    buscarClientes, 
+    adicionarCliente, 
+    atualizarCliente, 
+    buscarOuCriarCliente,
+    incrementarAnamnese,
+    incrementarAtendimento 
+  }
 }
 

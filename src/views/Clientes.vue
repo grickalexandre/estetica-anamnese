@@ -19,6 +19,7 @@
             <th>Telefone</th>
             <th>Email</th>
             <th>Data Nasc.</th>
+            <th>Anamneses</th>
             <th>Atendimentos</th>
             <th>Total Gasto</th>
             <th>Status</th>
@@ -31,7 +32,8 @@
             <td>{{ cli.telefone }}</td>
             <td>{{ cli.email || '-' }}</td>
             <td>{{ formatarData(cli.dataNascimento) }}</td>
-            <td>{{ cli.totalAtendimentos || 0 }}</td>
+            <td class="numero-badge">{{ cli.totalAnamneses || 0 }}</td>
+            <td class="numero-badge">{{ cli.totalAtendimentos || 0 }}</td>
             <td class="valor">R$ {{ formatarMoeda(cli.totalGasto || 0) }}</td>
             <td><span :class="['status-badge', cli.ativo ? 'ativo' : 'inativo']">{{ cli.ativo ? 'Ativo' : 'Inativo' }}</span></td>
             <td class="acoes">
@@ -130,7 +132,7 @@ const salvar = async () => {
 }
 
 const verHistorico = (cli) => {
-  alert(`Histórico de ${cli.nome}\n\nAtendimentos: ${cli.totalAtendimentos || 0}\nTotal Gasto: R$ ${formatarMoeda(cli.totalGasto || 0)}`)
+  alert(`Histórico de ${cli.nome}\n\nAnamneses: ${cli.totalAnamneses || 0}\nAtendimentos: ${cli.totalAtendimentos || 0}\nTotal Gasto: R$ ${formatarMoeda(cli.totalGasto || 0)}\n\nÚltima Anamnese: ${formatarData(cli.ultimaAnamnese)}\nÚltimo Atendimento: ${formatarData(cli.ultimoAtendimento)}`)
 }
 
 const fecharModal = () => { modal.value = false }
@@ -141,7 +143,8 @@ const formatarMoeda = (valor) => {
 
 const formatarData = (data) => {
   if (!data) return '-'
-  return new Date(data).toLocaleDateString('pt-BR')
+  const date = data.toDate ? data.toDate() : new Date(data)
+  return date.toLocaleDateString('pt-BR')
 }
 </script>
 
@@ -151,6 +154,7 @@ const formatarData = (data) => {
 .data-table { width: 100%; border-collapse: collapse; }
 .data-table thead th { text-align: left; padding: 12px; background: #f5f5f7; font-weight: 600; font-size: 13px; }
 .data-table tbody td { padding: 14px 12px; border-bottom: 1px solid #e5e5ea; }
+.numero-badge { text-align: center; font-weight: 700; color: #1d1d1f; }
 .valor { font-weight: 600; color: #667eea; }
 .status-badge { padding: 6px 12px; border-radius: 16px; font-size: 12px; font-weight: 600; }
 .status-badge.ativo { background: rgba(52, 199, 89, 0.1); color: #34c759; }

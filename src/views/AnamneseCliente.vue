@@ -182,11 +182,13 @@ import { db } from '../firebase.js'
 import { collection, addDoc, serverTimestamp, query, where, getDocs } from 'firebase/firestore'
 import { useConfiguracoes } from '../composables/useConfiguracoes'
 import { useClinica } from '../composables/useClinica.js'
+import { useClientes } from '../composables/useClientes.js'
 import { compressAnamneseImage, isValidImage } from '../utils/imageCompressor.js'
 import { uploadToCloudinary } from '../utils/cloudinary.js'
 
 const { configuracoes, carregando } = useConfiguracoes()
 const { clinicaId } = useClinica()
+const { buscarOuCriarCliente, atualizarCliente, incrementarAnamnese } = useClientes()
 
 const error = ref('')
 const success = ref('')
@@ -292,30 +294,12 @@ const salvarAnamnese = async () => {
 
     console.log('Salvando anamnese do cliente com clinicaId:', clinicaId.value)
 
-    // Verificar se já existe anamnese para este paciente na mesma clínica
-    const id = clinicaId.value || 'demo'
-    const q = query(
-      collection(db, 'anamneses'),
-      where('clinicaId', '==', id),
-      where('nome', '==', formulario.value.nome),
-      where('telefone', '==', formulario.value.telefone)
-    )
-    
-    const existingAnamneses = await getDocs(q)
-    
-    if (existingAnamneses.size > 0) {
-      const confirmar = confirm(
-        `Já existe ${existingAnamneses.size} anamnese(s) para ${formulario.value.nome}. ` +
-        'Deseja criar uma nova anamnese mesmo assim?'
-      )
-      
-      if (!confirmar) {
-        salvando.value = false
-        return
-      }
-    }
+    // 1. Buscar ou criar cliente automaticamente
+    console.log('Buscando ou criando cliente:', formulario.value.nome, formulario.value.telefone)
+    const cliente = await buscarOuCriarCliente(formulario.value.nome, formulario.value.telefone)
+    console.log('Cliente criado/encontrado:', cliente)
 
-    // Fazer upload das fotos se houver
+    // 2. Fazer upload das fotos se houver
     if (fotosFiles.value.length > 0) {
       console.log('Fazendo upload de', fotosFiles.value.length, 'fotos...')
       const fotosURLs = await uploadFotos()
@@ -323,9 +307,11 @@ const salvarAnamnese = async () => {
       console.log('Fotos enviadas:', fotosURLs)
     }
 
-    // Salvar no Firestore com clinicaId
+    // 3. Salvar anamnese com vinculação ao cliente
+    const id = clinicaId.value || 'demo'
     const dadosAnamnese = {
       ...formulario.value,
+      clienteId: cliente?.id || null, // Vincular ao cliente
       clinicaId: id,
       dataCriacao: serverTimestamp(),
       origem: 'cliente' // Marcar que foi preenchida pelo cliente
@@ -336,7 +322,17 @@ const salvarAnamnese = async () => {
     const docRef = await addDoc(collection(db, 'anamneses'), dadosAnamnese)
     console.log('Anamnese do cliente salva com ID:', docRef.id)
 
-    success.value = 'Anamnese enviada com sucesso! Nossa equipe entrará em contato em breve.'
+    // 4. Atualizar cliente com dados adicionais da anamnese
+    if (cliente?.id) {
+      await atualizarCliente(cliente.id, {
+        email: formulario.value.email || cliente.email,
+        dataNascimento: formulario.value.dataNascimento || cliente.dataNascimento
+      })
+      // Incrementar contador de anamneses
+      await incrementarAnamnese(cliente.id)
+    }
+
+    success.value = 'Anamnese enviada com sucesso! Nossa equipe entrará em contato em breve. Seu cadastro foi realizado automaticamente.'
     
     // Limpar formulário após sucesso
     setTimeout(() => {
