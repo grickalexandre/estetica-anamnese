@@ -52,7 +52,7 @@
 
       <div v-else class="categorias-tree">
         <div 
-          v-for="categoria in arvoreCategor ias" 
+          v-for="categoria in arvoreCategorias" 
           :key="categoria.id"
           :class="['categoria-item', `nivel-${categoria.nivel}`, { inativa: !categoria.ativa }]"
         >
@@ -253,7 +253,7 @@ const categoriasFiltradas = computed(() => {
   return categorias.value.filter(c => c.tipo === tipoSelecionado.value)
 })
 
-const arvoreCateg orias = computed(() => {
+const arvoreCategorias = computed(() => {
   return categoriasFiltradas.value.sort((a, b) => {
     return a.codigo.localeCompare(b.codigo)
   })
