@@ -32,6 +32,24 @@
             <span class="nav-text">Pacientes</span>
             <span v-if="pendingCount > 0" class="notification-count">{{ pendingCount }}</span>
           </router-link>
+          <div class="nav-dropdown">
+            <button class="nav-link dropdown-toggle">
+              <i class="fas fa-database nav-icon"></i>
+              <span class="nav-text">Cadastros</span>
+              <i class="fas fa-chevron-down"></i>
+            </button>
+            <div class="dropdown-menu">
+              <router-link to="/clientes" class="dropdown-item">
+                <i class="fas fa-user-friends"></i> Clientes
+              </router-link>
+              <router-link to="/fornecedores" class="dropdown-item">
+                <i class="fas fa-truck"></i> Fornecedores
+              </router-link>
+              <router-link to="/produtos" class="dropdown-item">
+                <i class="fas fa-box"></i> Produtos
+              </router-link>
+            </div>
+          </div>
           <router-link to="/financeiro" class="nav-link">
             <i class="fas fa-dollar-sign nav-icon"></i>
             <span class="nav-text">Financeiro</span>
@@ -341,6 +359,53 @@ watch(isClientPage, (newValue) => {
   background: #1d1d1f;
   color: white;
   box-shadow: 0 2px 8px rgba(29, 29, 31, 0.2);
+}
+
+/* Dropdown Menu */
+.nav-dropdown {
+  position: relative;
+}
+
+.dropdown-toggle {
+  background: none;
+  border: none;
+  width: 100%;
+}
+
+.dropdown-menu {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  min-width: 200px;
+  margin-top: 4px;
+  z-index: 100;
+}
+
+.nav-dropdown:hover .dropdown-menu {
+  display: block;
+}
+
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  color: #1d1d1f;
+  text-decoration: none;
+  transition: background 0.2s;
+}
+
+.dropdown-item:hover {
+  background: #f5f5f7;
+}
+
+.dropdown-item i {
+  width: 20px;
+  color: #6e6e73;
 }
 
 /* Mobile navigation improvements */

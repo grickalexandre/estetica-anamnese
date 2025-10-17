@@ -20,6 +20,9 @@ import RelatorioDRE from './views/RelatorioDRE.vue'
 import AnaliseTendencias from './views/AnaliseTendencias.vue'
 import Agenda from './views/Agenda.vue'
 import DashboardAnalitico from './views/DashboardAnalitico.vue'
+import Fornecedores from './views/Fornecedores.vue'
+import Produtos from './views/Produtos.vue'
+import Clientes from './views/Clientes.vue'
 import { auth } from './firebase.js'
 import './style.css'
 
@@ -51,7 +54,12 @@ const routes = [
   { path: '/agenda', component: Agenda, meta: { requiresAuth: true } },
   
   // Rotas de análise
-  { path: '/dashboard', component: DashboardAnalitico, meta: { requiresAuth: true } }
+  { path: '/dashboard', component: DashboardAnalitico, meta: { requiresAuth: true } },
+  
+  // Rotas de cadastros
+  { path: '/fornecedores', component: Fornecedores, meta: { requiresAuth: true } },
+  { path: '/produtos', component: Produtos, meta: { requiresAuth: true } },
+  { path: '/clientes', component: Clientes, meta: { requiresAuth: true } }
 ]
 
 const router = createRouter({

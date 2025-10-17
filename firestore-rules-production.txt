@@ -76,5 +76,25 @@ service cloud.firestore {
     match /movimentacoes/{movimentacaoId} {
       allow read, write: if true;
     }
+    
+    // ===== FORNECEDORES =====
+    match /fornecedores/{fornecedorId} {
+      allow read, write: if true;
+    }
+    
+    // ===== PRODUTOS =====
+    match /produtos/{produtoId} {
+      allow read, write: if true;
+    }
+    
+    // ===== CLIENTES =====
+    match /clientes/{clienteId} {
+      allow read, write: if true;
+    }
+    
+    // ===== MOVIMENTAÇÕES ESTOQUE =====
+    match /movimentacoes_estoque/{movimentacaoId} {
+      allow read, write: if true;
+    }
   }
 }

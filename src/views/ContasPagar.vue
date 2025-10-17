@@ -175,6 +175,13 @@
 
             <div class="form-group">
               <label>Fornecedor</label>
+              <select v-model="formulario.fornecedorId">
+                <option value="">Selecione ou deixe em branco</option>
+                <option v-for="forn in fornecedores" :key="forn.id" :value="forn.id">
+                  {{ forn.nome }}
+                </option>
+              </select>
+              <small>Ou digite manualmente:</small>
               <input v-model="formulario.fornecedor" type="text" placeholder="Nome do fornecedor">
             </div>
           </div>
@@ -278,6 +285,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useFinanceiro } from '../composables/useFinanceiro.js'
+import { useFornecedores } from '../composables/useFornecedores.js'
 
 const {
   contasPagar,
@@ -287,6 +295,8 @@ const {
   baixarContaPagar,
   excluirContaPagar
 } = useFinanceiro()
+
+const { fornecedores, buscarFornecedores } = useFornecedores()
 
 const modalNova = ref(false)
 const modalBaixa = ref(false)
@@ -305,6 +315,7 @@ const formulario = ref({
   descricao: '',
   categoria: '',
   fornecedor: '',
+  fornecedorId: '',
   valor: 0,
   dataVencimento: '',
   observacoes: '',
@@ -319,7 +330,10 @@ const formularioBaixa = ref({
 })
 
 onMounted(async () => {
-  await buscarContasPagar()
+  await Promise.all([
+    buscarContasPagar(),
+    buscarFornecedores()
+  ])
 })
 
 const contasFiltradas = computed(() => {
