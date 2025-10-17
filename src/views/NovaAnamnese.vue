@@ -287,10 +287,17 @@ const salvarAnamnese = async () => {
 
     console.log('Salvando anamnese com clinicaId:', clinicaId.value)
 
-    // 1. Buscar ou criar cliente automaticamente
-    console.log('Buscando ou criando cliente:', formulario.value.nome, formulario.value.telefone)
-    const cliente = await buscarOuCriarCliente(formulario.value.nome, formulario.value.telefone)
-    console.log('Cliente:', cliente)
+    // 1. Buscar ou criar cliente automaticamente (por CPF ou telefone)
+    console.log('Buscando ou criando cliente:', formulario.value.nome, formulario.value.cpf || formulario.value.telefone)
+    const cliente = await buscarOuCriarCliente({
+      nome: formulario.value.nome,
+      cpf: formulario.value.cpf,
+      telefone: formulario.value.telefone,
+      email: formulario.value.email,
+      dataNascimento: formulario.value.dataNascimento,
+      endereco: formulario.value.endereco
+    })
+    console.log('Cliente encontrado/criado:', cliente)
 
     let fotoURL = null
 

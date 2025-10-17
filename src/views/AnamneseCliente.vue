@@ -36,12 +36,24 @@
 
         <div class="form-row">
           <div class="form-group">
+            <label>CPF</label>
+            <input v-model="formulario.cpf" type="text" placeholder="000.000.000-00">
+            <small style="font-size: 12px; color: #6e6e73;">Recomendado para evitar duplicatas</small>
+          </div>
+          <div class="form-group">
             <label>Telefone *</label>
             <input v-model="formulario.telefone" type="tel" required placeholder="(00) 00000-0000">
           </div>
+        </div>
+
+        <div class="form-row">
           <div class="form-group">
             <label>Email</label>
             <input v-model="formulario.email" type="email">
+          </div>
+          <div class="form-group">
+            <label>Endereço</label>
+            <input v-model="formulario.endereco" type="text" placeholder="Rua, número - Cidade">
           </div>
         </div>
 
@@ -200,8 +212,10 @@ const uploadProgress = ref(0)
 const formulario = ref({
   nome: '',
   dataNascimento: '',
+  cpf: '',
   telefone: '',
   email: '',
+  endereco: '',
   doencas: '',
   medicamentos: '',
   alergias: '',
@@ -294,9 +308,15 @@ const salvarAnamnese = async () => {
 
     console.log('Salvando anamnese do cliente com clinicaId:', clinicaId.value)
 
-    // 1. Buscar ou criar cliente automaticamente
-    console.log('Buscando ou criando cliente:', formulario.value.nome, formulario.value.telefone)
-    const cliente = await buscarOuCriarCliente(formulario.value.nome, formulario.value.telefone)
+    // 1. Buscar ou criar cliente automaticamente (por CPF ou telefone)
+    console.log('Buscando ou criando cliente:', formulario.value.nome, formulario.value.cpf || formulario.value.telefone)
+    const cliente = await buscarOuCriarCliente({
+      nome: formulario.value.nome,
+      cpf: formulario.value.cpf || '',
+      telefone: formulario.value.telefone,
+      email: formulario.value.email,
+      dataNascimento: formulario.value.dataNascimento
+    })
     console.log('Cliente criado/encontrado:', cliente)
 
     // 2. Fazer upload das fotos se houver
@@ -339,8 +359,10 @@ const salvarAnamnese = async () => {
       formulario.value = {
         nome: '',
         dataNascimento: '',
+        cpf: '',
         telefone: '',
         email: '',
+        endereco: '',
         doencas: '',
         medicamentos: '',
         alergias: '',
