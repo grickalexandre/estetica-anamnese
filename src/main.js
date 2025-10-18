@@ -22,7 +22,6 @@ import Agenda from './views/Agenda.vue'
 import DashboardAnalitico from './views/DashboardAnalitico.vue'
 import Fornecedores from './views/Fornecedores.vue'
 import Produtos from './views/Produtos.vue'
-import Clientes from './views/Clientes.vue'
 import CatalogoProcedimentos from './views/CatalogoProcedimentos.vue'
 import RegistrarAtendimento from './views/RegistrarAtendimento.vue'
 import LimpezaDados from './views/LimpezaDados.vue'
@@ -62,7 +61,6 @@ const routes = [
   // Rotas de cadastros
   { path: '/fornecedores', component: Fornecedores, meta: { requiresAuth: true } },
   { path: '/produtos', component: Produtos, meta: { requiresAuth: true } },
-  { path: '/clientes', component: Clientes, meta: { requiresAuth: true } },
   { path: '/procedimentos', component: CatalogoProcedimentos, meta: { requiresAuth: true } },
   
   // Rotas de atendimento

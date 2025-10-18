@@ -53,10 +53,6 @@
               <i class="fas fa-chevron-down" :class="{ 'rotated': showCadastros }"></i>
             </div>
             <div v-if="showCadastros" class="mobile-nav-group-content">
-              <router-link to="/clientes" class="mobile-nav-subitem" @click="closeMenu">
-                <i class="fas fa-user-friends"></i>
-                <span>Clientes</span>
-              </router-link>
               <router-link to="/fornecedores" class="mobile-nav-subitem" @click="closeMenu">
                 <i class="fas fa-truck"></i>
                 <span>Fornecedores</span>

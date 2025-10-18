@@ -104,7 +104,7 @@ export function useProcedimentos() {
 
       // 4. Atualizar cliente
       if (dados.clienteId) {
-        const { incrementarAtendimento } = await import('./useClientes.js')
+        const { incrementarAtendimento } = await import('./usePacientes.js')
         await incrementarAtendimento(dados.clienteId, dados.valorCobrado || 0)
       }
 

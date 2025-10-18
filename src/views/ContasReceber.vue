@@ -275,7 +275,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useFinanceiro } from '../composables/useFinanceiro.js'
-import { useClientes } from '../composables/useClientes.js'
+import { usePacientes } from '../composables/usePacientes.js'
 
 const {
   contasReceber,
@@ -286,7 +286,7 @@ const {
   excluirContaReceber
 } = useFinanceiro()
 
-const { clientes, buscarClientes } = useClientes()
+const { clientes, buscarClientes } = usePacientes()
 
 const modalNova = ref(false)
 const modalBaixa = ref(false)

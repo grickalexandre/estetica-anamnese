@@ -194,13 +194,13 @@ import { db } from '../firebase.js'
 import { collection, addDoc, serverTimestamp, query, where, getDocs } from 'firebase/firestore'
 import { useConfiguracoes } from '../composables/useConfiguracoes'
 import { useClinica } from '../composables/useClinica.js'
-import { useClientes } from '../composables/useClientes.js'
+import { usePacientes } from '../composables/usePacientes.js'
 import { compressAnamneseImage, isValidImage } from '../utils/imageCompressor.js'
 import { uploadToCloudinary } from '../utils/cloudinary.js'
 
 const { configuracoes, carregando } = useConfiguracoes()
 const { clinicaId } = useClinica()
-const { buscarOuCriarCliente, atualizarCliente, incrementarAnamnese } = useClientes()
+const { buscarOuCriarCliente, atualizarCliente, incrementarAnamnese } = usePacientes()
 
 const error = ref('')
 const success = ref('')

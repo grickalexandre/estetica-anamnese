@@ -228,11 +228,11 @@ import { collection, addDoc, serverTimestamp } from 'firebase/firestore'
 import { compressAnamneseImage } from '../utils/imageCompressor.js'
 import { uploadToCloudinary } from '../utils/cloudinary.js'
 import { useClinica } from '../composables/useClinica.js'
-import { useClientes } from '../composables/useClientes.js'
+import { usePacientes } from '../composables/usePacientes.js'
 
 const router = useRouter()
 const { clinicaId } = useClinica()
-const { buscarOuCriarCliente, atualizarCliente, incrementarAnamnese } = useClientes()
+const { buscarOuCriarCliente, atualizarCliente, incrementarAnamnese } = usePacientes()
 const error = ref('')
 const success = ref('')
 const salvando = ref(false)

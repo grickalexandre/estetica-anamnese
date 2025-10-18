@@ -56,10 +56,6 @@
           <i v-if="!collapsed" class="fas fa-chevron-down group-arrow" :class="{ 'rotated': showCadastros }"></i>
         </div>
         <div v-if="!collapsed && showCadastros" class="nav-group-content">
-          <router-link to="/clientes" class="nav-subitem">
-            <i class="fas fa-user-friends"></i>
-            <span>Clientes</span>
-          </router-link>
           <router-link to="/fornecedores" class="nav-subitem">
             <i class="fas fa-truck"></i>
             <span>Fornecedores</span>

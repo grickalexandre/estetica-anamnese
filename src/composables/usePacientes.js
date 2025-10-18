@@ -3,7 +3,7 @@ import { db } from '../firebase.js'
 import { collection, addDoc, updateDoc, doc, getDocs, query, where, serverTimestamp } from 'firebase/firestore'
 import { useClinica } from './useClinica.js'
 
-export function useClientes() {
+export function usePacientes() {
   const { clinicaId } = useClinica()
   const clientes = ref([])
   const carregando = ref(false)

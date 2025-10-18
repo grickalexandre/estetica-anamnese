@@ -93,12 +93,12 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useProcedimentos } from '../composables/useProcedimentos.js'
-import { useClientes } from '../composables/useClientes.js'
+import { usePacientes } from '../composables/usePacientes.js'
 import { useProdutos } from '../composables/useProdutos.js'
 
 const router = useRouter()
 const { procedimentos, registrarAtendimento } = useProcedimentos()
-const { clientes, buscarClientes } = useClientes()
+const { clientes, buscarClientes } = usePacientes()
 const { produtos, buscarProdutos } = useProdutos()
 
 const salvando = ref(false)
