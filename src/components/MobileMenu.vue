@@ -130,12 +130,6 @@
             <span>Configurações</span>
           </router-link>
 
-          <router-link v-if="isAuthenticated" to="/planos" class="mobile-nav-item plan-link" @click="closeMenu">
-            <i class="fas fa-crown"></i>
-            <span>Planos</span>
-            <span v-if="isFree" class="badge-free">FREE</span>
-          </router-link>
-
           <button v-if="isAuthenticated" @click="handleLogout" class="mobile-nav-item logout-btn">
             <i class="fas fa-sign-out-alt"></i>
             <span>Sair</span>
@@ -154,7 +148,7 @@ import { useAuth } from '../composables/useAuth'
 
 const router = useRouter()
 const { configuracoes } = useConfiguracoes()
-const { isAuthenticated, isFree, logout } = useAuth()
+const { isAuthenticated, logout } = useAuth()
 
 // Props
 const props = defineProps({
@@ -460,34 +454,6 @@ const handleLogout = async () => {
     color: #8e8e93;
   }
 
-  .plan-link {
-    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
-    color: #92400e;
-    margin: 8px 12px;
-    border-radius: 12px;
-    border: 1px solid rgba(146, 64, 14, 0.2);
-  }
-
-  .plan-link:hover {
-    background: linear-gradient(135deg, #fde68a 0%, #fcd34d 100%);
-    color: #78350f;
-  }
-
-  .plan-link.router-link-active {
-    background: linear-gradient(135deg, #92400e 0%, #78350f 100%);
-    color: white;
-  }
-
-  .badge-free {
-    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-    color: white;
-    padding: 2px 8px;
-    border-radius: 10px;
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 0.5px;
-    margin-left: auto;
-  }
 
   .logout-btn {
     background: none;
