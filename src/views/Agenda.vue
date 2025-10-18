@@ -82,7 +82,7 @@
         
         <div v-else class="mes-view">
           <div class="mes-grid">
-            <div v-for="dia in diasMes" :key="dia.data" :class="['dia-cell', { hoje: dia.isHoje, 'outro-mes': !dia.mesAtual }]">
+            <div v-for="dia in diasMes" :key="dia.data" :class="['dia-cell', { 'hoje': dia.isHoje, 'outro-mes': !dia.mesAtual }]">
               <div class="dia-numero">{{ dia.numero }}</div>
               <div class="dia-agendamentos">
                 <div 
