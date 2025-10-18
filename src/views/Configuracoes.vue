@@ -149,6 +149,16 @@
         </div>
       </form>
     </div>
+
+    <!-- Zona de Perigo -->
+    <div class="card danger-zone">
+      <h2><i class="fas fa-exclamation-triangle"></i> Zona de Perigo</h2>
+      <p>Ações irreversíveis que afetam seus dados.</p>
+      <router-link to="/limpeza-dados" class="btn btn-danger">
+        <i class="fas fa-broom"></i>
+        Limpeza de Dados
+      </router-link>
+    </div>
   </div>
 </template>
 
@@ -450,6 +460,26 @@ onMounted(() => {
   font-size: 12px;
   color: #6b7280;
   font-weight: 600;
+}
+
+.danger-zone {
+  margin-top: 32px;
+  border: 2px solid #ff3b30;
+  background: rgba(255, 59, 48, 0.05);
+}
+
+.danger-zone h2 {
+  color: #ff3b30;
+  font-size: 18px;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.danger-zone p {
+  color: #6e6e73;
+  margin-bottom: 16px;
 }
 
 @media (max-width: 768px) {

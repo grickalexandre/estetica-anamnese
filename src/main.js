@@ -25,6 +25,7 @@ import Produtos from './views/Produtos.vue'
 import Clientes from './views/Clientes.vue'
 import CatalogoProcedimentos from './views/CatalogoProcedimentos.vue'
 import RegistrarAtendimento from './views/RegistrarAtendimento.vue'
+import LimpezaDados from './views/LimpezaDados.vue'
 import { auth } from './firebase.js'
 import './style.css'
 
@@ -65,7 +66,10 @@ const routes = [
   { path: '/procedimentos', component: CatalogoProcedimentos, meta: { requiresAuth: true } },
   
   // Rotas de atendimento
-  { path: '/registrar-atendimento', component: RegistrarAtendimento, meta: { requiresAuth: true } }
+  { path: '/registrar-atendimento', component: RegistrarAtendimento, meta: { requiresAuth: true } },
+  
+  // Rotas de administração
+  { path: '/limpeza-dados', component: LimpezaDados, meta: { requiresAuth: true } }
 ]
 
 const router = createRouter({
