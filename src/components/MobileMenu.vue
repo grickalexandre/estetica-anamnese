@@ -104,6 +104,10 @@
                 <i class="fas fa-chart-area"></i>
                 <span>Análise de Tendências</span>
               </router-link>
+              <router-link to="/financeiro/despesas-recorrentes" class="mobile-nav-subitem" @click="closeMenu">
+                <i class="fas fa-sync-alt"></i>
+                <span>Despesas Recorrentes</span>
+              </router-link>
             </div>
           </div>
 

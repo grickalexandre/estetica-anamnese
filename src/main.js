@@ -25,6 +25,7 @@ import CatalogoProcedimentos from './views/CatalogoProcedimentos.vue'
 import RegistrarAtendimento from './views/RegistrarAtendimento.vue'
 import RelatorioAtendimentos from './views/RelatorioAtendimentos.vue'
 import EntradaProdutos from './views/EntradaProdutos.vue'
+import DespesasRecorrentes from './views/DespesasRecorrentes.vue'
 import LimpezaDados from './views/LimpezaDados.vue'
 import { auth } from './firebase.js'
 import './style.css'
@@ -51,6 +52,7 @@ const routes = [
   { path: '/financeiro/plano-contas', component: PlanoContas, meta: { requiresAuth: true } },
   { path: '/financeiro/relatorio-dre', component: RelatorioDRE, meta: { requiresAuth: true } },
   { path: '/financeiro/analise-tendencias', component: AnaliseTendencias, meta: { requiresAuth: true } },
+  { path: '/financeiro/despesas-recorrentes', component: DespesasRecorrentes, meta: { requiresAuth: true } },
   
   // Rotas de agendamento
   { path: '/agenda', component: Agenda, meta: { requiresAuth: true } },
