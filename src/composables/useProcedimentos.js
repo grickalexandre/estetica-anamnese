@@ -114,23 +114,37 @@ export function useProcedimentos() {
         await incrementarAtendimento(dados.clienteId, dados.valorCobrado || 0)
       }
 
-      // 5. Gestão financeira - Conta a Receber
+      // 5. Gestão financeira - Conta a Receber (com parcelamento)
       if (dados.valorCobrado && dados.valorCobrado > 0) {
-        const { adicionarContaReceber } = await import('./useFinanceiro.js')
+        const { adicionarContaReceber, adicionarContaReceberParcelada } = await import('./useFinanceiro.js')
         
-        const contaReceber = {
+        const dadosFinanceiros = {
           descricao: `Atendimento: ${dados.procedimentoNome} - ${dados.clienteNome}`,
-          valor: dados.valorCobrado,
-          dataVencimento: dados.dataVencimento || new Date().toISOString().split('T')[0],
           categoria: 'atendimentos',
           clienteId: dados.clienteId,
           clienteNome: dados.clienteNome,
           atendimentoId: docRef.id,
-          status: dados.pago ? 'pago' : 'pendente',
+          formaPagamento: dados.formaPagamento || 'dinheiro',
           observacoes: dados.observacoes || ''
         }
 
-        await adicionarContaReceber(contaReceber)
+        // Se parcelado, usar função de parcelamento
+        if (dados.numeroParcelas && dados.numeroParcelas > 1) {
+          await adicionarContaReceberParcelada({
+            ...dadosFinanceiros,
+            valorTotal: dados.valorCobrado,
+            numeroParcelas: dados.numeroParcelas,
+            dataVencimentoInicial: dados.dataVencimento || new Date().toISOString().split('T')[0]
+          })
+        } else {
+          // Pagamento único
+          await adicionarContaReceber({
+            ...dadosFinanceiros,
+            valor: dados.valorCobrado,
+            dataVencimento: dados.dataVencimento || new Date().toISOString().split('T')[0],
+            status: dados.pago ? 'recebido' : 'pendente'
+          })
+        }
       }
 
       // 6. Gestão financeira - Conta a Pagar (custos dos produtos)

@@ -96,6 +96,16 @@
           </div>
 
           <div class="form-group">
+            <label>Número de Parcelas *</label>
+            <select v-model.number="form.numeroParcelas" required @change="calcularParcelas">
+              <option :value="1">À vista</option>
+              <option v-for="n in 12" :key="n+1" :value="n+1">{{ n+1 }}x de R$ {{ formatarMoeda(form.valorTotal / (n+1)) }}</option>
+            </select>
+          </div>
+        </div>
+        
+        <div class="form-row">
+          <div class="form-group">
             <label>Status do Pagamento *</label>
             <select v-model="form.pago" required>
               <option value="false">A Pagar</option>
@@ -103,10 +113,31 @@
             </select>
           </div>
 
-          <div class="form-group" v-if="form.pago === 'false'">
+          <div class="form-group" v-if="form.pago === 'false' && form.numeroParcelas === 1">
             <label>Data de Vencimento</label>
             <input v-model="form.dataVencimento" type="date">
             <small class="form-help">Deixe em branco para vencimento imediato</small>
+          </div>
+          
+          <div class="form-group" v-if="form.numeroParcelas > 1">
+            <label>Vencimento da 1ª Parcela *</label>
+            <input v-model="form.dataVencimento" type="date" required>
+            <small class="form-help">As demais serão mensais</small>
+          </div>
+        </div>
+        
+        <div v-if="form.numeroParcelas > 1" class="info-parcelas">
+          <h4><i class="fas fa-info-circle"></i> Parcelamento</h4>
+          <div class="parcelas-preview">
+            <div v-for="n in Math.min(form.numeroParcelas, 3)" :key="n" class="parcela-item">
+              <span class="parcela-numero">{{ n }}/{{ form.numeroParcelas }}</span>
+              <span class="parcela-valor">R$ {{ formatarMoeda(form.valorTotal / form.numeroParcelas) }}</span>
+              <span class="parcela-venc">{{ calcularDataParcela(n) }}</span>
+            </div>
+            <div v-if="form.numeroParcelas > 3" class="parcela-item mais">
+              <span>...</span>
+              <span>+{{ form.numeroParcelas - 3 }} parcelas</span>
+            </div>
           </div>
         </div>
 
@@ -170,6 +201,7 @@ const form = ref({
   numeroNota: '',
   formaPagamento: 'dinheiro',
   valorTotal: 0,
+  numeroParcelas: 1,
   pago: 'false',
   dataVencimento: '',
   observacoes: '',
@@ -270,6 +302,19 @@ const salvar = async () => {
 const formatarMoeda = (valor) => {
   return new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 2 }).format(valor || 0)
 }
+
+const calcularParcelas = () => {
+  if (form.value.numeroParcelas > 1 && !form.value.dataVencimento) {
+    form.value.dataVencimento = new Date().toISOString().split('T')[0]
+  }
+}
+
+const calcularDataParcela = (numeroParcela) => {
+  if (!form.value.dataVencimento) return '-'
+  const data = new Date(form.value.dataVencimento)
+  data.setMonth(data.getMonth() + (numeroParcela - 1))
+  return data.toLocaleDateString('pt-BR')
+}
 </script>
 
 <style scoped>
@@ -302,6 +347,14 @@ const formatarMoeda = (valor) => {
 .form-actions { display: flex; gap: 12px; justify-content: flex-end; margin-top: 24px; padding-top: 20px; border-top: 1px solid #e5e5ea; }
 
 .form-help { font-size: 12px; color: #8e8e93; margin-top: 4px; display: block; }
+.info-parcelas { background: rgba(102, 126, 234, 0.05); padding: 16px; border-radius: 12px; margin: 16px 0; border: 1px solid rgba(102, 126, 234, 0.2); }
+.info-parcelas h4 { margin: 0 0 12px 0; font-size: 14px; color: #1d1d1f; display: flex; align-items: center; gap: 6px; }
+.parcelas-preview { display: flex; flex-direction: column; gap: 8px; }
+.parcela-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; background: white; border-radius: 8px; border: 1px solid #e5e5ea; }
+.parcela-item.mais { justify-content: center; gap: 8px; color: #6e6e73; font-size: 13px; }
+.parcela-numero { font-weight: 600; color: #667eea; font-size: 13px; }
+.parcela-valor { font-weight: 700; color: #1d1d1f; font-size: 15px; }
+.parcela-venc { font-size: 13px; color: #6e6e73; }
 
 @media (max-width: 768px) {
   .produto-row { grid-template-columns: 1fr; }

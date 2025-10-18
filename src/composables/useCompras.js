@@ -51,23 +51,37 @@ export function useCompras() {
           }
         }
 
-        // 3. Criar conta a pagar automaticamente
+        // 3. Criar conta a pagar automaticamente (com parcelamento)
         if (dados.valorTotal > 0) {
-          const { adicionarContaPagar } = await import('./useFinanceiro.js')
+          const { adicionarContaPagar, adicionarContaPagarParcelada } = await import('./useFinanceiro.js')
 
-          const contaPagar = {
+          const dadosFinanceiros = {
             descricao: `Compra de produtos - ${dados.fornecedorNome} - NF: ${dados.numeroNota || 'S/N'}`,
-            valor: dados.valorTotal,
-            dataVencimento: dados.dataVencimento || new Date().toISOString().split('T')[0],
             categoria: 'compra-produtos',
             fornecedorId: dados.fornecedorId,
             fornecedorNome: dados.fornecedorNome,
             compraId: docRef.id,
-            status: dados.pago ? 'pago' : 'pendente',
+            formaPagamento: dados.formaPagamento || 'transferencia',
             observacoes: dados.observacoes || ''
           }
 
-          await adicionarContaPagar(contaPagar)
+          // Se parcelado, usar função de parcelamento
+          if (dados.numeroParcelas && dados.numeroParcelas > 1) {
+            await adicionarContaPagarParcelada({
+              ...dadosFinanceiros,
+              valorTotal: dados.valorTotal,
+              numeroParcelas: dados.numeroParcelas,
+              dataVencimentoInicial: dados.dataVencimento || new Date().toISOString().split('T')[0]
+            })
+          } else {
+            // Pagamento único
+            await adicionarContaPagar({
+              ...dadosFinanceiros,
+              valor: dados.valorTotal,
+              dataVencimento: dados.dataVencimento || new Date().toISOString().split('T')[0],
+              status: dados.pago ? 'pago' : 'pendente'
+            })
+          }
         }
       }
 
