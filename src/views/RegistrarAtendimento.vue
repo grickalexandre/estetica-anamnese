@@ -23,7 +23,16 @@
           </div>
           <div class="form-group">
             <label>Profissional *</label>
-            <input v-model="form.profissional" required placeholder="Nome do profissional">
+            <select v-model="form.profissionalId" @change="selecionarProfissional" required>
+              <option value="">Escolha o profissional...</option>
+              <option v-for="prof in profissionais" :key="prof.id" :value="prof.id">
+                {{ prof.nome }} - {{ prof.especialidade }} (Comissão: {{ prof.percentualComissao || 0 }}%)
+              </option>
+            </select>
+            <small v-if="profissionalSelecionado && profissionalSelecionado.percentualComissao > 0" class="info-comissao">
+              💰 Comissão: {{ profissionalSelecionado.percentualComissao }}% = 
+              R$ {{ formatarMoeda((form.valorCobrado * profissionalSelecionado.percentualComissao) / 100) }}
+            </small>
           </div>
         </div>
 
@@ -174,20 +183,24 @@ import { useRouter } from 'vue-router'
 import { useProcedimentos } from '../composables/useProcedimentos.js'
 import { usePacientes } from '../composables/usePacientes.js'
 import { useProdutos } from '../composables/useProdutos.js'
+import { useProfissionais } from '../composables/useProfissionais.js'
 
 const router = useRouter()
 const { procedimentos, registrarAtendimento } = useProcedimentos()
 const { clientes, buscarClientes } = usePacientes()
 const { produtos, buscarProdutos } = useProdutos()
+const { profissionais, buscarProfissionais } = useProfissionais()
 
 const salvando = ref(false)
 const clienteSelecionado = ref(null)
 const procedimentoSelecionado = ref(null)
+const profissionalSelecionado = ref(null)
 
 const form = ref({
   clienteId: '',
   clienteNome: '',
-  profissional: '',
+  profissionalId: '',
+  profissionalNome: '',
   procedimentoId: '',
   procedimentoNome: '',
   data: new Date().toISOString().split('T')[0],
@@ -203,7 +216,8 @@ const form = ref({
 onMounted(async () => {
   await Promise.all([
     buscarClientes(true),
-    buscarProdutos(true)
+    buscarProdutos(true),
+    buscarProfissionais(true)
   ])
   const { buscarCatalogo } = useProcedimentos()
   await buscarCatalogo()
@@ -214,6 +228,14 @@ const selecionarCliente = () => {
   if (cli) {
     clienteSelecionado.value = cli
     form.value.clienteNome = cli.nome
+  }
+}
+
+const selecionarProfissional = () => {
+  const prof = profissionais.value.find(p => p.id === form.value.profissionalId)
+  if (prof) {
+    profissionalSelecionado.value = prof
+    form.value.profissionalNome = prof.nome
   }
 }
 
@@ -310,6 +332,7 @@ const calcularDataParcela = (numeroParcela) => {
 .page-header { margin-bottom: 24px; }
 .page-header h1 { font-size: 28px; color: #1d1d1f; display: flex; align-items: center; gap: 12px; }
 .info-selecionado { display: block; margin-top: 8px; padding: 8px 12px; background: rgba(52, 199, 89, 0.1); border-radius: 6px; color: #34c759; font-size: 12px; }
+.info-comissao { display: block; margin-top: 8px; padding: 8px 12px; background: rgba(102, 126, 234, 0.1); border-radius: 6px; color: #667eea; font-size: 12px; font-weight: 600; }
 .produtos-section { background: #f5f5f7; padding: 20px; border-radius: 12px; margin: 20px 0; }
 .produtos-section h3 { font-size: 16px; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
 .produtos-list { display: flex; flex-direction: column; gap: 12px; margin-bottom: 16px; }

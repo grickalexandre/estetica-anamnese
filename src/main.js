@@ -26,6 +26,8 @@ import RegistrarAtendimento from './views/RegistrarAtendimento.vue'
 import RelatorioAtendimentos from './views/RelatorioAtendimentos.vue'
 import EntradaProdutos from './views/EntradaProdutos.vue'
 import DespesasRecorrentes from './views/DespesasRecorrentes.vue'
+import Profissionais from './views/Profissionais.vue'
+import Comissoes from './views/Comissoes.vue'
 import LimpezaDados from './views/LimpezaDados.vue'
 import { auth } from './firebase.js'
 import './style.css'
@@ -65,6 +67,8 @@ const routes = [
   { path: '/produtos', component: Produtos, meta: { requiresAuth: true } },
   { path: '/entrada-produtos', component: EntradaProdutos, meta: { requiresAuth: true } },
   { path: '/procedimentos', component: CatalogoProcedimentos, meta: { requiresAuth: true } },
+  { path: '/profissionais', component: Profissionais, meta: { requiresAuth: true } },
+  { path: '/comissoes', component: Comissoes, meta: { requiresAuth: true } },
   
   // Rotas de atendimento
   { path: '/registrar-atendimento', component: RegistrarAtendimento, meta: { requiresAuth: true } },

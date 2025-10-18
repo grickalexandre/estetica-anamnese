@@ -114,6 +114,32 @@ export function useProcedimentos() {
         await incrementarAtendimento(dados.clienteId, dados.valorCobrado || 0)
       }
 
+      // 4.1. Atualizar profissional e gerar comissão
+      if (dados.profissionalId) {
+        const { incrementarAtendimento: incrementarAtendProf } = await import('./useProfissionais.js')
+        await incrementarAtendProf(dados.profissionalId)
+
+        // Gerar comissão se o profissional tiver percentual configurado
+        const { gerarComissao } = await import('./useComissoes.js')
+        const { buscarProfissionais } = await import('./useProfissionais.js')
+        const profissionais = await buscarProfissionais(true)
+        const profissional = profissionais.find(p => p.id === dados.profissionalId)
+
+        if (profissional && profissional.percentualComissao > 0) {
+          await gerarComissao({
+            profissionalId: dados.profissionalId,
+            profissionalNome: dados.profissionalNome,
+            atendimentoId: docRef.id,
+            pacienteId: dados.clienteId,
+            pacienteNome: dados.clienteNome,
+            procedimentoNome: dados.procedimentoNome,
+            valorAtendimento: dados.valorCobrado,
+            percentualComissao: profissional.percentualComissao,
+            data: dados.data
+          })
+        }
+      }
+
       // 5. Gestão financeira - Conta a Receber (com parcelamento)
       if (dados.valorCobrado && dados.valorCobrado > 0) {
         const { adicionarContaReceber, adicionarContaReceberParcelada } = await import('./useFinanceiro.js')
