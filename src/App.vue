@@ -1,157 +1,25 @@
 <template>
   <div id="app" :class="{ 'no-menu-layout': isClientPage }">
-    <header v-if="!isClientPage" class="header">
-      <div class="header-content">
-        <div class="header-left">
-          <h2>{{ configuracoes.nomeClinica || '🌸 Clínica de Estética' }}</h2>
-          <div v-if="!carregando && configuracoes.nomeProprietario" class="header-info">
-            <span class="proprietario-name">
-              <i class="fas fa-user-md"></i>
-              {{ configuracoes.nomeProprietario }}
-            </span>
-            <span v-if="configuracoes.telefone" class="header-contact">
-              <i class="fas fa-phone"></i>
-              {{ configuracoes.telefone }}
-            </span>
-            <button @click="toggleClinicInfo" class="clinic-info-btn" :class="{ active: showClinicInfo }">
-              <i class="fas fa-info-circle"></i>
-            </button>
-          </div>
-        </div>
-        <nav class="nav">
-          <router-link to="/dashboard" class="nav-link">
-            <i class="fas fa-chart-pie nav-icon"></i>
-            <span class="nav-text">Dashboard</span>
-          </router-link>
-          <router-link to="/agenda" class="nav-link">
-            <i class="fas fa-calendar-alt nav-icon"></i>
-            <span class="nav-text">Agenda</span>
-          </router-link>
-          <router-link to="/lista" class="nav-link notification-badge">
-            <i class="fas fa-users nav-icon"></i>
-            <span class="nav-text">Pacientes</span>
-            <span v-if="pendingCount > 0" class="notification-count">{{ pendingCount }}</span>
-          </router-link>
-          <div class="nav-dropdown">
-            <button class="nav-link dropdown-toggle">
-              <i class="fas fa-database nav-icon"></i>
-              <span class="nav-text">Cadastros</span>
-              <i class="fas fa-chevron-down"></i>
-            </button>
-            <div class="dropdown-menu">
-              <router-link to="/clientes" class="dropdown-item">
-                <i class="fas fa-user-friends"></i> Clientes
-              </router-link>
-              <router-link to="/fornecedores" class="dropdown-item">
-                <i class="fas fa-truck"></i> Fornecedores
-              </router-link>
-              <router-link to="/produtos" class="dropdown-item">
-                <i class="fas fa-box"></i> Produtos
-              </router-link>
-              <router-link to="/procedimentos" class="dropdown-item">
-                <i class="fas fa-spa"></i> Procedimentos
-              </router-link>
-            </div>
-          </div>
-          <router-link to="/financeiro" class="nav-link">
-            <i class="fas fa-dollar-sign nav-icon"></i>
-            <span class="nav-text">Financeiro</span>
-          </router-link>
-          <router-link to="/relatorios" class="nav-link">
-            <i class="fas fa-chart-bar nav-icon"></i>
-            <span class="nav-text">Relatórios</span>
-          </router-link>
-          <router-link to="/configuracoes" class="nav-link">
-            <i class="fas fa-cog nav-icon"></i>
-            <span class="nav-text">Configurações</span>
-          </router-link>
-          <router-link to="/planos" class="nav-link" v-if="isAuthenticated">
-            <i class="fas fa-crown nav-icon"></i>
-            <span class="nav-text">Planos</span>
-            <span v-if="isFree" class="badge-free">FREE</span>
-          </router-link>
-          <button @click="handleLogout" class="nav-link logout-btn" v-if="isAuthenticated">
-            <i class="fas fa-sign-out-alt nav-icon"></i>
-            <span class="nav-text">Sair</span>
-          </button>
-        </nav>
-      </div>
-      
-      <!-- Dropdown com informações completas da clínica -->
-      <div v-if="showClinicInfo && !carregando" class="clinic-info-dropdown">
-        <div class="clinic-info-content">
-          <div class="clinic-info-header">
-            <h3><i class="fas fa-building"></i> {{ configuracoes.nomeClinica }}</h3>
-            <button @click="toggleClinicInfo" class="close-btn">
-              <i class="fas fa-times"></i>
-            </button>
-          </div>
-          
-          <div class="clinic-info-grid">
-            <div v-if="configuracoes.nomeProprietario" class="info-item">
-              <i class="fas fa-user-md"></i>
-              <div>
-                <strong>Proprietário:</strong>
-                <span>{{ configuracoes.nomeProprietario }}</span>
-                <span v-if="configuracoes.registroProfissional"> - {{ configuracoes.registroProfissional }}</span>
-              </div>
-            </div>
-            
-            <div v-if="configuracoes.endereco" class="info-item">
-              <i class="fas fa-map-marker-alt"></i>
-              <div>
-                <strong>Endereço:</strong>
-                <span>{{ configuracoes.endereco }}</span>
-              </div>
-            </div>
-            
-            <div v-if="configuracoes.telefone" class="info-item">
-              <i class="fas fa-phone"></i>
-              <div>
-                <strong>Telefone:</strong>
-                <span>{{ configuracoes.telefone }}</span>
-                <span v-if="configuracoes.whatsapp"> | WhatsApp: {{ configuracoes.whatsapp }}</span>
-              </div>
-            </div>
-            
-            <div v-if="configuracoes.email" class="info-item">
-              <i class="fas fa-envelope"></i>
-              <div>
-                <strong>Email:</strong>
-                <span>{{ configuracoes.email }}</span>
-              </div>
-            </div>
-            
-            <div v-if="configuracoes.website" class="info-item">
-              <i class="fas fa-globe"></i>
-              <div>
-                <strong>Website:</strong>
-                <a :href="configuracoes.website" target="_blank">{{ configuracoes.website }}</a>
-              </div>
-            </div>
-            
-            <div v-if="configuracoes.horarioSegSex" class="info-item">
-              <i class="fas fa-clock"></i>
-              <div>
-                <strong>Horário:</strong>
-                <span>{{ configuracoes.horarioSegSex }}</span>
-                <span v-if="configuracoes.horarioSabado"> | Sábado: {{ configuracoes.horarioSabado }}</span>
-              </div>
-            </div>
-            
-            <div v-if="configuracoes.especialidades" class="info-item full-width">
-              <i class="fas fa-star"></i>
-              <div>
-                <strong>Especialidades:</strong>
-                <span>{{ configuracoes.especialidades }}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </header>
+    <!-- Sidebar Desktop -->
+    <Sidebar 
+      v-if="!isClientPage" 
+      :pending-count="pendingCount"
+      @logout="handleLogout"
+      class="desktop-sidebar"
+    />
     
-    <router-view></router-view>
+    <!-- Mobile Menu -->
+    <MobileMenu 
+      v-if="!isClientPage" 
+      :pending-count="pendingCount"
+      @logout="handleLogout"
+      class="mobile-menu"
+    />
+    
+    <!-- Main Content -->
+    <main class="main-content" :class="{ 'with-sidebar': !isClientPage }">
+      <router-view></router-view>
+    </main>
     
     <!-- Notificações -->
     <div v-if="notification.show" :class="['notification', notification.type]">
@@ -180,6 +48,8 @@ import { collection, getDocs, query, where, orderBy, onSnapshot } from 'firebase
 import { useConfiguracoes } from './composables/useConfiguracoes'
 import { useClinica } from './composables/useClinica.js'
 import { useAuth } from './composables/useAuth.js'
+import Sidebar from './components/Sidebar.vue'
+import MobileMenu from './components/MobileMenu.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -191,18 +61,13 @@ const notification = ref({
   message: ''
 })
 
-const { configuracoes, carregando } = useConfiguracoes()
 const { clinicaId, inicializarClinica } = useClinica()
 const { isAuthenticated, isFree, isPaid, logout, initAuth } = useAuth()
-const showClinicInfo = ref(false)
 
 const isClientPage = computed(() => {
   return route.path === '/anamnese-cliente'
 })
 
-const toggleClinicInfo = () => {
-  showClinicInfo.value = !showClinicInfo.value
-}
 
 const showNotification = (type, title, message) => {
   notification.value = {
@@ -291,394 +156,88 @@ watch(isClientPage, (newValue) => {
 </script>
 
 <style scoped>
-.notification-count {
-  background: #1d1d1f;
-  color: white;
-  border-radius: 10px;
-  padding: 2px 6px;
-  font-size: 12px;
-  font-weight: 600;
-  margin-left: 4px;
+/* Layout principal */
+.main-content {
+  min-height: 100vh;
+  transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.nav-link {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  text-decoration: none;
-  color: #8e8e93;
-  font-weight: 500;
-  padding: 10px 16px;
-  border-radius: 10px;
-  transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-  font-size: 16px;
-  letter-spacing: -0.022em;
+.main-content.with-sidebar {
+  margin-left: 280px;
 }
 
-.nav-icon {
-  font-size: 18px;
-  min-width: 20px;
-  text-align: center;
-  color: inherit;
-}
-
-.nav-text {
-  flex: 1;
-}
-
-.nav-link:hover {
-  background: rgba(29, 29, 31, 0.1);
-  color: #1d1d1f;
-  transform: scale(1.05);
-}
-
-.logout-btn {
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-family: inherit;
-  font-size: inherit;
-  text-align: left;
-  width: 100%;
-}
-
-.logout-btn:hover {
-  background: rgba(220, 38, 38, 0.1);
-  color: #dc2626;
-}
-
-.badge-free {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-  color: white;
-  padding: 2px 8px;
-  border-radius: 10px;
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.5px;
-  margin-left: auto;
-}
-
-.nav-link.router-link-active {
-  background: #1d1d1f;
-  color: white;
-  box-shadow: 0 2px 8px rgba(29, 29, 31, 0.2);
-}
-
-/* Dropdown Menu */
-.nav-dropdown {
-  position: relative;
-}
-
-.dropdown-toggle {
-  background: none;
-  border: none;
-  width: 100%;
-}
-
-.dropdown-menu {
-  display: none;
-  position: absolute;
-  top: 100%;
-  left: 0;
-  background: white;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  min-width: 200px;
-  margin-top: 4px;
-  z-index: 100;
-}
-
-.nav-dropdown:hover .dropdown-menu {
+/* Sidebar Desktop */
+.desktop-sidebar {
   display: block;
 }
 
-.dropdown-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 12px 16px;
-  color: #1d1d1f;
-  text-decoration: none;
-  transition: background 0.2s;
+/* Mobile Menu */
+.mobile-menu {
+  display: none;
 }
 
-.dropdown-item:hover {
-  background: #f5f5f7;
-}
-
-.dropdown-item i {
-  width: 20px;
-  color: #6e6e73;
-}
-
-/* Mobile navigation improvements */
+/* Responsive */
 @media (max-width: 768px) {
-  .nav-link {
-    flex-direction: column;
-    gap: 4px;
-    padding: 12px 8px;
-    text-align: center;
-    min-height: 60px;
-    justify-content: center;
+  .desktop-sidebar {
+    display: none;
   }
   
-  .nav-icon {
-    font-size: 20px;
+  .mobile-menu {
+    display: block;
   }
   
-  .nav-text {
-    font-size: 12px;
-    font-weight: 600;
-  }
-  
-  .notification-count {
-    position: absolute;
-    top: 8px;
-    right: 8px;
-    margin: 0;
-    font-size: 10px;
-    padding: 1px 4px;
-    min-width: 16px;
-    text-align: center;
+  .main-content.with-sidebar {
+    margin-left: 0;
+    padding-top: 80px;
   }
 }
 
-/* Touch optimizations */
-@media (hover: none) and (pointer: coarse) {
-  .nav-link:hover {
-    transform: none;
-  }
-  
-  .nav-link:active {
-    transform: scale(0.95);
-  }
+/* Notificações */
+.notification {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: white;
+  border-radius: 12px;
+  padding: 16px 20px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  z-index: 10000;
+  max-width: 400px;
+  animation: slideInRight 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Estilos para informações da clínica no header */
-.header-left {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  flex: 1;
-  min-width: 0;
+.notification.success {
+  border-left: 4px solid #10b981;
 }
 
-.header-info {
-  display: flex;
-  gap: 16px;
-  flex-wrap: wrap;
-  align-items: center;
+.notification.warning {
+  border-left: 4px solid #f59e0b;
 }
 
-.proprietario-name,
-.header-contact {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 12px;
-  color: #8e8e93;
-  font-weight: 500;
+.notification.error {
+  border-left: 4px solid #ef4444;
 }
 
-.proprietario-name i,
-.header-contact i {
-  font-size: 11px;
-  color: #1d1d1f;
+.notification.info {
+  border-left: 4px solid #3b82f6;
 }
 
-.clinic-info-btn {
-  background: none;
-  border: none;
-  color: #8e8e93;
-  cursor: pointer;
-  padding: 4px;
-  border-radius: 4px;
-  transition: all 0.2s ease;
-  font-size: 12px;
-}
-
-.clinic-info-btn:hover,
-.clinic-info-btn.active {
-  color: #1d1d1f;
-  background: rgba(29, 29, 31, 0.1);
-}
-
-.clinic-info-dropdown {
-  position: absolute;
-  top: 100%;
-  left: 0;
-  right: 0;
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-bottom: 0.5px solid rgba(0, 0, 0, 0.1);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
-  z-index: 1000;
-  animation: slideDown 0.3s ease;
-}
-
-@keyframes slideDown {
+@keyframes slideInRight {
   from {
     opacity: 0;
-    transform: translateY(-10px);
+    transform: translateX(100%);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateX(0);
   }
 }
 
-.clinic-info-content {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 20px;
-}
-
-.clinic-info-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-  padding-bottom: 12px;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-}
-
-.clinic-info-header h3 {
-  margin: 0;
-  color: #1d1d1f;
-  font-size: 18px;
-  font-weight: 600;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.close-btn {
-  background: none;
-  border: none;
-  color: #8e8e93;
-  cursor: pointer;
-  padding: 8px;
-  border-radius: 6px;
-  transition: all 0.2s ease;
-  font-size: 14px;
-}
-
-.close-btn:hover {
-  color: #1d1d1f;
-  background: rgba(29, 29, 31, 0.1);
-}
-
-.clinic-info-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 16px;
-}
-
-.info-item {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  padding: 12px 16px;
-  background: rgba(29, 29, 31, 0.05);
-  border-radius: 8px;
-  border-left: 3px solid #1d1d1f;
-}
-
-.info-item.full-width {
-  grid-column: 1 / -1;
-}
-
-.info-item i {
-  color: #1d1d1f;
-  font-size: 14px;
-  margin-top: 2px;
-  min-width: 14px;
-}
-
-.info-item div {
-  flex: 1;
-  font-size: 13px;
-  line-height: 1.5;
-}
-
-.info-item strong {
-  color: #1d1d1f;
-  font-weight: 600;
-  display: block;
-  margin-bottom: 2px;
-}
-
-.info-item span {
-  color: #6b7280;
-}
-
-.info-item a {
-  color: #1d1d1f;
-  text-decoration: none;
-  font-weight: 500;
-}
-
-.info-item a:hover {
-  text-decoration: underline;
-}
-
-/* Mobile styles for header info */
-@media (max-width: 768px) {
-  .header-content {
-    flex-direction: column;
-    gap: 12px;
-    align-items: flex-start;
-  }
-  
-  .header-left {
-    width: 100%;
-  }
-  
-  .header-info {
-    gap: 12px;
-    flex-wrap: wrap;
-  }
-  
-  .proprietario-name,
-  .header-contact {
-    font-size: 11px;
-  }
-  
-  .nav {
-    width: 100%;
-    justify-content: center;
-  }
-}
-
-@media (max-width: 480px) {
-  .header-info {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 4px;
-  }
-  
-  .proprietario-name,
-  .header-contact {
-    font-size: 10px;
-  }
-  
-  .clinic-info-content {
-    padding: 16px;
-  }
-  
-  .clinic-info-grid {
-    grid-template-columns: 1fr;
-    gap: 12px;
-  }
-  
-  .info-item {
-    padding: 10px 12px;
-  }
-  
-  .info-item div {
-    font-size: 12px;
-  }
+/* Layout sem menu (página do cliente) */
+.no-menu-layout .main-content {
+  margin-left: 0;
+  padding-top: 0;
 }
 </style>
 
