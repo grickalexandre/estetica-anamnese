@@ -48,6 +48,43 @@
           </div>
         </div>
 
+        <h2><i class="fas fa-dollar-sign"></i> Gestão Financeira</h2>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Status do Pagamento *</label>
+            <select v-model="form.pago" required>
+              <option value="false">Pendente</option>
+              <option value="true">Pago</option>
+            </select>
+          </div>
+          <div class="form-group" v-if="form.pago === 'false'">
+            <label>Data de Vencimento</label>
+            <input v-model="form.dataVencimento" type="date">
+            <small class="form-help">Deixe em branco para vencimento imediato</small>
+          </div>
+        </div>
+
+        <div class="resumo-financeiro" v-if="form.produtosUtilizados.length > 0">
+          <h3><i class="fas fa-calculator"></i> Resumo Financeiro</h3>
+          <div class="resumo-grid">
+            <div class="resumo-item">
+              <span class="resumo-label">Receita:</span>
+              <span class="resumo-valor receita">R$ {{ formatarMoeda(form.valorCobrado) }}</span>
+            </div>
+            <div class="resumo-item">
+              <span class="resumo-label">Custo dos Produtos:</span>
+              <span class="resumo-valor custo">R$ {{ formatarMoeda(calcularCustoProdutos()) }}</span>
+            </div>
+            <div class="resumo-item">
+              <span class="resumo-label">Margem de Lucro:</span>
+              <span class="resumo-valor margem" :class="{'positiva': calcularMargemLucro() > 0, 'negativa': calcularMargemLucro() < 0}">
+                R$ {{ formatarMoeda(calcularMargemLucro()) }} ({{ calcularPercentualLucro() }}%)
+              </span>
+            </div>
+          </div>
+        </div>
+        </div>
+
         <div v-if="procedimentoSelecionado && procedimentoSelecionado.produtosUtilizados" class="produtos-section">
           <h3><i class="fas fa-flask"></i> Produtos que serão utilizados (Baixa Automática no Estoque)</h3>
           <div class="produtos-list">
@@ -113,6 +150,8 @@ const form = ref({
   procedimentoNome: '',
   data: new Date().toISOString().split('T')[0],
   valorCobrado: 0,
+  pago: 'false',
+  dataVencimento: '',
   observacoes: '',
   produtosUtilizados: []
 })
@@ -183,6 +222,30 @@ const salvar = async () => {
 const formatarMoeda = (valor) => {
   return new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 2 }).format(valor || 0)
 }
+
+const calcularCustoProdutos = () => {
+  let custoTotal = 0
+  form.value.produtosUtilizados.forEach(item => {
+    const produto = produtos.value.find(p => p.id === item.produtoId)
+    if (produto) {
+      custoTotal += (produto.precoCusto || 0) * item.quantidade
+    }
+  })
+  return custoTotal
+}
+
+const calcularMargemLucro = () => {
+  const receita = form.value.valorCobrado || 0
+  const custos = calcularCustoProdutos()
+  return receita - custos
+}
+
+const calcularPercentualLucro = () => {
+  const receita = form.value.valorCobrado || 0
+  if (receita === 0) return 0
+  const margem = calcularMargemLucro()
+  return ((margem / receita) * 100).toFixed(1)
+}
 </script>
 
 <style scoped>
@@ -199,6 +262,16 @@ const formatarMoeda = (valor) => {
 .input-quantidade { padding: 8px; border: 1px solid #d2d2d7; border-radius: 6px; text-align: center; width: 80px; }
 .produto-estoque { font-size: 12px; color: #6e6e73; }
 .alerta-estoque { padding: 12px; background: rgba(255, 159, 10, 0.1); border-left: 4px solid #ff9f0a; color: #ff9f0a; border-radius: 6px; font-size: 13px; display: flex; align-items: center; gap: 8px; }
+.resumo-financeiro { background: #f8f9fa; padding: 20px; border-radius: 12px; margin: 20px 0; border: 1px solid #e5e5ea; }
+.resumo-financeiro h3 { font-size: 16px; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; color: #1d1d1f; }
+.resumo-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; }
+.resumo-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: white; border-radius: 8px; border: 1px solid #e5e5ea; }
+.resumo-label { font-size: 14px; color: #6e6e73; font-weight: 500; }
+.resumo-valor { font-size: 16px; font-weight: 600; }
+.resumo-valor.receita { color: #34c759; }
+.resumo-valor.custo { color: #ff3b30; }
+.resumo-valor.margem.positiva { color: #34c759; }
+.resumo-valor.margem.negativa { color: #ff3b30; }
 .form-actions { display: flex; gap: 12px; justify-content: flex-end; margin-top: 24px; padding-top: 20px; border-top: 1px solid #e5e5ea; }
 .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 20px; }
 .modal-content { background: white; border-radius: 16px; width: 100%; max-height: 90vh; overflow-y: auto; }

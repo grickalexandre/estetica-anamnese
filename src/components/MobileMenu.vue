@@ -107,10 +107,23 @@
             </div>
           </div>
 
-          <router-link to="/relatorios" class="mobile-nav-item" @click="closeMenu">
-            <i class="fas fa-chart-bar"></i>
-            <span>Relatórios</span>
-          </router-link>
+          <div class="mobile-nav-group">
+            <div class="mobile-nav-group-header" @click="toggleRelatorios">
+              <i class="fas fa-chart-bar"></i>
+              <span>Relatórios</span>
+              <i class="fas fa-chevron-down" :class="{ 'rotated': showRelatorios }"></i>
+            </div>
+            <div v-if="showRelatorios" class="mobile-nav-group-content">
+              <router-link to="/relatorios" class="mobile-nav-subitem" @click="closeMenu">
+                <i class="fas fa-file-alt"></i>
+                <span>Relatórios Gerais</span>
+              </router-link>
+              <router-link to="/relatorio-atendimentos" class="mobile-nav-subitem" @click="closeMenu">
+                <i class="fas fa-user-md"></i>
+                <span>Atendimentos</span>
+              </router-link>
+            </div>
+          </div>
 
           <router-link to="/configuracoes" class="mobile-nav-item" @click="closeMenu">
             <i class="fas fa-cog"></i>
@@ -158,6 +171,7 @@ const emit = defineEmits(['logout'])
 const menuOpen = ref(false)
 const showCadastros = ref(false)
 const showFinanceiro = ref(false)
+const showRelatorios = ref(false)
 
 // Métodos
 const toggleMenu = () => {
@@ -174,6 +188,10 @@ const toggleCadastros = () => {
 
 const toggleFinanceiro = () => {
   showFinanceiro.value = !showFinanceiro.value
+}
+
+const toggleRelatorios = () => {
+  showRelatorios.value = !showRelatorios.value
 }
 
 const handleLogout = async () => {

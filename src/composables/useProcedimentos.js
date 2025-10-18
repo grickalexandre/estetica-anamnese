@@ -69,9 +69,10 @@ export function useProcedimentos() {
       
       const docRef = await addDoc(collection(db, 'atendimentos'), atendimento)
 
-      // 2. Dar baixa nos produtos utilizados
+      // 2. Dar baixa nos produtos utilizados e calcular custos
+      let custoTotalProdutos = 0
       if (dados.produtosUtilizados && dados.produtosUtilizados.length > 0) {
-        const { atualizarEstoque } = useProdutos()
+        const { atualizarEstoque, produtos } = useProdutos()
         const { saida } = useEstoque()
 
         for (const item of dados.produtosUtilizados) {
@@ -79,13 +80,18 @@ export function useProcedimentos() {
           const resultado = await atualizarEstoque(item.produtoId, item.quantidade, 'saida')
           
           if (resultado.success) {
+            // Calcular custo do produto
+            const produto = produtos.value.find(p => p.id === item.produtoId)
+            const custoProduto = (produto?.precoCusto || 0) * item.quantidade
+            custoTotalProdutos += custoProduto
+
             // Registrar movimentação
             await saida(
               item.produtoId,
               item.produtoNome,
               item.quantidade,
               `Utilizado em: ${dados.procedimentoNome} - Cliente: ${dados.clienteNome}`,
-              0
+              custoProduto
             )
           }
         }
@@ -106,6 +112,44 @@ export function useProcedimentos() {
       if (dados.clienteId) {
         const { incrementarAtendimento } = await import('./usePacientes.js')
         await incrementarAtendimento(dados.clienteId, dados.valorCobrado || 0)
+      }
+
+      // 5. Gestão financeira - Conta a Receber
+      if (dados.valorCobrado && dados.valorCobrado > 0) {
+        const { adicionarContaReceber } = await import('./useFinanceiro.js')
+        
+        const contaReceber = {
+          descricao: `Atendimento: ${dados.procedimentoNome} - ${dados.clienteNome}`,
+          valor: dados.valorCobrado,
+          dataVencimento: dados.dataVencimento || new Date().toISOString().split('T')[0],
+          categoria: 'atendimentos',
+          clienteId: dados.clienteId,
+          clienteNome: dados.clienteNome,
+          atendimentoId: docRef.id,
+          status: dados.pago ? 'pago' : 'pendente',
+          observacoes: dados.observacoes || ''
+        }
+
+        await adicionarContaReceber(contaReceber)
+      }
+
+      // 6. Gestão financeira - Conta a Pagar (custos dos produtos)
+      if (custoTotalProdutos > 0) {
+        const { adicionarContaPagar } = await import('./useFinanceiro.js')
+        
+        const contaPagar = {
+          descricao: `Custos de produtos - Atendimento: ${dados.procedimentoNome} - ${dados.clienteNome}`,
+          valor: custoTotalProdutos,
+          dataVencimento: new Date().toISOString().split('T')[0], // Custo imediato
+          categoria: 'custos-produtos',
+          fornecedorId: null,
+          fornecedorNome: 'Custo Interno',
+          atendimentoId: docRef.id,
+          status: 'pago', // Custo já "pago" quando o produto foi comprado
+          observacoes: `Custo dos produtos utilizados no atendimento`
+        }
+
+        await adicionarContaPagar(contaPagar)
       }
 
       return { success: true, id: docRef.id }
@@ -151,6 +195,69 @@ export function useProcedimentos() {
     }
   }
 
+  /**
+   * Calcular estatísticas de atendimentos
+   */
+  const obterEstatisticasAtendimentos = async (dataInicio, dataFim) => {
+    try {
+      const atendimentos = await buscarAtendimentos(dataInicio, dataFim)
+      
+      const stats = {
+        totalAtendimentos: atendimentos.length,
+        totalReceita: 0,
+        totalCustos: 0,
+        margemLucro: 0,
+        procedimentosRealizados: {},
+        clientesAtendidos: new Set()
+      }
+
+      atendimentos.forEach(atendimento => {
+        // Receita
+        stats.totalReceita += atendimento.valorCobrado || 0
+        
+        // Custos (se disponível)
+        if (atendimento.custoProdutos) {
+          stats.totalCustos += atendimento.custoProdutos
+        }
+        
+        // Procedimentos
+        const procNome = atendimento.procedimentoNome || 'Não informado'
+        stats.procedimentosRealizados[procNome] = (stats.procedimentosRealizados[procNome] || 0) + 1
+        
+        // Clientes únicos
+        if (atendimento.clienteId) {
+          stats.clientesAtendidos.add(atendimento.clienteId)
+        }
+      })
+
+      // Calcular margem de lucro
+      if (stats.totalReceita > 0) {
+        stats.margemLucro = ((stats.totalReceita - stats.totalCustos) / stats.totalReceita) * 100
+      }
+
+      stats.clientesUnicos = stats.clientesAtendidos.size
+      delete stats.clientesAtendidos
+
+      return stats
+    } catch (err) {
+      console.error('Erro ao calcular estatísticas:', err)
+      return null
+    }
+  }
+
+  /**
+   * Buscar atendimentos por cliente
+   */
+  const buscarAtendimentosPorCliente = async (clienteId) => {
+    try {
+      const atendimentos = await buscarAtendimentos(null, null, clienteId)
+      return atendimentos.sort((a, b) => new Date(b.data.toDate()) - new Date(a.data.toDate()))
+    } catch (err) {
+      console.error('Erro ao buscar atendimentos do cliente:', err)
+      return []
+    }
+  }
+
   return {
     procedimentos,
     atendimentos,
@@ -158,7 +265,9 @@ export function useProcedimentos() {
     buscarCatalogo,
     adicionarAoCatalogo,
     registrarAtendimento,
-    buscarAtendimentos
+    buscarAtendimentos,
+    obterEstatisticasAtendimentos,
+    buscarAtendimentosPorCliente
   }
 }
 

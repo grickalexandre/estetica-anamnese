@@ -113,12 +113,25 @@
       </div>
 
       <!-- Relatórios -->
-      <router-link to="/relatorios" class="nav-item" :class="{ 'collapsed': collapsed }">
-        <div class="nav-icon">
-          <i class="fas fa-chart-bar"></i>
+      <div class="nav-group" :class="{ 'collapsed': collapsed }">
+        <div class="nav-group-header" @click="toggleRelatorios">
+          <div class="nav-icon">
+            <i class="fas fa-chart-bar"></i>
+          </div>
+          <span v-if="!collapsed" class="nav-text">Relatórios</span>
+          <i v-if="!collapsed" class="fas fa-chevron-down group-arrow" :class="{ 'rotated': showRelatorios }"></i>
         </div>
-        <span v-if="!collapsed" class="nav-text">Relatórios</span>
-      </router-link>
+        <div v-if="!collapsed && showRelatorios" class="nav-group-content">
+          <router-link to="/relatorios" class="nav-subitem">
+            <i class="fas fa-file-alt"></i>
+            <span>Relatórios Gerais</span>
+          </router-link>
+          <router-link to="/relatorio-atendimentos" class="nav-subitem">
+            <i class="fas fa-user-md"></i>
+            <span>Atendimentos</span>
+          </router-link>
+        </div>
+      </div>
 
       <!-- Configurações -->
       <router-link to="/configuracoes" class="nav-item" :class="{ 'collapsed': collapsed }">
@@ -175,6 +188,7 @@ const emit = defineEmits(['logout'])
 const collapsed = ref(false)
 const showCadastros = ref(false)
 const showFinanceiro = ref(false)
+const showRelatorios = ref(false)
 
 // Métodos
 const toggleCollapse = () => {
@@ -183,6 +197,7 @@ const toggleCollapse = () => {
   if (collapsed.value) {
     showCadastros.value = false
     showFinanceiro.value = false
+    showRelatorios.value = false
   }
 }
 
@@ -195,6 +210,12 @@ const toggleCadastros = () => {
 const toggleFinanceiro = () => {
   if (!collapsed.value) {
     showFinanceiro.value = !showFinanceiro.value
+  }
+}
+
+const toggleRelatorios = () => {
+  if (!collapsed.value) {
+    showRelatorios.value = !showRelatorios.value
   }
 }
 
