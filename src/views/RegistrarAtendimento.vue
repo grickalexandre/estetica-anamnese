@@ -36,24 +36,45 @@
           </div>
         </div>
 
-        <h2><i class="fas fa-spa"></i> Procedimento</h2>
-        <div class="form-row">
-          <div class="form-group">
-            <label>Procedimento *</label>
-            <select v-model="form.procedimentoId" @change="selecionarProcedimento" required>
-              <option value="">Escolha o procedimento...</option>
-              <option v-for="proc in procedimentos" :key="proc.id" :value="proc.id">
-                {{ proc.nome }} - R$ {{ formatarMoeda(proc.preco) }} ({{ proc.duracao }}min)
-              </option>
-            </select>
+        <h2><i class="fas fa-spa"></i> Procedimentos</h2>
+        
+        <div class="procedimentos-section">
+          <div v-for="(item, index) in form.procedimentos" :key="index" class="procedimento-row">
+            <div class="form-group">
+              <label>Procedimento *</label>
+              <select v-model="item.procedimentoId" @change="selecionarProcedimentoMultiplo(index)" required>
+                <option value="">Escolha o procedimento...</option>
+                <option v-for="proc in procedimentosDisponiveis" :key="proc.id" :value="proc.id">
+                  {{ proc.nome }} - R$ {{ formatarMoeda(proc.preco) }} ({{ proc.duracao }}min)
+                </option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label>Valor (R$) *</label>
+              <input v-model.number="item.valor" type="number" step="0.01" min="0" required @input="calcularValorTotal">
+            </div>
+
+            <div class="form-group-actions">
+              <button v-if="form.procedimentos.length > 1" type="button" @click="removerProcedimento(index)" class="btn-icon btn-remove" title="Remover">
+                <i class="fas fa-trash"></i>
+              </button>
+            </div>
           </div>
+
+          <button type="button" @click="adicionarProcedimento" class="btn btn-secondary btn-small">
+            <i class="fas fa-plus"></i> Adicionar Procedimento
+          </button>
+        </div>
+
+        <div class="form-row">
           <div class="form-group">
             <label>Data do Atendimento *</label>
             <input v-model="form.data" type="date" required>
           </div>
           <div class="form-group">
-            <label>Valor Cobrado *</label>
-            <input v-model.number="form.valorCobrado" type="number" step="0.01" required placeholder="0,00">
+            <label>Valor Total Cobrado *</label>
+            <input v-model.number="form.valorCobrado" type="number" step="0.01" required placeholder="0,00" class="input-valor-total">
           </div>
         </div>
 
@@ -178,7 +199,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useProcedimentos } from '../composables/useProcedimentos.js'
 import { usePacientes } from '../composables/usePacientes.js'
@@ -201,8 +222,7 @@ const form = ref({
   clienteNome: '',
   profissionalId: '',
   profissionalNome: '',
-  procedimentoId: '',
-  procedimentoNome: '',
+  procedimentos: [], // Múltiplos procedimentos
   data: new Date().toISOString().split('T')[0],
   valorCobrado: 0,
   formaPagamento: 'dinheiro',
@@ -213,6 +233,11 @@ const form = ref({
   produtosUtilizados: []
 })
 
+const procedimentosDisponiveis = computed(() => {
+  const selecionados = form.value.procedimentos.map(p => p.procedimentoId).filter(id => id)
+  return procedimentos.value.filter(p => !selecionados.includes(p.id))
+})
+
 onMounted(async () => {
   await Promise.all([
     buscarClientes(true),
@@ -221,6 +246,7 @@ onMounted(async () => {
   ])
   const { buscarCatalogo } = useProcedimentos()
   await buscarCatalogo()
+  adicionarProcedimento() // Inicia com um procedimento
 })
 
 const selecionarCliente = () => {
@@ -239,14 +265,61 @@ const selecionarProfissional = () => {
   }
 }
 
-const selecionarProcedimento = () => {
-  const proc = procedimentos.value.find(p => p.id === form.value.procedimentoId)
+const adicionarProcedimento = () => {
+  form.value.procedimentos.push({
+    procedimentoId: '',
+    procedimentoNome: '',
+    valor: 0,
+    duracao: 0,
+    produtosDoProc: []
+  })
+}
+
+const removerProcedimento = (index) => {
+  form.value.procedimentos.splice(index, 1)
+  recalcularProdutosUtilizados()
+  calcularValorTotal()
+}
+
+const selecionarProcedimentoMultiplo = (index) => {
+  const proc = procedimentos.value.find(p => p.id === form.value.procedimentos[index].procedimentoId)
   if (proc) {
-    procedimentoSelecionado.value = proc
-    form.value.procedimentoNome = proc.nome
-    form.value.valorCobrado = proc.preco
-    form.value.produtosUtilizados = proc.produtosUtilizados ? JSON.parse(JSON.stringify(proc.produtosUtilizados)) : []
+    form.value.procedimentos[index].procedimentoNome = proc.nome
+    form.value.procedimentos[index].valor = proc.preco
+    form.value.procedimentos[index].duracao = proc.duracao
+    form.value.procedimentos[index].produtosDoProc = proc.produtosUtilizados ? JSON.parse(JSON.stringify(proc.produtosUtilizados)) : []
+    
+    recalcularProdutosUtilizados()
+    calcularValorTotal()
   }
+}
+
+const recalcularProdutosUtilizados = () => {
+  // Consolidar produtos de todos os procedimentos
+  const produtosMap = new Map()
+  
+  form.value.procedimentos.forEach(proc => {
+    if (proc.produtosDoProc && proc.produtosDoProc.length > 0) {
+      proc.produtosDoProc.forEach(produto => {
+        if (produtosMap.has(produto.produtoId)) {
+          // Se já existe, soma a quantidade
+          const existente = produtosMap.get(produto.produtoId)
+          existente.quantidade += produto.quantidade
+        } else {
+          // Se não existe, adiciona
+          produtosMap.set(produto.produtoId, { ...produto })
+        }
+      })
+    }
+  })
+  
+  form.value.produtosUtilizados = Array.from(produtosMap.values())
+}
+
+const calcularValorTotal = () => {
+  form.value.valorCobrado = form.value.procedimentos.reduce((total, proc) => {
+    return total + (proc.valor || 0)
+  }, 0)
 }
 
 const obterEstoqueProduto = (produtoId) => {
@@ -263,6 +336,11 @@ const verificarEstoque = () => {
 
 const salvar = async () => {
   try {
+    if (form.value.procedimentos.length === 0) {
+      alert('Adicione pelo menos um procedimento!')
+      return
+    }
+
     if (verificarEstoque()) {
       if (!confirm('ATENÇÃO: Alguns produtos têm quantidade maior que o estoque disponível. Deseja continuar mesmo assim?')) {
         return
@@ -270,7 +348,14 @@ const salvar = async () => {
     }
 
     salvando.value = true
-    const resultado = await registrarAtendimento(form.value)
+    
+    // Preparar dados com lista de procedimentos
+    const dadosAtendimento = {
+      ...form.value,
+      procedimentoNome: form.value.procedimentos.map(p => p.procedimentoNome).join(' + ')
+    }
+    
+    const resultado = await registrarAtendimento(dadosAtendimento)
     
     if (resultado.success) {
       alert('Atendimento registrado com sucesso! Estoque atualizado automaticamente.')
@@ -333,6 +418,10 @@ const calcularDataParcela = (numeroParcela) => {
 .page-header h1 { font-size: 28px; color: #1d1d1f; display: flex; align-items: center; gap: 12px; }
 .info-selecionado { display: block; margin-top: 8px; padding: 8px 12px; background: rgba(52, 199, 89, 0.1); border-radius: 6px; color: #34c759; font-size: 12px; }
 .info-comissao { display: block; margin-top: 8px; padding: 8px 12px; background: rgba(102, 126, 234, 0.1); border-radius: 6px; color: #667eea; font-size: 12px; font-weight: 600; }
+.procedimentos-section { background: #f5f5f7; padding: 20px; border-radius: 12px; margin: 20px 0; }
+.procedimento-row { display: grid; grid-template-columns: 2fr 1fr auto; gap: 12px; margin-bottom: 12px; align-items: end; }
+.input-valor-total { font-weight: 700; font-size: 16px; background: rgba(52, 199, 89, 0.05); }
+.btn-small { padding: 8px 16px; font-size: 14px; }
 .produtos-section { background: #f5f5f7; padding: 20px; border-radius: 12px; margin: 20px 0; }
 .produtos-section h3 { font-size: 16px; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
 .produtos-list { display: flex; flex-direction: column; gap: 12px; margin-bottom: 16px; }

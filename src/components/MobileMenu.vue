@@ -65,10 +65,6 @@
                 <i class="fas fa-spa"></i>
                 <span>Procedimentos</span>
               </router-link>
-              <router-link to="/profissionais" class="mobile-nav-subitem" @click="closeMenu">
-                <i class="fas fa-user-md"></i>
-                <span>Profissionais</span>
-              </router-link>
             </div>
           </div>
 
@@ -111,10 +107,6 @@
               <router-link to="/financeiro/despesas-recorrentes" class="mobile-nav-subitem" @click="closeMenu">
                 <i class="fas fa-sync-alt"></i>
                 <span>Despesas Recorrentes</span>
-              </router-link>
-              <router-link to="/comissoes" class="mobile-nav-subitem" @click="closeMenu">
-                <i class="fas fa-money-bill-wave"></i>
-                <span>Comissões</span>
               </router-link>
             </div>
           </div>

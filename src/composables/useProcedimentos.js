@@ -97,14 +97,18 @@ export function useProcedimentos() {
         }
       }
 
-      // 3. Atualizar contador do procedimento no catálogo
-      if (dados.procedimentoId) {
-        const procRef = doc(db, 'catalogo_procedimentos', dados.procedimentoId)
-        const proc = procedimentos.value.find(p => p.id === dados.procedimentoId)
-        if (proc) {
-          await updateDoc(procRef, {
-            totalRealizados: (proc.totalRealizados || 0) + 1
-          })
+      // 3. Atualizar contador dos procedimentos no catálogo
+      if (dados.procedimentos && dados.procedimentos.length > 0) {
+        for (const procedimento of dados.procedimentos) {
+          if (procedimento.procedimentoId) {
+            const procRef = doc(db, 'catalogo_procedimentos', procedimento.procedimentoId)
+            const proc = procedimentos.value.find(p => p.id === procedimento.procedimentoId)
+            if (proc) {
+              await updateDoc(procRef, {
+                totalRealizados: (proc.totalRealizados || 0) + 1
+              })
+            }
+          }
         }
       }
 
