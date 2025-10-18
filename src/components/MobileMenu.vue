@@ -61,10 +61,6 @@
                 <i class="fas fa-box"></i>
                 <span>Produtos</span>
               </router-link>
-              <router-link to="/entrada-produtos" class="mobile-nav-subitem" @click="closeMenu">
-                <i class="fas fa-truck-loading"></i>
-                <span>Entrada de Produtos</span>
-              </router-link>
               <router-link to="/procedimentos" class="mobile-nav-subitem" @click="closeMenu">
                 <i class="fas fa-spa"></i>
                 <span>Procedimentos</span>

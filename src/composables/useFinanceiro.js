@@ -400,6 +400,90 @@ export function useFinanceiro() {
     }
   })
 
+  /**
+   * Adicionar conta a pagar com parcelas
+   */
+  const adicionarContaPagarParcelada = async (dados) => {
+    try {
+      carregando.value = true
+      erro.value = ''
+
+      const { numeroParcelas, valorTotal, dataVencimentoInicial, ...dadosBase } = dados
+      const valorParcela = valorTotal / numeroParcelas
+      const parcelas = []
+
+      for (let i = 0; i < numeroParcelas; i++) {
+        const dataVencimento = new Date(dataVencimentoInicial)
+        dataVencimento.setMonth(dataVencimento.getMonth() + i)
+
+        const parcela = {
+          ...dadosBase,
+          valor: valorParcela,
+          dataVencimento: dataVencimento.toISOString().split('T')[0],
+          numeroParcela: i + 1,
+          totalParcelas: numeroParcelas,
+          valorTotal: valorTotal,
+          parcelaId: `${Date.now()}-${i}` // ID único para identificar parcelas do mesmo lançamento
+        }
+
+        const resultado = await adicionarContaPagar(parcela)
+        if (resultado.success) {
+          parcelas.push(resultado.id)
+        }
+      }
+
+      return { success: true, parcelas, total: parcelas.length }
+    } catch (err) {
+      console.error('Erro ao criar parcelas a pagar:', err)
+      erro.value = 'Erro ao criar parcelas'
+      return { success: false, error: err.message }
+    } finally {
+      carregando.value = false
+    }
+  }
+
+  /**
+   * Adicionar conta a receber com parcelas
+   */
+  const adicionarContaReceberParcelada = async (dados) => {
+    try {
+      carregando.value = true
+      erro.value = ''
+
+      const { numeroParcelas, valorTotal, dataVencimentoInicial, ...dadosBase } = dados
+      const valorParcela = valorTotal / numeroParcelas
+      const parcelas = []
+
+      for (let i = 0; i < numeroParcelas; i++) {
+        const dataVencimento = new Date(dataVencimentoInicial)
+        dataVencimento.setMonth(dataVencimento.getMonth() + i)
+
+        const parcela = {
+          ...dadosBase,
+          valor: valorParcela,
+          dataVencimento: dataVencimento.toISOString().split('T')[0],
+          numeroParcela: i + 1,
+          totalParcelas: numeroParcelas,
+          valorTotal: valorTotal,
+          parcelaId: `${Date.now()}-${i}` // ID único para identificar parcelas do mesmo lançamento
+        }
+
+        const resultado = await adicionarContaReceber(parcela)
+        if (resultado.success) {
+          parcelas.push(resultado.id)
+        }
+      }
+
+      return { success: true, parcelas, total: parcelas.length }
+    } catch (err) {
+      console.error('Erro ao criar parcelas a receber:', err)
+      erro.value = 'Erro ao criar parcelas'
+      return { success: false, error: err.message }
+    } finally {
+      carregando.value = false
+    }
+  }
+
   return {
     // Estado
     contasPagar,
@@ -415,6 +499,8 @@ export function useFinanceiro() {
     buscarMovimentacoes,
     adicionarContaPagar,
     adicionarContaReceber,
+    adicionarContaPagarParcelada,
+    adicionarContaReceberParcelada,
     baixarContaPagar,
     baixarContaReceber,
     excluirContaPagar,
