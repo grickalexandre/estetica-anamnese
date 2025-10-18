@@ -5,6 +5,25 @@
       <button @click="abrirModal" class="btn btn-primary"><i class="fas fa-plus"></i> Novo Produto</button>
     </div>
 
+    <!-- Alertas de Validade -->
+    <div v-if="alertasValidade.length > 0" class="alertas-container">
+      <div class="alertas-header">
+        <h3><i class="fas fa-exclamation-triangle"></i> Alertas de Validade</h3>
+      </div>
+      <div class="alertas-grid">
+        <div v-for="alerta in alertasValidade" :key="alerta.tipo" :class="['alerta-card', alerta.tipo]">
+          <div class="alerta-icon">
+            <i :class="alerta.icone"></i>
+          </div>
+          <div class="alerta-content">
+            <h4>{{ alerta.titulo }}</h4>
+            <p>{{ alerta.descricao }}</p>
+            <span class="alerta-count">{{ alerta.quantidade }} produto(s)</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div class="card">
       <div v-if="carregando" class="loading"><i class="fas fa-spinner fa-spin"></i> Carregando...</div>
       <div v-else-if="produtos.length === 0" class="empty-state">
@@ -19,13 +38,14 @@
             <th>Categoria</th>
             <th>Estoque</th>
             <th>Mín/Máx</th>
+            <th>Validade</th>
             <th>Preço Venda</th>
             <th>Status</th>
             <th>Ações</th>
           </tr>
         </thead>
         <tbody>
-          <tr v-for="prod in produtos" :key="prod.id" :class="{'estoque-baixo': prod.estoqueAtual <= prod.estoqueMinimo}">
+          <tr v-for="prod in produtos" :key="prod.id" :class="{'estoque-baixo': prod.estoqueAtual <= prod.estoqueMinimo, 'vencido': getStatusValidade(prod.dataValidade) === 'vencido'}">
             <td><strong>{{ prod.nome }}</strong></td>
             <td><span class="badge">{{ prod.categoria }}</span></td>
             <td class="estoque">
@@ -34,6 +54,16 @@
               </span>
             </td>
             <td class="min-max">{{ prod.estoqueMinimo }} / {{ prod.estoqueMaximo }}</td>
+            <td class="validade">
+              <span v-if="prod.dataValidade" :class="['validade-badge', getStatusValidade(prod.dataValidade)]">
+                <i :class="getIconeValidade(prod.dataValidade)"></i>
+                {{ formatarData(prod.dataValidade) }}
+              </span>
+              <span v-else class="validade-badge sem-vencimento">
+                <i class="fas fa-infinity"></i>
+                Sem vencimento
+              </span>
+            </td>
             <td class="preco">R$ {{ formatarMoeda(prod.precoVenda) }}</td>
             <td><span :class="['status-badge', prod.ativo ? 'ativo' : 'inativo']">{{ prod.ativo ? 'Ativo' : 'Inativo' }}</span></td>
             <td class="acoes">
@@ -105,6 +135,11 @@
             </div>
           </div>
           <div class="form-group">
+            <label>Data de Validade</label>
+            <input v-model="form.dataValidade" type="date">
+            <small class="form-help">Deixe em branco se o produto não tem validade</small>
+          </div>
+          <div class="form-group">
             <label>Descrição</label>
             <textarea v-model="form.descricao" rows="3"></textarea>
           </div>
@@ -164,22 +199,26 @@ import { ref, onMounted } from 'vue'
 import { useProdutos } from '../composables/useProdutos.js'
 import { useEstoque } from '../composables/useEstoque.js'
 
-const { produtos, carregando, buscarProdutos, adicionarProduto, atualizarProduto, atualizarEstoque, desativarProduto } = useProdutos()
+const { produtos, carregando, buscarProdutos, adicionarProduto, atualizarProduto, atualizarEstoque, desativarProduto, calcularStatusValidade, obterEstatisticasValidade } = useProdutos()
 const { entrada, saida } = useEstoque()
 
 const modal = ref(false)
 const modalEstoque = ref(false)
 const produtoEditando = ref(null)
 const produtoSelecionado = ref(null)
-const form = ref({ nome: '', categoria: 'cosmeticos', unidade: 'un', estoqueInicial: 0, estoqueMinimo: 5, estoqueMaximo: 100, precoCusto: 0, precoVenda: 0, descricao: '' })
+const form = ref({ nome: '', categoria: 'cosmeticos', unidade: 'un', estoqueInicial: 0, estoqueMinimo: 5, estoqueMaximo: 100, precoCusto: 0, precoVenda: 0, dataValidade: '', descricao: '' })
 const formEstoque = ref({ tipo: 'entrada', quantidade: 1, motivo: '' })
+const alertasValidade = ref([])
 
-onMounted(() => buscarProdutos())
+onMounted(async () => {
+  await buscarProdutos()
+  calcularAlertasValidade()
+})
 
 const abrirModal = () => {
   modal.value = true
   produtoEditando.value = null
-  form.value = { nome: '', categoria: 'cosmeticos', unidade: 'un', estoqueInicial: 0, estoqueMinimo: 5, estoqueMaximo: 100, precoCusto: 0, precoVenda: 0, descricao: '' }
+  form.value = { nome: '', categoria: 'cosmeticos', unidade: 'un', estoqueInicial: 0, estoqueMinimo: 5, estoqueMaximo: 100, precoCusto: 0, precoVenda: 0, dataValidade: '', descricao: '' }
 }
 
 const editar = (prod) => {
@@ -195,6 +234,7 @@ const salvar = async () => {
   
   if (resultado.success) {
     await buscarProdutos()
+    calcularAlertasValidade()
     fecharModal()
     alert('Produto salvo!')
   }
@@ -235,6 +275,63 @@ const fecharModal = () => { modal.value = false }
 const formatarMoeda = (valor) => {
   return new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 2 }).format(valor || 0)
 }
+
+const formatarData = (data) => {
+  if (!data) return ''
+  return new Date(data).toLocaleDateString('pt-BR')
+}
+
+const getStatusValidade = (dataValidade) => {
+  return calcularStatusValidade(dataValidade)
+}
+
+const getIconeValidade = (dataValidade) => {
+  const status = getStatusValidade(dataValidade)
+  switch (status) {
+    case 'vencido': return 'fas fa-exclamation-triangle'
+    case 'proximo-vencimento': return 'fas fa-clock'
+    case 'vencimento-medio': return 'fas fa-calendar-alt'
+    case 'valido': return 'fas fa-check-circle'
+    default: return 'fas fa-infinity'
+  }
+}
+
+const calcularAlertasValidade = () => {
+  const stats = obterEstatisticasValidade()
+  const alertas = []
+
+  if (stats.vencidos > 0) {
+    alertas.push({
+      tipo: 'vencido',
+      titulo: 'Produtos Vencidos',
+      descricao: 'Produtos que já passaram da data de validade',
+      quantidade: stats.vencidos,
+      icone: 'fas fa-exclamation-triangle'
+    })
+  }
+
+  if (stats.proximoVencimento > 0) {
+    alertas.push({
+      tipo: 'proximo-vencimento',
+      titulo: 'Próximo do Vencimento',
+      descricao: 'Produtos que vencem em até 30 dias',
+      quantidade: stats.proximoVencimento,
+      icone: 'fas fa-clock'
+    })
+  }
+
+  if (stats.vencimentoMedio > 0) {
+    alertas.push({
+      tipo: 'vencimento-medio',
+      titulo: 'Vencimento em 90 dias',
+      descricao: 'Produtos que vencem em até 90 dias',
+      quantidade: stats.vencimentoMedio,
+      icone: 'fas fa-calendar-alt'
+    })
+  }
+
+  alertasValidade.value = alertas
+}
 </script>
 
 <style scoped>
@@ -244,12 +341,19 @@ const formatarMoeda = (valor) => {
 .data-table thead th { text-align: left; padding: 12px; background: #f5f5f7; font-weight: 600; font-size: 13px; }
 .data-table tbody td { padding: 14px 12px; border-bottom: 1px solid #e5e5ea; }
 .data-table tbody tr.estoque-baixo { background: rgba(255, 59, 48, 0.05); }
+.data-table tbody tr.vencido { background: rgba(255, 59, 48, 0.1); }
 .estoque .alerta { color: #ff3b30; font-weight: 700; }
 .min-max, .preco { font-size: 13px; color: #6e6e73; }
 .badge { padding: 4px 10px; border-radius: 12px; font-size: 12px; background: #e5e5ea; }
 .status-badge { padding: 6px 12px; border-radius: 16px; font-size: 12px; font-weight: 600; }
 .status-badge.ativo { background: rgba(52, 199, 89, 0.1); color: #34c759; }
 .status-badge.inativo { background: rgba(255, 59, 48, 0.1); color: #ff3b30; }
+.validade-badge { display: flex; align-items: center; gap: 6px; padding: 4px 8px; border-radius: 12px; font-size: 12px; font-weight: 500; }
+.validade-badge.vencido { background: rgba(255, 59, 48, 0.1); color: #ff3b30; }
+.validade-badge.proximo-vencimento { background: rgba(255, 149, 0, 0.1); color: #ff9500; }
+.validade-badge.vencimento-medio { background: rgba(255, 204, 0, 0.1); color: #ffcc00; }
+.validade-badge.valido { background: rgba(52, 199, 89, 0.1); color: #34c759; }
+.validade-badge.sem-vencimento { background: rgba(142, 142, 147, 0.1); color: #8e8e93; }
 .acoes { display: flex; gap: 8px; }
 .btn-icon { width: 32px; height: 32px; border-radius: 6px; border: none; cursor: pointer; }
 .btn-icon.btn-stock { background: #667eea; color: white; }
@@ -271,5 +375,22 @@ const formatarMoeda = (valor) => {
 .modal-actions { display: flex; gap: 12px; justify-content: flex-end; margin-top: 24px; padding-top: 20px; border-top: 1px solid #e5e5ea; }
 .loading, .empty-state { text-align: center; padding: 60px; color: #6e6e73; }
 .empty-state i { font-size: 64px; color: #d2d2d7; margin-bottom: 16px; }
+.form-help { font-size: 12px; color: #8e8e93; margin-top: 4px; display: block; }
+.alertas-container { margin-bottom: 24px; }
+.alertas-header { margin-bottom: 16px; }
+.alertas-header h3 { font-size: 18px; color: #1d1d1f; display: flex; align-items: center; gap: 8px; }
+.alertas-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
+.alerta-card { display: flex; align-items: center; gap: 16px; padding: 16px; border-radius: 12px; border-left: 4px solid; }
+.alerta-card.vencido { background: rgba(255, 59, 48, 0.05); border-left-color: #ff3b30; }
+.alerta-card.proximo-vencimento { background: rgba(255, 149, 0, 0.05); border-left-color: #ff9500; }
+.alerta-card.vencimento-medio { background: rgba(255, 204, 0, 0.05); border-left-color: #ffcc00; }
+.alerta-icon { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+.alerta-card.vencido .alerta-icon { background: rgba(255, 59, 48, 0.1); color: #ff3b30; }
+.alerta-card.proximo-vencimento .alerta-icon { background: rgba(255, 149, 0, 0.1); color: #ff9500; }
+.alerta-card.vencimento-medio .alerta-icon { background: rgba(255, 204, 0, 0.1); color: #ffcc00; }
+.alerta-content { flex: 1; }
+.alerta-content h4 { margin: 0 0 4px 0; font-size: 14px; font-weight: 600; color: #1d1d1f; }
+.alerta-content p { margin: 0 0 8px 0; font-size: 12px; color: #6e6e73; }
+.alerta-count { font-size: 12px; font-weight: 600; color: #1d1d1f; }
 </style>
 

@@ -39,6 +39,8 @@ export function useProdutos() {
         estoqueMinimo: dados.estoqueMinimo || 0,
         estoqueMaximo: dados.estoqueMaximo || 0,
         totalVendido: 0,
+        dataValidade: dados.dataValidade || null,
+        statusValidade: calcularStatusValidade(dados.dataValidade),
         dataCriacao: serverTimestamp()
       }
       const docRef = await addDoc(collection(db, 'produtos'), produto)
@@ -86,6 +88,104 @@ export function useProdutos() {
     }
   }
 
-  return { produtos, carregando, buscarProdutos, adicionarProduto, atualizarProduto, atualizarEstoque, desativarProduto }
+  // Função para calcular status de validade
+  const calcularStatusValidade = (dataValidade) => {
+    if (!dataValidade) return 'sem-vencimento'
+    
+    const hoje = new Date()
+    const validade = new Date(dataValidade)
+    const diffTime = validade - hoje
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+    
+    if (diffDays < 0) return 'vencido'
+    if (diffDays <= 30) return 'proximo-vencimento'
+    if (diffDays <= 90) return 'vencimento-medio'
+    return 'valido'
+  }
+
+  // Função para atualizar status de validade de todos os produtos
+  const atualizarStatusValidade = async () => {
+    try {
+      const produtosParaAtualizar = produtos.value.filter(produto => {
+        const novoStatus = calcularStatusValidade(produto.dataValidade)
+        return produto.statusValidade !== novoStatus
+      })
+
+      for (const produto of produtosParaAtualizar) {
+        const novoStatus = calcularStatusValidade(produto.dataValidade)
+        await updateDoc(doc(db, 'produtos', produto.id), { 
+          statusValidade: novoStatus 
+        })
+      }
+
+      return { success: true, atualizados: produtosParaAtualizar.length }
+    } catch (err) {
+      return { success: false, error: err.message }
+    }
+  }
+
+  // Função para buscar produtos por status de validade
+  const buscarProdutosPorValidade = async (status) => {
+    try {
+      carregando.value = true
+      let q = query(
+        collection(db, 'produtos'),
+        where('clinicaId', '==', clinicaId.value || 'demo'),
+        where('ativo', '==', true)
+      )
+      
+      const snapshot = await getDocs(q)
+      let produtosFiltrados = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+      
+      if (status && status !== 'todos') {
+        produtosFiltrados = produtosFiltrados.filter(produto => {
+          const statusAtual = calcularStatusValidade(produto.dataValidade)
+          return statusAtual === status
+        })
+      }
+      
+      return produtosFiltrados
+    } catch (err) {
+      console.error('Erro ao buscar produtos por validade:', err)
+      return []
+    } finally {
+      carregando.value = false
+    }
+  }
+
+  // Função para obter estatísticas de validade
+  const obterEstatisticasValidade = () => {
+    const stats = {
+      total: produtos.value.length,
+      vencidos: 0,
+      proximoVencimento: 0,
+      vencimentoMedio: 0,
+      validos: 0,
+      semVencimento: 0
+    }
+
+    produtos.value.forEach(produto => {
+      const status = calcularStatusValidade(produto.dataValidade)
+      stats[status === 'proximo-vencimento' ? 'proximoVencimento' : 
+            status === 'vencimento-medio' ? 'vencimentoMedio' : 
+            status === 'sem-vencimento' ? 'semVencimento' : status]++
+    })
+
+    return stats
+  }
+
+  return { 
+    produtos, 
+    carregando, 
+    buscarProdutos, 
+    adicionarProduto, 
+    atualizarProduto, 
+    atualizarEstoque, 
+    desativarProduto,
+    calcularStatusValidade,
+    atualizarStatusValidade,
+    buscarProdutosPorValidade,
+    obterEstatisticasValidade
+  }
 }
 
