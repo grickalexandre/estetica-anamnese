@@ -83,7 +83,6 @@
             </div>
           </div>
         </div>
-        </div>
 
         <div v-if="procedimentoSelecionado && procedimentoSelecionado.produtosUtilizados" class="produtos-section">
           <h3><i class="fas fa-flask"></i> Produtos que serão utilizados (Baixa Automática no Estoque)</h3>
