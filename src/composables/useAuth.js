@@ -85,15 +85,8 @@ export function useAuth() {
         nome: dados.nomeClinica,
         slug: clinicaId,
         ownerId: userCredential.user.uid,
-        plano: dados.plano || 'free',
         ativo: true,
         dataCriacao: serverTimestamp(),
-        limites: {
-          maxAnamneses: dados.plano === 'free' ? 100 : 10000,
-          maxUsuarios: dados.plano === 'free' ? 1 : 10,
-          maxFotos: dados.plano === 'free' ? 4 : 20,
-          uploadSize: dados.plano === 'free' ? 10 : 50 // MB
-        },
         contato: {
           email: dados.email,
           telefone: dados.telefone || ''
@@ -109,7 +102,6 @@ export function useAuth() {
         email: dados.email,
         clinicaId: clinicaId,
         role: 'owner', // owner, admin, user
-        plano: dados.plano || 'free',
         dataCriacao: serverTimestamp()
       })
       console.log('Perfil do usuário criado')
@@ -199,20 +191,6 @@ export function useAuth() {
    */
   const clinicaId = computed(() => userProfile.value?.clinicaId)
 
-  /**
-   * Retorna o plano do usuário
-   */
-  const planoAtual = computed(() => userProfile.value?.plano || 'free')
-
-  /**
-   * Verifica se é plano free
-   */
-  const isFree = computed(() => planoAtual.value === 'free')
-
-  /**
-   * Verifica se é plano pago
-   */
-  const isPaid = computed(() => planoAtual.value !== 'free')
 
   /**
    * Verifica se o usuário é owner da clínica
@@ -237,9 +215,6 @@ export function useAuth() {
     logout,
     isAuthenticated,
     clinicaId,
-    planoAtual,
-    isFree,
-    isPaid,
     isOwner,
     isAdmin,
     loadUserProfile

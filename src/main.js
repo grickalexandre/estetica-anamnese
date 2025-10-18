@@ -10,7 +10,6 @@ import Configuracoes from './views/Configuracoes.vue'
 import Relatorios from './views/Relatorios.vue'
 import Login from './views/Login.vue'
 import Cadastro from './views/Cadastro.vue'
-import Planos from './views/Planos.vue'
 import Financeiro from './views/Financeiro.vue'
 import ContasPagar from './views/ContasPagar.vue'
 import ContasReceber from './views/ContasReceber.vue'
@@ -42,7 +41,6 @@ const routes = [
   { path: '/detalhes/:id', component: DetalhesAnamnese, meta: { requiresAuth: true } },
   { path: '/configuracoes', component: Configuracoes, meta: { requiresAuth: true } },
   { path: '/relatorios', component: Relatorios, meta: { requiresAuth: true } },
-  { path: '/planos', component: Planos, meta: { requiresAuth: true } },
   
   // Rotas financeiras
   { path: '/financeiro', component: Financeiro, meta: { requiresAuth: true } },
