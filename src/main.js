@@ -24,6 +24,7 @@ import Produtos from './views/Produtos.vue'
 import CatalogoProcedimentos from './views/CatalogoProcedimentos.vue'
 import RegistrarAtendimento from './views/RegistrarAtendimento.vue'
 import RelatorioAtendimentos from './views/RelatorioAtendimentos.vue'
+import EntradaProdutos from './views/EntradaProdutos.vue'
 import LimpezaDados from './views/LimpezaDados.vue'
 import { auth } from './firebase.js'
 import './style.css'
@@ -60,6 +61,7 @@ const routes = [
   // Rotas de cadastros
   { path: '/fornecedores', component: Fornecedores, meta: { requiresAuth: true } },
   { path: '/produtos', component: Produtos, meta: { requiresAuth: true } },
+  { path: '/entrada-produtos', component: EntradaProdutos, meta: { requiresAuth: true } },
   { path: '/procedimentos', component: CatalogoProcedimentos, meta: { requiresAuth: true } },
   
   // Rotas de atendimento
