@@ -300,6 +300,7 @@ const buscarProcedimentos = async () => {
 }
 
 const abrirModal = () => {
+  console.log('Abrindo modal para novo procedimento')
   modal.value = true
   procedimentoEditando.value = null
   form.value = {
@@ -319,6 +320,7 @@ const fecharModal = () => {
 }
 
 const editar = (proc) => {
+  console.log('Editando procedimento:', proc)
   procedimentoEditando.value = proc
   form.value = { ...proc }
   modal.value = true
@@ -327,7 +329,10 @@ const editar = (proc) => {
 const salvar = async () => {
   try {
     salvando.value = true
+    console.log('=== INÍCIO DO SALVAMENTO ===')
     console.log('Salvando procedimento:', form.value)
+    console.log('procedimentoEditando:', procedimentoEditando.value)
+    console.log('clinicaId:', clinicaId.value)
     
     // Validações
     if (!form.value.nome || form.value.nome.trim() === '') {
@@ -357,18 +362,32 @@ const salvar = async () => {
       ativo: true
     }
     
-    if (procedimentoEditando.value) {
-      // Atualizar
-      console.log('Atualizando procedimento ID:', procedimentoEditando.value.id)
-      const docRef = doc(db, 'catalogo_procedimentos', procedimentoEditando.value.id)
-      await updateDoc(docRef, {
-        ...dadosParaSalvar,
-        dataAtualizacao: serverTimestamp()
-      })
-      console.log('✅ Procedimento atualizado')
+    console.log('Dados preparados para salvar:', dadosParaSalvar)
+    
+    if (procedimentoEditando.value && procedimentoEditando.value.id) {
+      // Atualizar - verificar se o documento existe
+      console.log('--- Atualizando procedimento existente ---')
+      console.log('ID do procedimento:', procedimentoEditando.value.id)
+      
+      try {
+        const docRef = doc(db, 'catalogo_procedimentos', procedimentoEditando.value.id)
+        await updateDoc(docRef, {
+          ...dadosParaSalvar,
+          dataAtualizacao: serverTimestamp()
+        })
+        console.log('✅ Procedimento atualizado com sucesso')
+      } catch (updateError) {
+        console.error('Erro ao atualizar, tentando criar novo:', updateError)
+        // Se falhar ao atualizar, criar novo
+        dadosParaSalvar.totalRealizados = 0
+        dadosParaSalvar.dataCriacao = serverTimestamp()
+        
+        const docRef = await addDoc(collection(db, 'catalogo_procedimentos'), dadosParaSalvar)
+        console.log('✅ Procedimento criado como novo com ID:', docRef.id)
+      }
     } else {
       // Criar novo
-      console.log('Criando novo procedimento')
+      console.log('--- Criando novo procedimento ---')
       dadosParaSalvar.totalRealizados = 0
       dadosParaSalvar.dataCriacao = serverTimestamp()
       
@@ -376,13 +395,18 @@ const salvar = async () => {
       console.log('✅ Procedimento criado com ID:', docRef.id)
     }
     
+    console.log('--- Recarregando lista ---')
     await buscarProcedimentos()
     atualizarTotalItens(procedimentosFiltrados.value.length)
     fecharModal()
+    console.log('=== SALVAMENTO CONCLUÍDO ===')
     alert('Procedimento salvo com sucesso!')
     
   } catch (error) {
-    console.error('❌ Erro ao salvar procedimento:', error)
+    console.error('❌ ERRO AO SALVAR PROCEDIMENTO:', error)
+    console.error('Tipo do erro:', error.name)
+    console.error('Mensagem:', error.message)
+    console.error('Stack:', error.stack)
     alert('Erro ao salvar procedimento: ' + error.message)
   } finally {
     salvando.value = false
