@@ -308,16 +308,57 @@ const editar = (prof) => {
 }
 
 const salvar = async () => {
-  const resultado = profissionalEditando.value
-    ? await atualizarProfissional(profissionalEditando.value.id, form.value)
-    : await adicionarProfissional(form.value)
-  
-  if (resultado.success) {
-    await buscarProfissionais(true)
-    fecharModal()
-    alert('Profissional salvo!')
-  } else {
-    alert('Erro: ' + resultado.error)
+  try {
+    // Validações
+    if (!form.value.nome || form.value.nome.trim() === '') {
+      alert('Por favor, preencha o nome do profissional')
+      return
+    }
+    
+    if (!form.value.telefone || form.value.telefone.trim() === '') {
+      alert('Por favor, preencha o telefone do profissional')
+      return
+    }
+    
+    // Validar percentual de comissão
+    const percentual = parseFloat(form.value.percentualComissao)
+    if (isNaN(percentual) || percentual < 0 || percentual > 100) {
+      alert('Percentual de comissão deve estar entre 0 e 100')
+      return
+    }
+    
+    // Preparar dados para salvar
+    const dadosParaSalvar = {
+      nome: form.value.nome.trim(),
+      especialidade: form.value.especialidade,
+      registroProfissional: form.value.registroProfissional?.trim() || '',
+      telefone: form.value.telefone.trim(),
+      email: form.value.email?.trim() || '',
+      percentualComissao: percentual,
+      tipoComissao: form.value.tipoComissao || 'porcentagem',
+      observacoes: form.value.observacoes?.trim() || ''
+    }
+    
+    console.log('Salvando profissional:', dadosParaSalvar)
+    
+    const resultado = profissionalEditando.value
+      ? await atualizarProfissional(profissionalEditando.value.id, dadosParaSalvar)
+      : await adicionarProfissional(dadosParaSalvar)
+    
+    console.log('Resultado:', resultado)
+    
+    if (resultado.success) {
+      await buscarProfissionais(true)
+      atualizarTotalItens(profissionaisFiltrados.value.length)
+      fecharModal()
+      alert('Profissional salvo com sucesso!')
+    } else {
+      console.error('Erro ao salvar:', resultado.error)
+      alert('Erro ao salvar profissional: ' + resultado.error)
+    }
+  } catch (error) {
+    console.error('Erro inesperado ao salvar profissional:', error)
+    alert('Erro inesperado ao salvar profissional: ' + error.message)
   }
 }
 

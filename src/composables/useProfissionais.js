@@ -35,6 +35,9 @@ export function useProfissionais() {
    */
   const adicionarProfissional = async (dados) => {
     try {
+      console.log('useProfissionais - Iniciando adição...', dados)
+      console.log('clinicaId:', clinicaId.value)
+      
       const profissional = {
         ...dados,
         clinicaId: clinicaId.value || 'demo',
@@ -43,11 +46,17 @@ export function useProfissionais() {
         totalComissoes: 0,
         dataCriacao: serverTimestamp()
       }
+      
+      console.log('Profissional a ser salvo:', profissional)
+      
       const docRef = await addDoc(collection(db, 'profissionais'), profissional)
+      console.log('Profissional salvo com ID:', docRef.id)
+      
       return { success: true, id: docRef.id }
     } catch (err) {
       console.error('Erro ao adicionar profissional:', err)
-      return { success: false, error: err.message }
+      console.error('Detalhes do erro:', err.code, err.message)
+      return { success: false, error: err.message || 'Erro desconhecido ao salvar profissional' }
     }
   }
 
@@ -56,15 +65,24 @@ export function useProfissionais() {
    */
   const atualizarProfissional = async (id, dados) => {
     try {
+      console.log('useProfissionais - Iniciando atualização...', id, dados)
+      
       const docRef = doc(db, 'profissionais', id)
-      await updateDoc(docRef, {
+      const dadosAtualizacao = {
         ...dados,
         dataAtualizacao: serverTimestamp()
-      })
+      }
+      
+      console.log('Dados a serem atualizados:', dadosAtualizacao)
+      
+      await updateDoc(docRef, dadosAtualizacao)
+      console.log('Profissional atualizado com sucesso')
+      
       return { success: true }
     } catch (err) {
       console.error('Erro ao atualizar profissional:', err)
-      return { success: false, error: err.message }
+      console.error('Detalhes do erro:', err.code, err.message)
+      return { success: false, error: err.message || 'Erro desconhecido ao atualizar profissional' }
     }
   }
 
