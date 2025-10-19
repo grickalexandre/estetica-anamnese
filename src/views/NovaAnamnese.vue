@@ -1,8 +1,15 @@
 <template>
   <div class="container">
+    <div class="page-header">
+      <div class="header-content">
+        <h1><i class="fas fa-file-medical"></i> Nova Anamnese</h1>
+        <div class="header-actions">
+          <VoltarHome />
+        </div>
+      </div>
+    </div>
+
     <div class="card">
-      <h1>Nova Anamnese</h1>
-      
       <div v-if="error" class="error">{{ error }}</div>
       <div v-if="success" class="success">{{ success }}</div>
 
@@ -229,6 +236,7 @@ import { compressAnamneseImage } from '../utils/imageCompressor.js'
 import { uploadToCloudinary } from '../utils/cloudinary.js'
 import { useClinica } from '../composables/useClinica.js'
 import { usePacientes } from '../composables/usePacientes.js'
+import VoltarHome from '../components/VoltarHome.vue'
 
 const router = useRouter()
 const { clinicaId } = useClinica()
@@ -390,4 +398,30 @@ const salvarAnamnese = async () => {
 }
 </script>
 
+<style scoped>
+.page-header {
+  margin-bottom: 24px;
+}
 
+.header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+}
+
+.header-content h1 {
+  font-size: 28px;
+  color: #1d1d1f;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+</style>

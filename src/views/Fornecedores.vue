@@ -215,28 +215,80 @@ const editar = (forn) => {
 }
 
 const salvar = async () => {
-  const resultado = fornecedorEditando.value
-    ? await atualizarFornecedor(fornecedorEditando.value.id, form.value)
-    : await adicionarFornecedor(form.value)
-  
-  if (resultado.success) {
-    await buscarFornecedores()
-    fecharModal()
-    alert('Fornecedor salvo com sucesso!')
+  try {
+    console.log('Salvando fornecedor:', form.value)
+    
+    // Validações
+    if (!form.value.nome || form.value.nome.trim() === '') {
+      alert('Por favor, preencha o nome do fornecedor')
+      return
+    }
+    
+    if (!form.value.telefone || form.value.telefone.trim() === '') {
+      alert('Por favor, preencha o telefone do fornecedor')
+      return
+    }
+    
+    const resultado = fornecedorEditando.value
+      ? await atualizarFornecedor(fornecedorEditando.value.id, form.value)
+      : await adicionarFornecedor(form.value)
+    
+    console.log('Resultado:', resultado)
+    
+    if (resultado.success) {
+      await buscarFornecedores()
+      atualizarTotalItens(fornecedoresFiltrados.value.length)
+      fecharModal()
+      alert('Fornecedor salvo com sucesso!')
+    } else {
+      alert('Erro ao salvar fornecedor: ' + resultado.error)
+    }
+  } catch (error) {
+    console.error('Erro ao salvar fornecedor:', error)
+    alert('Erro ao salvar fornecedor: ' + error.message)
   }
 }
 
 const desativar = async (id) => {
-  if (confirm('Deseja desativar este fornecedor?')) {
-    await desativarFornecedor(id)
-    await buscarFornecedores()
+  if (confirm('Desativar este fornecedor? Ele não aparecerá mais nas listagens ativas, mas os dados serão mantidos.')) {
+    try {
+      const resultado = await desativarFornecedor(id)
+      if (resultado.success) {
+        await buscarFornecedores()
+        atualizarTotalItens(fornecedoresFiltrados.value.length)
+        alert('Fornecedor desativado com sucesso!')
+      } else {
+        alert('Erro ao desativar: ' + resultado.error)
+      }
+    } catch (error) {
+      console.error('Erro ao desativar fornecedor:', error)
+      alert('Erro ao desativar fornecedor: ' + error.message)
+    }
   }
 }
 
 const excluir = async (id) => {
-  if (confirm('Deseja excluir este fornecedor? Esta ação não pode ser desfeita.')) {
-    await excluirFornecedor(id)
-    await buscarFornecedores()
+  const confirmacao = confirm(
+    '⚠️ ATENÇÃO: Excluir permanentemente este fornecedor?\n\n' +
+    'Esta ação NÃO pode ser desfeita!\n' +
+    'Todos os dados e históricos de compras serão perdidos.\n\n' +
+    'Deseja realmente EXCLUIR?'
+  )
+  
+  if (confirmacao) {
+    try {
+      const resultado = await excluirFornecedor(id)
+      if (resultado.success) {
+        await buscarFornecedores()
+        atualizarTotalItens(fornecedoresFiltrados.value.length)
+        alert('Fornecedor excluído permanentemente!')
+      } else {
+        alert('Erro ao excluir: ' + resultado.error)
+      }
+    } catch (error) {
+      console.error('Erro ao excluir fornecedor:', error)
+      alert('Erro ao excluir fornecedor: ' + error.message)
+    }
   }
 }
 

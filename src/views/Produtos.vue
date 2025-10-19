@@ -320,15 +320,43 @@ const editar = (prod) => {
 }
 
 const salvar = async () => {
-  const resultado = produtoEditando.value
-    ? await atualizarProduto(produtoEditando.value.id, form.value)
-    : await adicionarProduto(form.value)
-  
-  if (resultado.success) {
-    await buscarProdutos()
-    calcularAlertasValidade()
-    fecharModal()
-    alert('Produto salvo!')
+  try {
+    console.log('Salvando produto:', form.value)
+    
+    // Validações
+    if (!form.value.nome || form.value.nome.trim() === '') {
+      alert('Por favor, preencha o nome do produto')
+      return
+    }
+    
+    if (form.value.estoqueInicial < 0 || form.value.estoqueMinimo < 0 || form.value.estoqueMaximo < 0) {
+      alert('Os valores de estoque não podem ser negativos')
+      return
+    }
+    
+    if (form.value.precoCusto < 0 || form.value.precoVenda < 0) {
+      alert('Os preços não podem ser negativos')
+      return
+    }
+    
+    const resultado = produtoEditando.value
+      ? await atualizarProduto(produtoEditando.value.id, form.value)
+      : await adicionarProduto(form.value)
+    
+    console.log('Resultado:', resultado)
+    
+    if (resultado.success) {
+      await buscarProdutos()
+      atualizarTotalItens(produtosFiltrados.value.length)
+      calcularAlertasValidade()
+      fecharModal()
+      alert('Produto salvo com sucesso!')
+    } else {
+      alert('Erro ao salvar produto: ' + resultado.error)
+    }
+  } catch (error) {
+    console.error('Erro ao salvar produto:', error)
+    alert('Erro ao salvar produto: ' + error.message)
   }
 }
 
@@ -356,9 +384,21 @@ const salvarMovimentacao = async () => {
 }
 
 const desativar = async (id) => {
-  if (confirm('Deseja desativar este produto?')) {
-    await desativarProduto(id)
-    await buscarProdutos()
+  if (confirm('Desativar este produto? Ele não aparecerá mais nas listagens ativas, mas os dados serão mantidos.')) {
+    try {
+      const resultado = await desativarProduto(id)
+      if (resultado.success) {
+        await buscarProdutos()
+        atualizarTotalItens(produtosFiltrados.value.length)
+        calcularAlertasValidade()
+        alert('Produto desativado com sucesso!')
+      } else {
+        alert('Erro ao desativar: ' + resultado.error)
+      }
+    } catch (error) {
+      console.error('Erro ao desativar produto:', error)
+      alert('Erro ao desativar produto: ' + error.message)
+    }
   }
 }
 
