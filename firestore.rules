@@ -10,10 +10,16 @@ service cloud.firestore {
     // Função para verificar se o usuário pertence à clínica
     function belongsToClinica(clinicaId) {
       return isAuthenticated() && 
-             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.clinicaId == clinicaId;
+             get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.clinicaId == clinicaId;
     }
     
     // Regras para usuários
+    match /usuarios/{userId} {
+      allow read: if isAuthenticated() && request.auth.uid == userId;
+      allow write: if isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    // Compatibilidade com 'users' (se necessário)
     match /users/{userId} {
       allow read: if isAuthenticated() && request.auth.uid == userId;
       allow write: if isAuthenticated() && request.auth.uid == userId;
@@ -50,106 +56,70 @@ service cloud.firestore {
     
     // Regras para profissionais
     match /profissionais/{profissionalId} {
-      allow read: if belongsToClinica(resource.data.clinicaId);
-      allow create: if isAuthenticated();
-      allow update: if belongsToClinica(resource.data.clinicaId);
-      allow delete: if belongsToClinica(resource.data.clinicaId);
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && request.resource.data.clinicaId != null;
+      allow update: if isAuthenticated();
+      allow delete: if isAuthenticated();
     }
     
     // Regras para fornecedores
     match /fornecedores/{fornecedorId} {
-      allow read: if belongsToClinica(resource.data.clinicaId);
-      allow create: if isAuthenticated();
-      allow update: if belongsToClinica(resource.data.clinicaId);
-      allow delete: if belongsToClinica(resource.data.clinicaId);
+      allow read, write: if isAuthenticated();
     }
     
     // Regras para produtos
     match /produtos/{produtoId} {
-      allow read: if belongsToClinica(resource.data.clinicaId);
-      allow create: if isAuthenticated();
-      allow update: if belongsToClinica(resource.data.clinicaId);
-      allow delete: if belongsToClinica(resource.data.clinicaId);
+      allow read, write: if isAuthenticated();
     }
     
     // Regras para procedimentos (catálogo)
     match /procedimentos/{procedimentoId} {
-      allow read: if belongsToClinica(resource.data.clinicaId);
-      allow create: if isAuthenticated();
-      allow update: if belongsToClinica(resource.data.clinicaId);
-      allow delete: if belongsToClinica(resource.data.clinicaId);
+      allow read, write: if isAuthenticated();
     }
     
     // Regras para atendimentos
     match /atendimentos/{atendimentoId} {
-      allow read: if belongsToClinica(resource.data.clinicaId);
-      allow create: if isAuthenticated();
-      allow update: if belongsToClinica(resource.data.clinicaId);
-      allow delete: if belongsToClinica(resource.data.clinicaId);
+      allow read, write: if isAuthenticated();
     }
     
     // Regras para contas a pagar
     match /contas_pagar/{contaId} {
-      allow read: if belongsToClinica(resource.data.clinicaId);
-      allow create: if isAuthenticated();
-      allow update: if belongsToClinica(resource.data.clinicaId);
-      allow delete: if belongsToClinica(resource.data.clinicaId);
+      allow read, write: if isAuthenticated();
     }
     
     // Regras para contas a receber
     match /contas_receber/{contaId} {
-      allow read: if belongsToClinica(resource.data.clinicaId);
-      allow create: if isAuthenticated();
-      allow update: if belongsToClinica(resource.data.clinicaId);
-      allow delete: if belongsToClinica(resource.data.clinicaId);
+      allow read, write: if isAuthenticated();
     }
     
     // Regras para comissões
     match /comissoes/{comissaoId} {
-      allow read: if belongsToClinica(resource.data.clinicaId);
-      allow create: if isAuthenticated();
-      allow update: if belongsToClinica(resource.data.clinicaId);
-      allow delete: if belongsToClinica(resource.data.clinicaId);
+      allow read, write: if isAuthenticated();
     }
     
     // Regras para plano de contas
     match /plano_contas/{contaId} {
-      allow read: if belongsToClinica(resource.data.clinicaId);
-      allow create: if isAuthenticated();
-      allow update: if belongsToClinica(resource.data.clinicaId);
-      allow delete: if belongsToClinica(resource.data.clinicaId);
+      allow read, write: if isAuthenticated();
     }
     
     // Regras para movimentações de estoque
     match /movimentacoes_estoque/{movimentacaoId} {
-      allow read: if belongsToClinica(resource.data.clinicaId);
-      allow create: if isAuthenticated();
-      allow update: if belongsToClinica(resource.data.clinicaId);
-      allow delete: if belongsToClinica(resource.data.clinicaId);
+      allow read, write: if isAuthenticated();
     }
     
     // Regras para compras
     match /compras/{compraId} {
-      allow read: if belongsToClinica(resource.data.clinicaId);
-      allow create: if isAuthenticated();
-      allow update: if belongsToClinica(resource.data.clinicaId);
-      allow delete: if belongsToClinica(resource.data.clinicaId);
+      allow read, write: if isAuthenticated();
     }
     
     // Regras para despesas recorrentes
     match /despesas_recorrentes/{despesaId} {
-      allow read: if belongsToClinica(resource.data.clinicaId);
-      allow create: if isAuthenticated();
-      allow update: if belongsToClinica(resource.data.clinicaId);
-      allow delete: if belongsToClinica(resource.data.clinicaId);
+      allow read, write: if isAuthenticated();
     }
     
     // Regras para observações de anamnese
     match /observacoes_anamnese/{observacaoId} {
-      allow read: if belongsToClinica(resource.data.clinicaId);
-      allow create: if isAuthenticated();
-      allow update: if belongsToClinica(resource.data.clinicaId);
-      allow delete: if belongsToClinica(resource.data.clinicaId);
+      allow read, write: if isAuthenticated();
     }
     
     // Regra padrão: negar tudo que não foi especificado
