@@ -31,6 +31,27 @@
   </div>
 
   <div class="container">
+    <!-- Card de Link para Clientes -->
+    <div class="card link-cliente-card">
+      <div class="link-cliente-content">
+        <div class="link-info">
+          <h2><i class="fas fa-link"></i> Link para Clientes Preencherem</h2>
+          <p>Copie este link e envie para seus clientes via WhatsApp, Email ou SMS</p>
+          <div class="url-display">
+            <code>{{ linkClienteUrl }}</code>
+          </div>
+        </div>
+        <button @click="copiarLinkCliente" class="btn btn-success btn-large">
+          <i class="fas fa-copy"></i>
+          Copiar Link
+        </button>
+      </div>
+      <div v-if="showNotification" class="notification-success">
+        <i class="fas fa-check-circle"></i>
+        {{ notificationMessage }}
+      </div>
+    </div>
+
     <div class="card">
       <h2><i class="fas fa-star"></i> Funcionalidades</h2>
       <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-top: 20px;">
@@ -122,7 +143,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useConfiguracoes } from '../composables/useConfiguracoes'
 import { useClinica } from '../composables/useClinica.js'
 
@@ -130,6 +151,11 @@ const { configuracoes, carregando } = useConfiguracoes()
 const { clinicaId } = useClinica()
 const showNotification = ref(false)
 const notificationMessage = ref('')
+
+const linkClienteUrl = computed(() => {
+  const baseUrl = window.location.origin
+  return `${baseUrl}/anamnese-cliente`
+})
 
 const copiarLinkCliente = async () => {
   try {
@@ -206,6 +232,92 @@ const copiarLinkCliente = async () => {
   
   .clinic-item div {
     font-size: 13px;
+  }
+}
+
+/* Card de Link para Clientes */
+.link-cliente-card {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  margin-bottom: 24px;
+  border: none;
+}
+
+.link-cliente-card h2 {
+  color: white;
+  margin: 0 0 8px 0;
+  font-size: 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.link-cliente-card p {
+  color: rgba(255, 255, 255, 0.9);
+  margin: 0 0 16px 0;
+  font-size: 14px;
+}
+
+.link-cliente-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 16px;
+}
+
+.link-info {
+  flex: 1;
+}
+
+.url-display {
+  background: rgba(255, 255, 255, 0.15);
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin-top: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.url-display code {
+  color: white;
+  font-size: 13px;
+  word-break: break-all;
+}
+
+.notification-success {
+  background: rgba(52, 199, 89, 0.2);
+  padding: 12px 16px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  animation: slideDown 0.3s ease-out;
+}
+
+.notification-success i {
+  color: #34c759;
+  font-size: 18px;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 768px) {
+  .link-cliente-content {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .btn-large {
+    width: 100%;
   }
 }
 
