@@ -1,7 +1,10 @@
 <template>
   <div class="container">
     <div class="page-header">
-      <h1><i class="fas fa-user-md"></i> Registrar Atendimento</h1>
+      <div class="header-content">
+        <h1><i class="fas fa-user-md"></i> Registrar Atendimento</h1>
+        <VoltarHome />
+      </div>
     </div>
 
     <div class="card">
@@ -210,6 +213,7 @@ import { useProcedimentos } from '../composables/useProcedimentos.js'
 import { usePacientes } from '../composables/usePacientes.js'
 import { useProdutos } from '../composables/useProdutos.js'
 import { useProfissionais } from '../composables/useProfissionais.js'
+import VoltarHome from '../components/VoltarHome.vue'
 
 const router = useRouter()
 const { procedimentos, registrarAtendimento } = useProcedimentos()
@@ -251,6 +255,8 @@ onMounted(async () => {
   ])
   const { buscarCatalogo } = useProcedimentos()
   await buscarCatalogo()
+  console.log('Procedimentos carregados:', procedimentos.value.length)
+  console.log('Procedimentos disponíveis:', procedimentosDisponiveis.value.length)
   adicionarProcedimento() // Inicia com um procedimento
 })
 
@@ -427,7 +433,8 @@ const calcularDataParcela = (numeroParcela) => {
 
 <style scoped>
 .page-header { margin-bottom: 24px; }
-.page-header h1 { font-size: 28px; color: #1d1d1f; display: flex; align-items: center; gap: 12px; }
+.header-content { display: flex; justify-content: space-between; align-items: center; gap: 20px; }
+.header-content h1 { font-size: 28px; color: #1d1d1f; display: flex; align-items: center; gap: 12px; margin: 0; }
 .cliente-info { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
 .info-selecionado { display: block; padding: 8px 12px; background: rgba(52, 199, 89, 0.1); border-radius: 6px; color: #34c759; font-size: 12px; }
 .btn-link { background: none; border: none; color: #007aff; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 6px; padding: 4px 0; font-weight: 600; }

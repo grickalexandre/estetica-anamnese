@@ -1,43 +1,26 @@
 <template>
   <div class="container">
-    <div class="card">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+    <div class="page-header">
+      <div class="header-content">
         <h1><i class="fas fa-users"></i> Lista de Pacientes</h1>
-        <router-link to="/nova">
-          <button class="btn btn-primary">
-            <i class="fas fa-plus"></i>
-            Nova Anamnese
-          </button>
-        </router-link>
+        <div class="header-actions">
+          <VoltarHome />
+          <router-link to="/nova">
+            <button class="btn btn-primary">
+              <i class="fas fa-plus"></i>
+              Nova Anamnese
+            </button>
+          </router-link>
+        </div>
       </div>
+    </div>
 
+    <div class="card">
       <!-- Filtros -->
-      <div class="filters-container">
-        <div class="form-group search-group">
-          <input 
-            v-model="busca" 
-            type="text" 
-            placeholder="Buscar por nome, telefone ou CPF..."
-            class="search-input"
-          >
-        </div>
-        <div class="filters-row">
-          <div class="form-group filter-group">
-            <select v-model="filtroStatus" class="filter-select">
-              <option value="">Todos os status</option>
-              <option value="pendente">Pendente</option>
-              <option value="analisada">Analisada</option>
-            </select>
-          </div>
-          <div class="form-group filter-group">
-            <select v-model="filtroOrigem" class="filter-select">
-              <option value="">Todas as origens</option>
-              <option value="cliente">Cliente</option>
-              <option value="profissional">Profissional</option>
-            </select>
-          </div>
-        </div>
-      </div>
+      <Filtros 
+        :opcoes="opcoesFiltros"
+        @filtros-alterados="aplicarFiltros"
+      />
 
       <!-- Loading -->
       <div v-if="carregando" class="loading">
@@ -122,6 +105,23 @@
         <i class="fas fa-user-slash" style="font-size: 48px; margin-bottom: 16px;"></i>
         <p>Nenhum paciente encontrado</p>
       </div>
+
+      <!-- Paginação -->
+      <Paginacao
+        :pagina-atual="paginaAtual"
+        :total-paginas="totalPaginas"
+        :total-itens="totalItens"
+        :itens-por-pagina="itensPorPagina"
+        :tem-pagina-anterior="temPaginaAnterior"
+        :tem-proxima-pagina="temProximaPagina"
+        :paginas-visiveis="paginasVisiveis"
+        @ir-para-pagina="irParaPagina"
+        @proxima-pagina="proximaPagina"
+        @pagina-anterior="paginaAnterior"
+        @primeira-pagina="primeiraPagina"
+        @ultima-pagina="ultimaPagina"
+        @alterar-itens-por-pagina="alterarItensPorPagina"
+      />
     </div>
   </div>
 </template>
@@ -132,46 +132,71 @@ import { useRouter } from 'vue-router'
 import { db } from '../firebase.js'
 import { collection, getDocs, orderBy, query, where } from 'firebase/firestore'
 import { useClinica } from '../composables/useClinica.js'
+import { usePaginacao } from '../composables/usePaginacao.js'
+import { useFiltros } from '../composables/useFiltros.js'
+import VoltarHome from '../components/VoltarHome.vue'
+import Filtros from '../components/Filtros.vue'
+import Paginacao from '../components/Paginacao.vue'
 
 const router = useRouter()
 const { clinicaId } = useClinica()
 const anamneses = ref([])
-const busca = ref('')
-const filtroStatus = ref('')
-const filtroOrigem = ref('')
 const carregando = ref(true)
 
+// Paginação
+const {
+  paginaAtual,
+  totalItens,
+  itensPorPagina,
+  totalPaginas,
+  temPaginaAnterior,
+  temProximaPagina,
+  itensVisiveis,
+  paginasVisiveis,
+  irParaPagina,
+  proximaPagina,
+  paginaAnterior,
+  primeiraPagina,
+  ultimaPagina,
+  atualizarTotalItens,
+  alterarItensPorPagina
+} = usePaginacao(10)
+
+// Filtros
+const {
+  filtros,
+  aplicarFiltros: aplicarFiltrosComposable
+} = useFiltros()
+
+// Opções para os filtros
+const opcoesFiltros = {
+  status: [
+    { value: 'pendente', label: 'Pendente' },
+    { value: 'analisada', label: 'Analisada' }
+  ],
+  categorias: ['cliente', 'profissional'],
+  data: true,
+  ordenacao: [
+    { value: 'nome', label: 'Nome' },
+    { value: 'dataCriacao', label: 'Data de Criação' },
+    { value: 'status', label: 'Status' }
+  ]
+}
+
 const anamnesesFiltradas = computed(() => {
-  let filtradas = anamneses.value
+  return aplicarFiltrosComposable(anamneses.value, ['nome', 'telefone', 'cpf'])
+})
 
-  // Filtro por busca
-  if (busca.value) {
-    const termo = busca.value.toLowerCase()
-    filtradas = filtradas.filter(a =>
-      a.nome.toLowerCase().includes(termo) ||
-      a.telefone.includes(termo) ||
-      (a.cpf && a.cpf.includes(termo))
-    )
-  }
-
-  // Filtro por status
-  if (filtroStatus.value) {
-    filtradas = filtradas.filter(a => a.status === filtroStatus.value)
-  }
-
-  // Filtro por origem
-  if (filtroOrigem.value) {
-    filtradas = filtradas.filter(a => a.origem === filtroOrigem.value)
-  }
-
-  return filtradas
+const anamnesesPaginadas = computed(() => {
+  const { inicio, fim } = itensVisiveis.value
+  return anamnesesFiltradas.value.slice(inicio, fim)
 })
 
 // Agrupar anamneses por paciente
 const anamnesesAgrupadas = computed(() => {
   const grupos = {}
   
-  anamnesesFiltradas.value.forEach(anamnese => {
+  anamnesesPaginadas.value.forEach(anamnese => {
     const chave = `${anamnese.nome}-${anamnese.telefone}`
     
     if (!grupos[chave]) {
@@ -200,6 +225,12 @@ const anamnesesAgrupadas = computed(() => {
   
   return Object.values(grupos)
 })
+
+// Função para aplicar filtros
+const aplicarFiltros = (novosFiltros) => {
+  // Atualizar total de itens quando filtros mudarem
+  atualizarTotalItens(anamnesesFiltradas.value.length)
+}
 
 const carregarAnamneses = async () => {
   try {
@@ -254,12 +285,40 @@ const formatarDataCriacao = (timestamp) => {
   return data.toLocaleDateString('pt-BR') + ' ' + data.toLocaleTimeString('pt-BR')
 }
 
-onMounted(() => {
-  carregarAnamneses()
+onMounted(async () => {
+  await carregarAnamneses()
+  // Inicializar paginação com o total de itens
+  atualizarTotalItens(anamnesesFiltradas.value.length)
 })
 </script>
 
 <style scoped>
+.page-header {
+  margin-bottom: 24px;
+}
+
+.header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+}
+
+.header-content h1 {
+  font-size: 28px;
+  color: #1d1d1f;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
 .status-badge {
   padding: 2px 6px;
   border-radius: 12px;
