@@ -1,25 +1,36 @@
 <template>
   <div class="container">
     <div class="page-header">
-      <h1><i class="fas fa-user-md"></i> Profissionais</h1>
-      <button @click="abrirModal" class="btn btn-primary">
-        <i class="fas fa-plus"></i> Novo Profissional
-      </button>
+      <div class="header-content">
+        <h1><i class="fas fa-user-md"></i> Profissionais</h1>
+        <div class="header-actions">
+          <VoltarHome />
+          <button @click="abrirModal" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Novo Profissional
+          </button>
+        </div>
+      </div>
     </div>
 
     <div class="card">
+      <!-- Filtros -->
+      <Filtros 
+        :opcoes="opcoesFiltros"
+        @filtros-alterados="aplicarFiltros"
+      />
+
       <div v-if="carregando" class="loading">
         <i class="fas fa-spinner fa-spin"></i> Carregando...
       </div>
       
-      <div v-else-if="profissionais.length === 0" class="empty-state">
+      <div v-else-if="profissionaisFiltrados.length === 0" class="empty-state">
         <i class="fas fa-user-md"></i>
         <p>Nenhum profissional cadastrado</p>
         <button @click="abrirModal" class="btn btn-primary">Cadastrar Primeiro Profissional</button>
       </div>
       
       <div v-else class="profissionais-grid">
-        <div v-for="prof in profissionais" :key="prof.id" class="profissional-card">
+        <div v-for="prof in profissionaisPaginados" :key="prof.id" class="profissional-card">
           <div class="profissional-header">
             <div class="profissional-avatar">
               <i class="fas fa-user-md"></i>
@@ -82,6 +93,23 @@
           </div>
         </div>
       </div>
+
+      <!-- Paginação -->
+      <Paginacao
+        :pagina-atual="paginaAtual"
+        :total-paginas="totalPaginas"
+        :total-itens="totalItens"
+        :itens-por-pagina="itensPorPagina"
+        :tem-pagina-anterior="temPaginaAnterior"
+        :tem-proxima-pagina="temProximaPagina"
+        :paginas-visiveis="paginasVisiveis"
+        @ir-para-pagina="irParaPagina"
+        @proxima-pagina="proximaPagina"
+        @pagina-anterior="paginaAnterior"
+        @primeira-pagina="primeiraPagina"
+        @ultima-pagina="ultimaPagina"
+        @alterar-itens-por-pagina="alterarItensPorPagina"
+      />
     </div>
 
     <!-- Modal Profissional -->
@@ -164,9 +192,14 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useProfissionais } from '../composables/useProfissionais.js'
+import { usePaginacao } from '../composables/usePaginacao.js'
+import { useFiltros } from '../composables/useFiltros.js'
+import VoltarHome from '../components/VoltarHome.vue'
+import Filtros from '../components/Filtros.vue'
+import Paginacao from '../components/Paginacao.vue'
 
 const router = useRouter()
 const { 
@@ -178,8 +211,64 @@ const {
   desativarProfissional
 } = useProfissionais()
 
+// Paginação
+const {
+  paginaAtual,
+  totalItens,
+  itensPorPagina,
+  totalPaginas,
+  temPaginaAnterior,
+  temProximaPagina,
+  itensVisiveis,
+  paginasVisiveis,
+  irParaPagina,
+  proximaPagina,
+  paginaAnterior,
+  primeiraPagina,
+  ultimaPagina,
+  atualizarTotalItens,
+  alterarItensPorPagina
+} = usePaginacao(9) // 9 itens para ficar 3x3 no grid
+
+// Filtros
+const {
+  filtros,
+  aplicarFiltros: aplicarFiltrosComposable
+} = useFiltros()
+
+// Opções para os filtros
+const opcoesFiltros = {
+  status: [
+    { value: 'ativo', label: 'Ativo' },
+    { value: 'inativo', label: 'Inativo' }
+  ],
+  categorias: ['esteticista', 'dermatologista', 'fisioterapeuta', 'massoterapeuta', 'outros'],
+  data: true,
+  ordenacao: [
+    { value: 'nome', label: 'Nome' },
+    { value: 'especialidade', label: 'Especialidade' },
+    { value: 'totalAtendimentos', label: 'Total de Atendimentos' },
+    { value: 'dataCriacao', label: 'Data de Criação' }
+  ]
+}
+
 const modal = ref(false)
 const profissionalEditando = ref(null)
+
+// Computed para profissionais filtrados e paginados
+const profissionaisFiltrados = computed(() => {
+  return aplicarFiltrosComposable(profissionais.value, ['nome', 'especialidade', 'telefone', 'email'])
+})
+
+const profissionaisPaginados = computed(() => {
+  const { inicio, fim } = itensVisiveis.value
+  return profissionaisFiltrados.value.slice(inicio, fim)
+})
+
+// Função para aplicar filtros
+const aplicarFiltros = (novosFiltros) => {
+  atualizarTotalItens(profissionaisFiltrados.value.length)
+}
 
 const form = ref({
   nome: '',
@@ -192,8 +281,9 @@ const form = ref({
   observacoes: ''
 })
 
-onMounted(() => {
-  buscarProfissionais(true)
+onMounted(async () => {
+  await buscarProfissionais(true)
+  atualizarTotalItens(profissionaisFiltrados.value.length)
 })
 
 const abrirModal = () => {
@@ -255,8 +345,10 @@ const formatarMoeda = (valor) => {
 </script>
 
 <style scoped>
-.page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
-.page-header h1 { font-size: 28px; color: #1d1d1f; display: flex; align-items: center; gap: 12px; }
+.page-header { margin-bottom: 24px; }
+.header-content { display: flex; justify-content: space-between; align-items: center; gap: 20px; }
+.header-content h1 { font-size: 28px; color: #1d1d1f; display: flex; align-items: center; gap: 12px; margin: 0; }
+.header-actions { display: flex; align-items: center; gap: 12px; }
 
 .profissionais-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 20px; }
 .profissional-card { background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%); border-radius: 16px; padding: 24px; border: 1px solid #e5e5ea; transition: all 0.3s ease; }

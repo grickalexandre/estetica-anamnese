@@ -1,16 +1,27 @@
 <template>
   <div class="container">
     <div class="page-header">
-      <h1><i class="fas fa-truck"></i> Fornecedores</h1>
-      <button @click="abrirModal" class="btn btn-primary">
-        <i class="fas fa-plus"></i>
-        Novo Fornecedor
-      </button>
+      <div class="header-content">
+        <h1><i class="fas fa-truck"></i> Fornecedores</h1>
+        <div class="header-actions">
+          <VoltarHome />
+          <button @click="abrirModal" class="btn btn-primary">
+            <i class="fas fa-plus"></i>
+            Novo Fornecedor
+          </button>
+        </div>
+      </div>
     </div>
 
     <div class="card">
+      <!-- Filtros -->
+      <Filtros 
+        :opcoes="opcoesFiltros"
+        @filtros-alterados="aplicarFiltros"
+      />
+
       <div v-if="carregando" class="loading"><i class="fas fa-spinner fa-spin"></i> Carregando...</div>
-      <div v-else-if="fornecedores.length === 0" class="empty-state">
+      <div v-else-if="fornecedoresFiltrados.length === 0" class="empty-state">
         <i class="fas fa-truck"></i>
         <p>Nenhum fornecedor cadastrado</p>
         <button @click="abrirModal" class="btn btn-primary">Cadastrar Primeiro Fornecedor</button>
@@ -28,7 +39,7 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-for="forn in fornecedores" :key="forn.id">
+          <tr v-for="forn in fornecedoresPaginados" :key="forn.id">
             <td><strong>{{ forn.nome }}</strong></td>
             <td>{{ forn.cnpjCpf || '-' }}</td>
             <td>{{ forn.telefone }}</td>
@@ -43,6 +54,23 @@
           </tr>
         </tbody>
       </table>
+
+      <!-- Paginação -->
+      <Paginacao
+        :pagina-atual="paginaAtual"
+        :total-paginas="totalPaginas"
+        :total-itens="totalItens"
+        :itens-por-pagina="itensPorPagina"
+        :tem-pagina-anterior="temPaginaAnterior"
+        :tem-proxima-pagina="temProximaPagina"
+        :paginas-visiveis="paginasVisiveis"
+        @ir-para-pagina="irParaPagina"
+        @proxima-pagina="proximaPagina"
+        @pagina-anterior="paginaAnterior"
+        @primeira-pagina="primeiraPagina"
+        @ultima-pagina="ultimaPagina"
+        @alterar-itens-por-pagina="alterarItensPorPagina"
+      />
     </div>
 
     <div v-if="modal" class="modal-overlay" @click.self="fecharModal">
@@ -100,16 +128,79 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useFornecedores } from '../composables/useFornecedores.js'
+import { usePaginacao } from '../composables/usePaginacao.js'
+import { useFiltros } from '../composables/useFiltros.js'
+import VoltarHome from '../components/VoltarHome.vue'
+import Filtros from '../components/Filtros.vue'
+import Paginacao from '../components/Paginacao.vue'
 
 const { fornecedores, carregando, buscarFornecedores, adicionarFornecedor, atualizarFornecedor, desativarFornecedor, excluirFornecedor } = useFornecedores()
+
+// Paginação
+const {
+  paginaAtual,
+  totalItens,
+  itensPorPagina,
+  totalPaginas,
+  temPaginaAnterior,
+  temProximaPagina,
+  itensVisiveis,
+  paginasVisiveis,
+  irParaPagina,
+  proximaPagina,
+  paginaAnterior,
+  primeiraPagina,
+  ultimaPagina,
+  atualizarTotalItens,
+  alterarItensPorPagina
+} = usePaginacao(10)
+
+// Filtros
+const {
+  filtros,
+  aplicarFiltros: aplicarFiltrosComposable
+} = useFiltros()
+
+// Opções para os filtros
+const opcoesFiltros = {
+  status: [
+    { value: 'ativo', label: 'Ativo' },
+    { value: 'inativo', label: 'Inativo' }
+  ],
+  categorias: ['produtos', 'equipamentos', 'servicos', 'outros'],
+  data: true,
+  ordenacao: [
+    { value: 'nome', label: 'Nome' },
+    { value: 'categoria', label: 'Categoria' },
+    { value: 'dataCriacao', label: 'Data de Criação' }
+  ]
+}
 
 const modal = ref(false)
 const fornecedorEditando = ref(null)
 const form = ref({ nome: '', cnpjCpf: '', categoria: 'produtos', telefone: '', email: '', endereco: '', observacoes: '' })
 
-onMounted(() => buscarFornecedores())
+// Computed para fornecedores filtrados e paginados
+const fornecedoresFiltrados = computed(() => {
+  return aplicarFiltrosComposable(fornecedores.value, ['nome', 'cnpjCpf', 'telefone', 'email'])
+})
+
+const fornecedoresPaginados = computed(() => {
+  const { inicio, fim } = itensVisiveis.value
+  return fornecedoresFiltrados.value.slice(inicio, fim)
+})
+
+// Função para aplicar filtros
+const aplicarFiltros = (novosFiltros) => {
+  atualizarTotalItens(fornecedoresFiltrados.value.length)
+}
+
+onMounted(async () => {
+  await buscarFornecedores()
+  atualizarTotalItens(fornecedoresFiltrados.value.length)
+})
 
 const abrirModal = () => {
   modal.value = true
@@ -153,8 +244,10 @@ const fecharModal = () => { modal.value = false }
 </script>
 
 <style scoped>
-.page-header { display: flex; justify-content: space-between; margin-bottom: 24px; }
-.page-header h1 { font-size: 28px; color: #1d1d1f; display: flex; align-items: center; gap: 12px; }
+.page-header { margin-bottom: 24px; }
+.header-content { display: flex; justify-content: space-between; align-items: center; gap: 20px; }
+.header-content h1 { font-size: 28px; color: #1d1d1f; display: flex; align-items: center; gap: 12px; margin: 0; }
+.header-actions { display: flex; align-items: center; gap: 12px; }
 .data-table { width: 100%; border-collapse: collapse; }
 .data-table thead th { text-align: left; padding: 12px; background: #f5f5f7; font-weight: 600; font-size: 13px; text-transform: uppercase; }
 .data-table tbody td { padding: 14px 12px; border-bottom: 1px solid #e5e5ea; }
