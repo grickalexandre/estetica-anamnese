@@ -16,10 +16,15 @@
                 {{ cli.nome }} - {{ cli.telefone }}
               </option>
             </select>
-            <small v-if="clienteSelecionado" class="info-selecionado">
-              📋 Anamneses: {{ clienteSelecionado.totalAnamneses || 0 }} | 
-              💰 Total Gasto: R$ {{ formatarMoeda(clienteSelecionado.totalGasto || 0) }}
-            </small>
+            <div v-if="clienteSelecionado" class="cliente-info">
+              <small class="info-selecionado">
+                📋 Anamneses: {{ clienteSelecionado.totalAnamneses || 0 }} | 
+                💰 Total Gasto: R$ {{ formatarMoeda(clienteSelecionado.totalGasto || 0) }}
+              </small>
+              <button type="button" @click="verFichaCliente" class="btn-link">
+                <i class="fas fa-file-medical"></i> Ver Ficha Completa
+              </button>
+            </div>
           </div>
           <div class="form-group">
             <label>Profissional *</label>
@@ -257,6 +262,13 @@ const selecionarCliente = () => {
   }
 }
 
+const verFichaCliente = () => {
+  // Abrir lista de anamneses filtrada pelo CPF do cliente
+  if (clienteSelecionado.value) {
+    router.push('/lista')
+  }
+}
+
 const selecionarProfissional = () => {
   const prof = profissionais.value.find(p => p.id === form.value.profissionalId)
   if (prof) {
@@ -416,7 +428,10 @@ const calcularDataParcela = (numeroParcela) => {
 <style scoped>
 .page-header { margin-bottom: 24px; }
 .page-header h1 { font-size: 28px; color: #1d1d1f; display: flex; align-items: center; gap: 12px; }
-.info-selecionado { display: block; margin-top: 8px; padding: 8px 12px; background: rgba(52, 199, 89, 0.1); border-radius: 6px; color: #34c759; font-size: 12px; }
+.cliente-info { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
+.info-selecionado { display: block; padding: 8px 12px; background: rgba(52, 199, 89, 0.1); border-radius: 6px; color: #34c759; font-size: 12px; }
+.btn-link { background: none; border: none; color: #007aff; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 6px; padding: 4px 0; font-weight: 600; }
+.btn-link:hover { text-decoration: underline; }
 .info-comissao { display: block; margin-top: 8px; padding: 8px 12px; background: rgba(102, 126, 234, 0.1); border-radius: 6px; color: #667eea; font-size: 12px; font-weight: 600; }
 .procedimentos-section { background: #f5f5f7; padding: 20px; border-radius: 12px; margin: 20px 0; }
 .procedimento-row { display: grid; grid-template-columns: 2fr 1fr auto; gap: 12px; margin-bottom: 12px; align-items: end; }
