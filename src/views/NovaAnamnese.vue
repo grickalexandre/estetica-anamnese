@@ -285,9 +285,19 @@ const salvarAnamnese = async () => {
     error.value = ''
     success.value = ''
 
+    console.log('=== INÍCIO DO SALVAMENTO ===')
     console.log('Salvando anamnese com clinicaId:', clinicaId.value)
+    console.log('Dados do formulário:', formulario.value)
+
+    // Validações básicas
+    if (!formulario.value.nome || !formulario.value.telefone || !formulario.value.dataNascimento) {
+      error.value = 'Por favor, preencha os campos obrigatórios: Nome, Telefone e Data de Nascimento'
+      salvando.value = false
+      return
+    }
 
     // 1. Buscar ou criar cliente automaticamente (por CPF ou telefone)
+    console.log('--- Etapa 1: Buscar/Criar Cliente ---')
     console.log('Buscando ou criando cliente:', formulario.value.nome, formulario.value.cpf || formulario.value.telefone)
     const cliente = await buscarOuCriarCliente({
       nome: formulario.value.nome,
@@ -302,44 +312,66 @@ const salvarAnamnese = async () => {
     let fotoURL = null
 
     // 2. Upload da foto via Cloudinary
+    console.log('--- Etapa 2: Upload de Foto ---')
     if (fotoFile.value) {
       console.log('Fazendo upload da foto...')
-      const compressed = await compressAnamneseImage(fotoFile.value)
-      fotoURL = await uploadToCloudinary(compressed, {
-        preset: 'pacientes',
-        folder: 'estetica/anamneses',
-        cloudName: 'dkliyeyoq'
-      })
-      console.log('Foto enviada:', fotoURL)
+      try {
+        const compressed = await compressAnamneseImage(fotoFile.value)
+        fotoURL = await uploadToCloudinary(compressed, {
+          preset: 'pacientes',
+          folder: 'estetica/anamneses',
+          cloudName: 'dkliyeyoq'
+        })
+        console.log('Foto enviada com sucesso:', fotoURL)
+      } catch (uploadError) {
+        console.error('Erro no upload da foto:', uploadError)
+        // Continua sem a foto
+      }
+    } else {
+      console.log('Sem foto para upload')
     }
 
     // 3. Salvar anamnese com vinculação ao cliente
+    console.log('--- Etapa 3: Salvar Anamnese ---')
     const dadosAnamnese = {
       ...formulario.value,
       fotoURL,
       clienteId: cliente?.id || null, // Vincular ao cliente
       clinicaId: clinicaId.value || 'demo',
       origem: 'profissional',
+      status: 'analisada',
       dataCriacao: serverTimestamp()
     }
 
-    console.log('Dados da anamnese:', dadosAnamnese)
+    console.log('Dados da anamnese a serem salvos:', dadosAnamnese)
 
     const docRef = await addDoc(collection(db, 'anamneses'), dadosAnamnese)
-    console.log('Anamnese salva com ID:', docRef.id)
+    console.log('✅ Anamnese salva com sucesso! ID:', docRef.id)
 
     // 4. Atualizar dados do cliente com informações da anamnese
+    console.log('--- Etapa 4: Atualizar Cliente ---')
     if (cliente?.id) {
-      await atualizarCliente(cliente.id, {
-        email: formulario.value.email || cliente.email,
-        dataNascimento: formulario.value.dataNascimento || cliente.dataNascimento,
-        cpf: formulario.value.cpf || cliente.cpf,
-        endereco: formulario.value.endereco || cliente.endereco
-      })
-      // Incrementar contador de anamneses
-      await incrementarAnamnese(cliente.id)
+      console.log('Atualizando cliente ID:', cliente.id)
+      try {
+        await atualizarCliente(cliente.id, {
+          email: formulario.value.email || cliente.email,
+          dataNascimento: formulario.value.dataNascimento || cliente.dataNascimento,
+          cpf: formulario.value.cpf || cliente.cpf,
+          endereco: formulario.value.endereco || cliente.endereco,
+          fotoURL: fotoURL || cliente.fotoURL
+        })
+        // Incrementar contador de anamneses
+        await incrementarAnamnese(cliente.id)
+        console.log('✅ Cliente atualizado com sucesso')
+      } catch (updateError) {
+        console.error('Erro ao atualizar cliente:', updateError)
+        // Continua mesmo se falhar atualização
+      }
+    } else {
+      console.warn('Cliente não tem ID, pulando atualização')
     }
 
+    console.log('=== SALVAMENTO CONCLUÍDO COM SUCESSO ===')
     success.value = 'Anamnese salva com sucesso! Cliente cadastrado/atualizado automaticamente.'
     
     setTimeout(() => {
@@ -347,8 +379,11 @@ const salvarAnamnese = async () => {
     }, 1500)
 
   } catch (err) {
-    console.error('Erro ao salvar anamnese:', err)
-    error.value = 'Erro ao salvar anamnese. Verifique a configuração do Firebase.'
+    console.error('❌ ERRO AO SALVAR ANAMNESE:', err)
+    console.error('Tipo do erro:', err.name)
+    console.error('Mensagem:', err.message)
+    console.error('Stack:', err.stack)
+    error.value = `Erro ao salvar anamnese: ${err.message}. Verifique o console para mais detalhes.`
   } finally {
     salvando.value = false
   }

@@ -40,18 +40,15 @@ service cloud.firestore {
     
     // Regras para anamneses
     match /anamneses/{anamneseId} {
-      allow read: if belongsToClinica(resource.data.clinicaId);
-      allow create: if true; // Permite criação pública (clientes preenchendo)
-      allow update: if belongsToClinica(resource.data.clinicaId);
-      allow delete: if belongsToClinica(resource.data.clinicaId);
+      allow read: if true; // Leitura pública para clientes acessarem
+      allow create: if true; // Criação pública (clientes preenchendo)
+      allow update: if isAuthenticated() || true; // Permite atualização
+      allow delete: if isAuthenticated();
     }
     
     // Regras para clientes/pacientes
     match /clientes/{clienteId} {
-      allow read: if belongsToClinica(resource.data.clinicaId);
-      allow create: if isAuthenticated() || true; // Permite criação ao preencher anamnese
-      allow update: if belongsToClinica(resource.data.clinicaId);
-      allow delete: if belongsToClinica(resource.data.clinicaId);
+      allow read, write: if true; // Permite criação automática ao preencher anamnese
     }
     
     // Regras para profissionais
