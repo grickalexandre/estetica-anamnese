@@ -3,12 +3,12 @@
     <!-- Header Mobile -->
     <header class="mobile-header">
       <div class="mobile-header-content">
-        <div class="mobile-brand">
+        <div class="mobile-brand" @click="irParaHome">
           <div class="brand-icon">
             <i class="fas fa-spa"></i>
           </div>
           <div class="brand-text">
-            <h3>{{ configuracoes.nomeClinica || 'Clínica Estética' }}</h3>
+            <h3 class="brand-title">{{ configuracoes.nomeClinica || 'Clínica Estética' }}</h3>
             <span v-if="configuracoes.nomeProprietario" class="proprietario">
               <i class="fas fa-user-md"></i>
               {{ configuracoes.nomeProprietario }}
@@ -153,6 +153,10 @@ import { useAuth } from '../composables/useAuth'
 const router = useRouter()
 const { configuracoes } = useConfiguracoes()
 const { isAuthenticated, logout } = useAuth()
+
+const irParaHome = () => {
+  router.push('/')
+}
 
 // Props
 const props = defineProps({

@@ -2,12 +2,12 @@
   <div class="sidebar" :class="{ 'collapsed': collapsed }">
     <!-- Header do Sidebar -->
     <div class="sidebar-header">
-      <div class="sidebar-brand">
+      <div class="sidebar-brand" @click="irParaHome">
         <div class="brand-icon">
           <i class="fas fa-spa"></i>
         </div>
         <div v-if="!collapsed" class="brand-text">
-          <h3>{{ configuracoes.nomeClinica || 'Clínica Estética' }}</h3>
+          <h3 class="brand-title">{{ configuracoes.nomeClinica || 'Clínica Estética' }}</h3>
           <span v-if="configuracoes.nomeProprietario" class="proprietario">
             <i class="fas fa-user-md"></i>
             {{ configuracoes.nomeProprietario }}
@@ -236,6 +236,10 @@ const handleLogout = async () => {
     console.error('Erro ao fazer logout:', error)
   }
 }
+
+const irParaHome = () => {
+  router.push('/')
+}
 </script>
 
 <style scoped>
@@ -275,6 +279,15 @@ const handleLogout = async () => {
   gap: 12px;
   flex: 1;
   min-width: 0;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border-radius: 8px;
+  padding: 8px;
+}
+
+.sidebar-brand:hover {
+  background: rgba(29, 29, 31, 0.05);
+  transform: translateY(-1px);
 }
 
 .brand-icon {
@@ -304,6 +317,14 @@ const handleLogout = async () => {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.brand-title {
+  transition: color 0.2s ease;
+}
+
+.sidebar-brand:hover .brand-title {
+  color: #007AFF;
 }
 
 .proprietario {
