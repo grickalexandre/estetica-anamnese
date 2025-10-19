@@ -4,24 +4,18 @@
       <h1>{{ configuracoes.nomeClinica || 'Sistema de Anamnese' }}</h1>
       <p>Gestão completa de fichas de anamnese para sua clínica de estética</p>
       <div class="action-buttons">
-        <router-link to="/dashboard">
-          <button class="btn btn-primary">
-            <i class="fas fa-chart-pie"></i>
-            Dashboard Analítico
-          </button>
-        </router-link>
-        <router-link to="/agenda">
-          <button class="btn btn-primary">
-            <i class="fas fa-calendar-alt"></i>
-            Agenda
-          </button>
-        </router-link>
-        <router-link to="/financeiro">
-          <button class="btn btn-primary">
-            <i class="fas fa-dollar-sign"></i>
-            Financeiro
-          </button>
-        </router-link>
+        <button @click="navegarPara('/dashboard')" class="btn btn-primary">
+          <i class="fas fa-chart-pie"></i>
+          Dashboard Analítico
+        </button>
+        <button @click="navegarPara('/agenda')" class="btn btn-primary">
+          <i class="fas fa-calendar-alt"></i>
+          Agenda
+        </button>
+        <button @click="navegarPara('/financeiro')" class="btn btn-primary">
+          <i class="fas fa-dollar-sign"></i>
+          Financeiro
+        </button>
         <button @click="copiarLinkCliente" class="btn btn-accent">
           <i class="fas fa-copy"></i>
           Copiar Link Cliente
@@ -144,9 +138,11 @@
 
 <script setup>
 import { ref, computed } from 'vue'
+import { useRouter } from 'vue-router'
 import { useConfiguracoes } from '../composables/useConfiguracoes'
 import { useClinica } from '../composables/useClinica.js'
 
+const router = useRouter()
 const { configuracoes, carregando } = useConfiguracoes()
 const { clinicaId } = useClinica()
 const showNotification = ref(false)
@@ -156,6 +152,11 @@ const linkClienteUrl = computed(() => {
   const baseUrl = window.location.origin
   return `${baseUrl}/anamnese-cliente`
 })
+
+const navegarPara = (rota) => {
+  console.log('Navegando para:', rota)
+  router.push(rota)
+}
 
 const copiarLinkCliente = async () => {
   try {
