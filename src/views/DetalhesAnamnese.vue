@@ -69,7 +69,7 @@
             </div>
             
             <div style="display: grid; gap: 12px; background: rgba(29, 29, 31, 0.05); padding: 20px; border-radius: 12px; border-left: 4px solid #1d1d1f;">
-              <p><strong><i class="fas fa-calendar"></i> Data de Nascimento:</strong> {{ formatarData(anamnese.dataNascimento) }}</p>
+              <p><strong><i class="fas fa-calendar"></i> Data de Nascimento:</strong> {{ formatarData(anamnese.dataNascimento, false) }}</p>
               <p v-if="anamnese.cpf"><strong><i class="fas fa-id-card"></i> CPF:</strong> {{ anamnese.cpf }}</p>
               <p><strong><i class="fas fa-phone"></i> Telefone:</strong> {{ anamnese.telefone }}</p>
               <p v-if="anamnese.email"><strong><i class="fas fa-envelope"></i> Email:</strong> {{ anamnese.email }}</p>
@@ -160,7 +160,7 @@
         <div v-for="obs in observacoes" :key="obs.id" class="observacao-item">
           <div class="observacao-header">
             <div class="observacao-info">
-              <span class="observacao-data">{{ formatarData(obs.dataCriacao) }}</span>
+              <span class="observacao-data">{{ formatarDataCriacao(obs.dataCriacao) }}</span>
               <span class="observacao-tipo" :class="obs.tipo">{{ obs.tipo }}</span>
             </div>
             <button @click="editarObservacao(obs)" class="btn-icon btn-edit" title="Editar">
@@ -254,10 +254,6 @@ const carregarAnamnese = async () => {
   }
 }
 
-const formatarData = (data) => {
-  if (!data) return ''
-  return new Date(data).toLocaleDateString('pt-BR')
-}
 
 const marcarComoAnalisada = async () => {
   try {
@@ -281,16 +277,17 @@ const marcarComoAnalisada = async () => {
   }
 }
 
-const formatarDataCriacao = (timestamp) => {
+const formatarData = (timestamp, comHora = true) => {
   if (!timestamp) return ''
   const data = timestamp.toDate ? timestamp.toDate() : new Date(timestamp)
-  return data.toLocaleDateString('pt-BR') + ' às ' + data.toLocaleTimeString('pt-BR')
+  if (comHora) {
+    return data.toLocaleDateString('pt-BR') + ' às ' + data.toLocaleTimeString('pt-BR')
+  }
+  return data.toLocaleDateString('pt-BR')
 }
 
-const formatarData = (timestamp) => {
-  if (!timestamp) return ''
-  const data = timestamp.toDate ? timestamp.toDate() : new Date(timestamp)
-  return data.toLocaleDateString('pt-BR') + ' às ' + data.toLocaleTimeString('pt-BR')
+const formatarDataCriacao = (timestamp) => {
+  return formatarData(timestamp, true)
 }
 
 // Funções de observações
