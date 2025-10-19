@@ -315,8 +315,19 @@ const abrirModal = () => {
 }
 
 const fecharModal = () => {
+  console.log('Fechando modal, limpando estado')
   modal.value = false
   procedimentoEditando.value = null
+  // Limpar formulário também
+  form.value = {
+    nome: '',
+    categoria: 'facial',
+    valor: 0,
+    duracao: 60,
+    sessoesRecomendadas: 1,
+    descricao: '',
+    observacoes: ''
+  }
 }
 
 const editar = (proc) => {
@@ -365,28 +376,18 @@ const salvar = async () => {
     console.log('Dados preparados para salvar:', dadosParaSalvar)
     
     if (procedimentoEditando.value && procedimentoEditando.value.id) {
-      // Atualizar - verificar se o documento existe
+      // Atualizar procedimento existente
       console.log('--- Atualizando procedimento existente ---')
       console.log('ID do procedimento:', procedimentoEditando.value.id)
       
-      try {
-        const docRef = doc(db, 'catalogo_procedimentos', procedimentoEditando.value.id)
-        await updateDoc(docRef, {
-          ...dadosParaSalvar,
-          dataAtualizacao: serverTimestamp()
-        })
-        console.log('✅ Procedimento atualizado com sucesso')
-      } catch (updateError) {
-        console.error('Erro ao atualizar, tentando criar novo:', updateError)
-        // Se falhar ao atualizar, criar novo
-        dadosParaSalvar.totalRealizados = 0
-        dadosParaSalvar.dataCriacao = serverTimestamp()
-        
-        const docRef = await addDoc(collection(db, 'catalogo_procedimentos'), dadosParaSalvar)
-        console.log('✅ Procedimento criado como novo com ID:', docRef.id)
-      }
+      const docRef = doc(db, 'catalogo_procedimentos', procedimentoEditando.value.id)
+      await updateDoc(docRef, {
+        ...dadosParaSalvar,
+        dataAtualizacao: serverTimestamp()
+      })
+      console.log('✅ Procedimento atualizado com sucesso')
     } else {
-      // Criar novo
+      // Criar novo procedimento
       console.log('--- Criando novo procedimento ---')
       dadosParaSalvar.totalRealizados = 0
       dadosParaSalvar.dataCriacao = serverTimestamp()
@@ -451,6 +452,9 @@ const reativar = async (id) => {
 }
 
 const excluir = async (id) => {
+  console.log('=== INÍCIO DA EXCLUSÃO ===')
+  console.log('ID do procedimento a ser excluído:', id)
+  
   const confirmacao = confirm(
     '⚠️ ATENÇÃO: Excluir permanentemente este procedimento?\n\n' +
     'Esta ação NÃO pode ser desfeita!\n' +
@@ -460,16 +464,25 @@ const excluir = async (id) => {
   
   if (confirmacao) {
     try {
+      console.log('--- Excluindo procedimento ---')
       const docRef = doc(db, 'catalogo_procedimentos', id)
       await deleteDoc(docRef)
+      console.log('✅ Procedimento excluído com sucesso')
       
+      console.log('--- Recarregando lista ---')
       await buscarProcedimentos()
       atualizarTotalItens(procedimentosFiltrados.value.length)
+      console.log('=== EXCLUSÃO CONCLUÍDA ===')
       alert('Procedimento excluído permanentemente!')
     } catch (error) {
-      console.error('Erro ao excluir procedimento:', error)
+      console.error('❌ ERRO AO EXCLUIR PROCEDIMENTO:', error)
+      console.error('Tipo do erro:', error.name)
+      console.error('Mensagem:', error.message)
+      console.error('Stack:', error.stack)
       alert('Erro ao excluir procedimento: ' + error.message)
     }
+  } else {
+    console.log('Exclusão cancelada pelo usuário')
   }
 }
 
