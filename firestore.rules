@@ -69,8 +69,13 @@ service cloud.firestore {
       allow read, write: if isAuthenticated();
     }
     
-    // Regras para procedimentos (catálogo)
+    // Regras para procedimentos (catálogo) - nomenclatura antiga
     match /procedimentos/{procedimentoId} {
+      allow read, write: if isAuthenticated();
+    }
+    
+    // Regras para catálogo de procedimentos - nomenclatura atual
+    match /catalogo_procedimentos/{procedimentoId} {
       allow read, write: if isAuthenticated();
     }
     
