@@ -1,37 +1,43 @@
 <template>
   <div class="container">
     <div class="page-header">
-      <h1><i class="fas fa-money-bill-wave"></i> Comissões</h1>
+      <div class="header-content">
+        <h1><i class="fas fa-money-bill-wave"></i> Comissões</h1>
+        <div class="header-actions">
+          <VoltarHome />
+        </div>
+      </div>
     </div>
 
-    <!-- Filtros -->
+    <!-- Filtros Personalizados para Comissões -->
     <div class="card">
-      <h2><i class="fas fa-filter"></i> Filtros</h2>
-      <div class="form-row">
-        <div class="form-group">
-          <label>Profissional</label>
-          <select v-model="filtros.profissionalId" @change="aplicarFiltros">
-            <option value="">Todos</option>
-            <option v-for="prof in profissionais" :key="prof.id" :value="prof.id">
-              {{ prof.nome }}
-            </option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label>Status</label>
-          <select v-model="filtros.status" @change="aplicarFiltros">
-            <option value="">Todos</option>
-            <option value="pendente">Pendente</option>
-            <option value="pago">Pago</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label>Data Início</label>
-          <input v-model="filtros.dataInicio" type="date" @change="aplicarFiltros">
-        </div>
-        <div class="form-group">
-          <label>Data Fim</label>
-          <input v-model="filtros.dataFim" type="date" @change="aplicarFiltros">
+      <div class="filtros-comissoes">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Profissional</label>
+            <select v-model="filtrosProfissional" @change="aplicarFiltrosCustom">
+              <option value="">Todos</option>
+              <option v-for="prof in profissionais" :key="prof.id" :value="prof.id">
+                {{ prof.nome }}
+              </option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Status</label>
+            <select v-model="filtrosStatus" @change="aplicarFiltrosCustom">
+              <option value="">Todos</option>
+              <option value="pendente">Pendente</option>
+              <option value="pago">Pago</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Data Início</label>
+            <input v-model="filtrosDataInicio" type="date" @change="aplicarFiltrosCustom">
+          </div>
+          <div class="form-group">
+            <label>Data Fim</label>
+            <input v-model="filtrosDataFim" type="date" @change="aplicarFiltrosCustom">
+          </div>
         </div>
       </div>
     </div>
@@ -92,7 +98,7 @@
         <i class="fas fa-spinner fa-spin"></i> Carregando...
       </div>
       
-      <div v-else-if="comissoes.length === 0" class="empty-state">
+      <div v-else-if="comissoesFiltradas.length === 0" class="empty-state">
         <i class="fas fa-money-bill-wave"></i>
         <p>Nenhuma comissão encontrada</p>
       </div>
@@ -113,7 +119,7 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-for="comissao in comissoes" :key="comissao.id" :class="{'paga': comissao.pago}">
+          <tr v-for="comissao in comissoesPaginadas" :key="comissao.id" :class="{'paga': comissao.pago}">
             <td><input type="checkbox" v-model="comissao.selecionada" v-if="!comissao.pago"></td>
             <td>{{ formatarData(comissao.data) }}</td>
             <td><strong>{{ comissao.profissionalNome }}</strong></td>
@@ -136,6 +142,23 @@
           </tr>
         </tbody>
       </table>
+
+      <!-- Paginação -->
+      <Paginacao
+        :pagina-atual="paginaAtual"
+        :total-paginas="totalPaginas"
+        :total-itens="totalItens"
+        :itens-por-pagina="itensPorPagina"
+        :tem-pagina-anterior="temPaginaAnterior"
+        :tem-proxima-pagina="temProximaPagina"
+        :paginas-visiveis="paginasVisiveis"
+        @ir-para-pagina="irParaPagina"
+        @proxima-pagina="proximaPagina"
+        @pagina-anterior="paginaAnterior"
+        @primeira-pagina="primeiraPagina"
+        @ultima-pagina="ultimaPagina"
+        @alterar-itens-por-pagina="alterarItensPorPagina"
+      />
     </div>
   </div>
 </template>
@@ -145,10 +168,38 @@ import { ref, onMounted, computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { useComissoes } from '../composables/useComissoes.js'
 import { useProfissionais } from '../composables/useProfissionais.js'
+import { usePaginacao } from '../composables/usePaginacao.js'
+import VoltarHome from '../components/VoltarHome.vue'
+import Paginacao from '../components/Paginacao.vue'
 
 const route = useRoute()
 const { comissoes, carregando, buscarComissoes, pagarComissao, obterEstatisticasComissoes } = useComissoes()
 const { profissionais, buscarProfissionais } = useProfissionais()
+
+// Paginação
+const {
+  paginaAtual,
+  totalItens,
+  itensPorPagina,
+  totalPaginas,
+  temPaginaAnterior,
+  temProximaPagina,
+  itensVisiveis,
+  paginasVisiveis,
+  irParaPagina,
+  proximaPagina,
+  paginaAnterior,
+  primeiraPagina,
+  ultimaPagina,
+  atualizarTotalItens,
+  alterarItensPorPagina
+} = usePaginacao(10)
+
+// Filtros customizados
+const filtrosProfissional = ref(route.query.profissionalId || '')
+const filtrosStatus = ref('')
+const filtrosDataInicio = ref('')
+const filtrosDataFim = ref('')
 
 const filtros = ref({
   profissionalId: route.query.profissionalId || '',
@@ -160,13 +211,57 @@ const filtros = ref({
 const estatisticas = ref(null)
 const todasSelecionadas = ref(false)
 
+// Computed para comissões filtradas e paginadas
+const comissoesFiltradas = computed(() => {
+  let resultado = [...comissoes.value]
+  
+  // Aplicar filtros customizados
+  if (filtrosProfissional.value) {
+    resultado = resultado.filter(c => c.profissionalId === filtrosProfissional.value)
+  }
+  if (filtrosStatus.value) {
+    if (filtrosStatus.value === 'pago') {
+      resultado = resultado.filter(c => c.pago === true)
+    } else if (filtrosStatus.value === 'pendente') {
+      resultado = resultado.filter(c => c.pago === false)
+    }
+  }
+  if (filtrosDataInicio.value) {
+    resultado = resultado.filter(c => {
+      const dataComissao = new Date(c.data)
+      const dataInicio = new Date(filtrosDataInicio.value)
+      return dataComissao >= dataInicio
+    })
+  }
+  if (filtrosDataFim.value) {
+    resultado = resultado.filter(c => {
+      const dataComissao = new Date(c.data)
+      const dataFim = new Date(filtrosDataFim.value)
+      return dataComissao <= dataFim
+    })
+  }
+  
+  return resultado
+})
+
+const comissoesPaginadas = computed(() => {
+  const { inicio, fim } = itensVisiveis.value
+  return comissoesFiltradas.value.slice(inicio, fim)
+})
+
 const comissoesPendentes = computed(() => {
   return comissoes.value.filter(c => !c.pago && c.selecionada)
 })
 
+const aplicarFiltrosCustom = () => {
+  atualizarTotalItens(comissoesFiltradas.value.length)
+  primeiraPagina()
+}
+
 onMounted(async () => {
   await buscarProfissionais(true)
   await carregarDados()
+  atualizarTotalItens(comissoesFiltradas.value.length)
 })
 
 const carregarDados = async () => {
@@ -240,7 +335,10 @@ const formatarData = (data) => {
 
 <style scoped>
 .page-header { margin-bottom: 24px; }
-.page-header h1 { font-size: 28px; color: #1d1d1f; display: flex; align-items: center; gap: 12px; }
+.header-content { display: flex; justify-content: space-between; align-items: center; gap: 20px; }
+.header-content h1 { font-size: 28px; color: #1d1d1f; display: flex; align-items: center; gap: 12px; margin: 0; }
+.header-actions { display: flex; align-items: center; gap: 12px; }
+.filtros-comissoes { padding: 16px 0; }
 
 .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
 .card-header h2 { margin: 0; }
