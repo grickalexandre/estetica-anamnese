@@ -19,6 +19,14 @@
         @filtros-alterados="aplicarFiltros"
       />
 
+      <!-- Filtro adicional para mostrar inativos -->
+      <div class="filtro-ativos">
+        <label>
+          <input type="checkbox" v-model="mostrarInativos" @change="toggleMostrarInativos">
+          Mostrar profissionais inativos
+        </label>
+      </div>
+
       <div v-if="carregando" class="loading">
         <i class="fas fa-spinner fa-spin"></i> Carregando...
       </div>
@@ -87,8 +95,14 @@
             <button @click="editar(prof)" class="btn-icon btn-edit" title="Editar">
               <i class="fas fa-edit"></i>
             </button>
-            <button @click="desativar(prof.id)" class="btn-icon btn-disable" title="Desativar">
+            <button v-if="prof.ativo" @click="desativar(prof.id)" class="btn-icon btn-disable" title="Desativar">
               <i class="fas fa-ban"></i>
+            </button>
+            <button v-else @click="reativar(prof.id)" class="btn-icon btn-success" title="Reativar">
+              <i class="fas fa-check-circle"></i>
+            </button>
+            <button @click="excluir(prof.id)" class="btn-icon btn-delete" title="Excluir Permanentemente">
+              <i class="fas fa-trash"></i>
             </button>
           </div>
         </div>
@@ -200,6 +214,8 @@ import { useFiltros } from '../composables/useFiltros.js'
 import VoltarHome from '../components/VoltarHome.vue'
 import Filtros from '../components/Filtros.vue'
 import Paginacao from '../components/Paginacao.vue'
+import { db } from '../firebase.js'
+import { doc, deleteDoc } from 'firebase/firestore'
 
 const router = useRouter()
 const { 
@@ -254,6 +270,7 @@ const opcoesFiltros = {
 
 const modal = ref(false)
 const profissionalEditando = ref(null)
+const mostrarInativos = ref(false)
 
 // Computed para profissionais filtrados e paginados
 const profissionaisFiltrados = computed(() => {
@@ -281,8 +298,15 @@ const form = ref({
   observacoes: ''
 })
 
+const toggleMostrarInativos = async () => {
+  // Buscar todos ou apenas ativos
+  await buscarProfissionais(!mostrarInativos.value)
+  atualizarTotalItens(profissionaisFiltrados.value.length)
+  primeiraPagina()
+}
+
 onMounted(async () => {
-  await buscarProfissionais(true)
+  await buscarProfissionais(true) // Inicialmente apenas ativos
   atualizarTotalItens(profissionaisFiltrados.value.length)
 })
 
@@ -363,11 +387,65 @@ const salvar = async () => {
 }
 
 const desativar = async (id) => {
-  if (confirm('Desativar este profissional?')) {
-    const resultado = await desativarProfissional(id)
-    if (resultado.success) {
-      await buscarProfissionais(true)
-      alert('Profissional desativado!')
+  if (confirm('Desativar este profissional? Ele não aparecerá mais nas listagens ativas, mas os dados serão mantidos.')) {
+    try {
+      const resultado = await desativarProfissional(id)
+      if (resultado.success) {
+        await buscarProfissionais(true)
+        atualizarTotalItens(profissionaisFiltrados.value.length)
+        alert('Profissional desativado com sucesso!')
+      } else {
+        alert('Erro ao desativar: ' + resultado.error)
+      }
+    } catch (error) {
+      console.error('Erro ao desativar profissional:', error)
+      alert('Erro ao desativar profissional: ' + error.message)
+    }
+  }
+}
+
+const reativar = async (id) => {
+  if (confirm('Reativar este profissional?')) {
+    try {
+      const resultado = await atualizarProfissional(id, { ativo: true })
+      if (resultado.success) {
+        await buscarProfissionais(true)
+        atualizarTotalItens(profissionaisFiltrados.value.length)
+        alert('Profissional reativado com sucesso!')
+      } else {
+        alert('Erro ao reativar: ' + resultado.error)
+      }
+    } catch (error) {
+      console.error('Erro ao reativar profissional:', error)
+      alert('Erro ao reativar profissional: ' + error.message)
+    }
+  }
+}
+
+const excluir = async (id) => {
+  const confirmacao = confirm(
+    '⚠️ ATENÇÃO: Excluir permanentemente este profissional?\n\n' +
+    'Esta ação NÃO pode ser desfeita!\n' +
+    'Todos os dados, comissões e históricos serão perdidos.\n\n' +
+    'Recomendamos usar "Desativar" ao invés de excluir.\n\n' +
+    'Deseja realmente EXCLUIR?'
+  )
+  
+  if (confirmacao) {
+    const confirmaExclusao = confirm('Tem certeza absoluta? Digite OK para confirmar.')
+    if (confirmaExclusao) {
+      try {
+        // Usar a função de exclusão do composable (precisamos adicionar)
+        const docRef = doc(db, 'profissionais', id)
+        await deleteDoc(docRef)
+        
+        await buscarProfissionais(true)
+        atualizarTotalItens(profissionaisFiltrados.value.length)
+        alert('Profissional excluído permanentemente!')
+      } catch (error) {
+        console.error('Erro ao excluir profissional:', error)
+        alert('Erro ao excluir profissional: ' + error.message)
+      }
     }
   }
 }
@@ -391,9 +469,41 @@ const formatarMoeda = (valor) => {
 .header-content h1 { font-size: 28px; color: #1d1d1f; display: flex; align-items: center; gap: 12px; margin: 0; }
 .header-actions { display: flex; align-items: center; gap: 12px; }
 
+.filtro-ativos {
+  padding: 16px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  margin-bottom: 16px;
+}
+
+.filtro-ativos label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.filtro-ativos input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+}
+
 .profissionais-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 20px; }
-.profissional-card { background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%); border-radius: 16px; padding: 24px; border: 1px solid #e5e5ea; transition: all 0.3s ease; }
+.profissional-card { background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%); border-radius: 16px; padding: 24px; border: 1px solid #e5e5ea; transition: all 0.3s ease; position: relative; }
 .profissional-card:hover { box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1); transform: translateY(-4px); }
+.profissional-card:not(:has(.profissional-header)) { opacity: 0.6; background: linear-gradient(135deg, #f5f5f7 0%, #e5e5ea 100%); }
+.profissional-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  border-radius: 16px 16px 0 0;
+  background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+}
 
 .profissional-header { display: flex; align-items: center; gap: 16px; margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid #e5e5ea; }
 .profissional-avatar { width: 60px; height: 60px; border-radius: 50%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center; color: white; font-size: 24px; }
@@ -416,6 +526,10 @@ const formatarMoeda = (valor) => {
 .btn-icon { width: 36px; height: 36px; border-radius: 8px; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; }
 .btn-icon.btn-edit { background: #007aff; color: white; }
 .btn-icon.btn-disable { background: #ff9500; color: white; }
+.btn-icon.btn-success { background: #34c759; color: white; }
+.btn-icon.btn-success:hover { background: #28a745; }
+.btn-icon.btn-delete { background: #ff3b30; color: white; }
+.btn-icon.btn-delete:hover { background: #e02e24; }
 
 .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 20px; }
 .modal-content { background: white; border-radius: 16px; width: 100%; max-width: 600px; max-height: 90vh; overflow-y: auto; }
