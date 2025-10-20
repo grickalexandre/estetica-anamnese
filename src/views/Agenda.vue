@@ -422,6 +422,7 @@ onMounted(async () => {
     
     console.log('Período de busca:', inicio.toISOString().split('T')[0], 'até', fim.toISOString().split('T')[0])
     await buscarAgendamentos(inicio.toISOString().split('T')[0], fim.toISOString().split('T')[0])
+    console.log('Agendamentos retornados:', agendamentos.value.length)
     console.log('=== CARREGAMENTO DA AGENDA CONCLUÍDO ===')
   } catch (error) {
     console.error('❌ ERRO NO CARREGAMENTO DA AGENDA:', error)
@@ -487,14 +488,16 @@ const agendamentosPorHora = (hora) => {
   return agendamentos.value.filter(a => {
     const agendData = a.dataHora?.toDate ? a.dataHora.toDate() : new Date(a.dataHora)
     const agendHora = agendData.toTimeString().slice(0, 5)
-    return agendData.toISOString().split('T')[0] === data && agendHora === hora
+    const dia = agendData.toISOString().split('T')[0]
+    return dia === data && agendHora === hora
   })
 }
 
 const agendamentosPorDia = (data) => {
   return agendamentos.value.filter(a => {
     const agendData = a.dataHora?.toDate ? a.dataHora.toDate() : new Date(a.dataHora)
-    return agendData.toISOString().split('T')[0] === data
+    const dia = agendData.toISOString().split('T')[0]
+    return dia === data
   }).sort((a, b) => {
     const dataA = a.dataHora?.toDate ? a.dataHora.toDate() : new Date(a.dataHora)
     const dataB = b.dataHora?.toDate ? b.dataHora.toDate() : new Date(b.dataHora)
@@ -506,7 +509,8 @@ const agendamentosPorDiaHora = (data, hora) => {
   return agendamentos.value.filter(a => {
     const agendData = a.dataHora?.toDate ? a.dataHora.toDate() : new Date(a.dataHora)
     const agendHora = agendData.toTimeString().slice(0, 5)
-    return agendData.toISOString().split('T')[0] === data && agendHora === hora
+    const dia = agendData.toISOString().split('T')[0]
+    return dia === data && agendHora === hora
   })
 }
 

@@ -40,12 +40,14 @@ export function useAgendamento() {
 
       if (dataInicio && dataFim) {
         console.log('Aplicando filtro de data')
-        q = query(
-          q,
-          where('dataHora', '>=', Timestamp.fromDate(new Date(dataInicio))),
-          where('dataHora', '<=', Timestamp.fromDate(new Date(dataFim))),
-          orderBy('dataHora', 'asc')
-        )
+        const ini = new Date(dataInicio)
+        ini.setHours(0, 0, 0, 0)
+        const fim = new Date(dataFim)
+        fim.setHours(23, 59, 59, 999)
+        q = query(q,
+          where('dataHora', '>=', Timestamp.fromDate(ini)),
+          where('dataHora', '<=', Timestamp.fromDate(fim)),
+          orderBy('dataHora', 'asc'))
       } else {
         console.log('Buscando todos os agendamentos (sem filtro de data)')
         q = query(q, orderBy('dataHora', 'asc'))
