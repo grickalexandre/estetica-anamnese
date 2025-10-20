@@ -485,12 +485,30 @@ const diasMes = computed(() => {
 
 const agendamentosPorHora = (hora) => {
   const data = dataAtual.value
-  return agendamentos.value.filter(a => {
+  const filtrados = agendamentos.value.filter(a => {
     const agendData = a.dataHora?.toDate ? a.dataHora.toDate() : new Date(a.dataHora)
     const agendHora = agendData.toTimeString().slice(0, 5)
     const dia = agendData.toISOString().split('T')[0]
-    return dia === data && agendHora === hora
+    const match = dia === data && agendHora === hora
+    
+    if (match) {
+      console.log('🎯 Agendamento encontrado:', {
+        cliente: a.clienteNome,
+        data: dia,
+        hora: agendHora,
+        dataAtual: data,
+        horaAtual: hora
+      })
+    }
+    
+    return match
   })
+  
+  if (filtrados.length > 0) {
+    console.log(`📅 ${filtrados.length} agendamentos para ${data} às ${hora}`)
+  }
+  
+  return filtrados
 }
 
 const agendamentosPorDia = (data) => {
