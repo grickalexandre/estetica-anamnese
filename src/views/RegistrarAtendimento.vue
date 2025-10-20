@@ -19,6 +19,11 @@
                 {{ cli.nome }} - {{ cli.telefone }}
               </option>
             </select>
+            <div style="margin-top: 8px;">
+              <button type="button" class="btn btn-secondary btn-small" @click="abrirModalPesquisaCliente">
+                <i class="fas fa-search"></i> Pesquisar Paciente
+              </button>
+            </div>
             <div v-if="clienteSelecionado" class="cliente-info">
               <small class="info-selecionado">
                 📋 Anamneses: {{ clienteSelecionado.totalAnamneses || 0 }} | 
@@ -56,6 +61,11 @@
                   {{ proc.nome }} - R$ {{ formatarMoeda(proc.valor) }} ({{ proc.duracao }}min)
                 </option>
               </select>
+              <div style="margin-top: 8px;">
+                <button type="button" class="btn btn-secondary btn-small" @click="abrirModalPesquisaProcedimento(index)">
+                  <i class="fas fa-search"></i> Pesquisar Procedimento
+                </button>
+              </div>
             </div>
 
             <div class="form-group">
@@ -203,6 +213,73 @@
         </div>
       </form>
     </div>
+
+    <!-- Modal: Pesquisa de Paciente -->
+    <div v-if="modalPesquisaCliente" class="modal-overlay" @click.self="fecharModalPesquisaCliente">
+      <div class="modal-content modal-large">
+        <div class="modal-header">
+          <h2><i class="fas fa-users"></i> Pesquisar Paciente</h2>
+          <button type="button" class="btn-close" @click="fecharModalPesquisaCliente"><i class="fas fa-times"></i></button>
+        </div>
+        <form @submit.prevent>
+          <div class="form-group">
+            <label>Buscar por nome, telefone ou CPF</label>
+            <input type="text" v-model="termoPesquisaCliente" placeholder="Digite para filtrar...">
+          </div>
+          <div v-if="clientesFiltrados.length === 0" class="empty-state">
+            <i class="fas fa-user-slash"></i>
+            <p>Nenhum paciente encontrado</p>
+          </div>
+          <div v-else class="lista-resultados">
+            <div v-for="cli in clientesFiltrados" :key="cli.id" class="resultado-item" @click="aplicarSelecaoCliente(cli)">
+              <div class="avatar"><i class="fas fa-user"></i></div>
+              <div class="info">
+                <div class="titulo">{{ cli.nome }}</div>
+                <div class="sub">{{ cli.telefone }} • {{ cli.cpf || 'sem CPF' }}</div>
+              </div>
+              <div class="acao">Selecionar</div>
+            </div>
+          </div>
+          <div class="modal-actions">
+            <button type="button" class="btn btn-secondary" @click="fecharModalPesquisaCliente">Fechar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Modal: Pesquisa de Procedimento -->
+    <div v-if="modalPesquisaProcedimento" class="modal-overlay" @click.self="fecharModalPesquisaProcedimento">
+      <div class="modal-content modal-large">
+        <div class="modal-header">
+          <h2><i class="fas fa-spa"></i> Pesquisar Procedimento</h2>
+          <button type="button" class="btn-close" @click="fecharModalPesquisaProcedimento"><i class="fas fa-times"></i></button>
+        </div>
+        <form @submit.prevent>
+          <div class="form-group">
+            <label>Buscar por nome ou categoria</label>
+            <input type="text" v-model="termoPesquisaProcedimento" placeholder="Digite para filtrar...">
+          </div>
+          <div v-if="procedimentosFiltradosPesquisa.length === 0" class="empty-state">
+            <i class="fas fa-search"></i>
+            <p>Nenhum procedimento encontrado</p>
+          </div>
+          <div v-else class="lista-resultados">
+            <div v-for="proc in procedimentosFiltradosPesquisa" :key="proc.id" class="resultado-item" @click="aplicarSelecaoProcedimento(proc)">
+              <div class="avatar"><i class="fas fa-spa"></i></div>
+              <div class="info">
+                <div class="titulo">{{ proc.nome }}</div>
+                <div class="sub">{{ proc.categoria || 'categoria' }} • R$ {{ formatarMoeda(proc.valor) }} • {{ proc.duracao }}min</div>
+              </div>
+              <div class="acao">Selecionar</div>
+            </div>
+          </div>
+          <div class="modal-actions">
+            <button type="button" class="btn btn-secondary" @click="fecharModalPesquisaProcedimento">Fechar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
   </div>
 </template>
 
@@ -298,6 +375,63 @@ const selecionarCliente = () => {
   }
 }
 
+// ===== Modais de Pesquisa =====
+const modalPesquisaCliente = ref(false)
+const termoPesquisaCliente = ref('')
+const clientesFiltrados = computed(() => {
+  const termo = termoPesquisaCliente.value.toLowerCase().trim()
+  if (!termo) return clientes.value
+  return clientes.value.filter(c =>
+    (c.nome || '').toLowerCase().includes(termo) ||
+    (c.telefone || '').toLowerCase().includes(termo) ||
+    (c.cpf || '').toLowerCase().includes(termo)
+  )
+})
+const abrirModalPesquisaCliente = () => {
+  termoPesquisaCliente.value = ''
+  modalPesquisaCliente.value = true
+}
+const fecharModalPesquisaCliente = () => {
+  modalPesquisaCliente.value = false
+}
+const aplicarSelecaoCliente = (cli) => {
+  form.value.clienteId = cli.id
+  selecionarCliente()
+  fecharModalPesquisaCliente()
+}
+
+const modalPesquisaProcedimento = ref(false)
+const termoPesquisaProcedimento = ref('')
+const indiceProcedimentoAtivo = ref(null)
+const procedimentosFiltradosPesquisa = computed(() => {
+  const termo = termoPesquisaProcedimento.value.toLowerCase().trim()
+  if (!termo) return procedimentos.value
+  return procedimentos.value.filter(p =>
+    (p.nome || '').toLowerCase().includes(termo) ||
+    (p.categoria || '').toLowerCase().includes(termo)
+  )
+})
+const abrirModalPesquisaProcedimento = (index) => {
+  indiceProcedimentoAtivo.value = index
+  termoPesquisaProcedimento.value = ''
+  modalPesquisaProcedimento.value = true
+}
+const fecharModalPesquisaProcedimento = () => {
+  modalPesquisaProcedimento.value = false
+  indiceProcedimentoAtivo.value = null
+}
+const aplicarSelecaoProcedimento = (proc) => {
+  if (indiceProcedimentoAtivo.value === null) return
+  const index = indiceProcedimentoAtivo.value
+  form.value.procedimentos[index].procedimentoId = proc.id
+  form.value.procedimentos[index].procedimentoNome = proc.nome
+  form.value.procedimentos[index].valor = proc.valor
+  form.value.procedimentos[index].duracao = proc.duracao
+  form.value.procedimentos[index].produtosDoProc = proc.produtosUtilizados ? JSON.parse(JSON.stringify(proc.produtosUtilizados)) : []
+  recalcularProdutosUtilizados()
+  calcularValorTotal()
+  fecharModalPesquisaProcedimento()
+}
 const verFichaCliente = () => {
   // Abrir lista de anamneses filtrada pelo CPF do cliente
   if (clienteSelecionado.value) {
@@ -477,6 +611,13 @@ const calcularDataParcela = (numeroParcela) => {
 .btn-small { padding: 8px 16px; font-size: 14px; }
 .produtos-section { background: #f5f5f7; padding: 20px; border-radius: 12px; margin: 20px 0; }
 .produtos-section h3 { font-size: 16px; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+.lista-resultados { display: grid; gap: 8px; }
+.resultado-item { display: grid; grid-template-columns: 40px 1fr auto; align-items: center; gap: 12px; padding: 10px 12px; border: 1px solid #e5e7eb; border-radius: 10px; cursor: pointer; background: #fafafa; }
+.resultado-item:hover { background: #f3f4f6; }
+.resultado-item .avatar { width: 40px; height: 40px; border-radius: 10px; background: #eef2ff; display: flex; align-items: center; justify-content: center; color: #6366f1; }
+.resultado-item .info .titulo { font-weight: 600; color: #111827; }
+.resultado-item .info .sub { font-size: 12px; color: #6b7280; }
+.resultado-item .acao { font-weight: 600; color: #2563eb; }
 .produtos-list { display: flex; flex-direction: column; gap: 12px; margin-bottom: 16px; }
 .produto-item-consumo { display: grid; grid-template-columns: 1fr 150px 100px; gap: 12px; padding: 12px; background: white; border-radius: 8px; align-items: center; }
 .produto-nome { display: flex; align-items: center; gap: 8px; }
