@@ -368,7 +368,7 @@ const {
 } = useAgendamento()
 const { clientes, buscarClientes } = usePacientes()
 const { profissionais, buscarProfissionais } = useProfissionais()
-const { procedimentos } = useProcedimentos()
+const { procedimentos, buscarCatalogo } = useProcedimentos()
 
 const visualizacao = ref('semana')
 const dataAtual = ref(new Date().toISOString().split('T')[0])
@@ -411,7 +411,8 @@ onMounted(async () => {
     // 2. Buscar pacientes, profissionais e agendamentos
     await Promise.all([
       buscarClientes(),
-      buscarProfissionais(true)
+      buscarProfissionais(true),
+      buscarCatalogo()
     ])
     console.log('--- Buscando agendamentos ---')
     const inicio = new Date(dataAtual.value)
@@ -679,10 +680,12 @@ const termoProc = ref('')
 const procedimentosFiltradosModal = computed(() => {
   const t = termoProc.value.toLowerCase().trim()
   if (!t) return procedimentos.value
-  return procedimentos.value.filter(p =>
-    (p.nome || '').toLowerCase().includes(t) ||
-    (p.categoria || '').toLowerCase().includes(t)
-  )
+  return procedimentos.value.filter(p => {
+    const nomeOk = (p.nome || '').toLowerCase().includes(t)
+    const catOk = (p.categoria || '').toLowerCase().includes(t)
+    const idOk = (p.id || '').toLowerCase().includes(t)
+    return nomeOk || catOk || idOk
+  })
 })
 const showSugProc = ref(false)
 const procedimentosSugeridos = computed(() => procedimentosFiltradosModal.value.slice(0, 8))
