@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Verificar Dados Firestore</title>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore.js"></script>
+</head>
+<body>
+    <h1>Verificar Dados no Firestore</h1>
+    <div id="resultado"></div>
+
+    <script>
+        // Configuração do Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyBvQZ8QZ8QZ8QZ8QZ8QZ8QZ8QZ8QZ8QZ8Q",
+            authDomain: "estetica-anamnese.firebaseapp.com",
+            projectId: "estetica-anamnese",
+            storageBucket: "estetica-anamnese.appspot.com",
+            messagingSenderId: "123456789",
+            appId: "1:123456789:web:abcdef123456789"
+        };
+
+        // Inicializar Firebase
+        const app = firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        async function verificarDados() {
+            const resultado = document.getElementById('resultado');
+            resultado.innerHTML = '<p>Verificando dados...</p>';
+
+            try {
+                // Verificar clientes
+                const clientesSnapshot = await db.collection('clientes').get();
+                let html = '<h2>Clientes:</h2>';
+                html += `<p>Total: ${clientesSnapshot.size}</p>`;
+                clientesSnapshot.forEach(doc => {
+                    const data = doc.data();
+                    html += `<p>- ${doc.id}: ${data.nome || 'Sem nome'} (clinicaId: ${data.clinicaId || 'N/A'})</p>`;
+                });
+
+                // Verificar procedimentos
+                const procedimentosSnapshot = await db.collection('catalogo_procedimentos').get();
+                html += '<h2>Procedimentos:</h2>';
+                html += `<p>Total: ${procedimentosSnapshot.size}</p>`;
+                procedimentosSnapshot.forEach(doc => {
+                    const data = doc.data();
+                    html += `<p>- ${doc.id}: ${data.nome || 'Sem nome'} (clinicaId: ${data.clinicaId || 'N/A'})</p>`;
+                });
+
+                // Verificar agendamentos
+                const agendamentosSnapshot = await db.collection('agendamentos').get();
+                html += '<h2>Agendamentos:</h2>';
+                html += `<p>Total: ${agendamentosSnapshot.size}</p>`;
+                agendamentosSnapshot.forEach(doc => {
+                    const data = doc.data();
+                    html += `<p>- ${doc.id}: ${data.clienteNome || 'Sem cliente'} (clinicaId: ${data.clinicaId || 'N/A'})</p>`;
+                });
+
+                // Verificar anamneses
+                const anamnesesSnapshot = await db.collection('anamneses').get();
+                html += '<h2>Anamneses:</h2>';
+                html += `<p>Total: ${anamnesesSnapshot.size}</p>`;
+                anamnesesSnapshot.forEach(doc => {
+                    const data = doc.data();
+                    html += `<p>- ${doc.id}: ${data.nome || 'Sem nome'} (clinicaId: ${data.clinicaId || 'N/A'})</p>`;
+                });
+
+                resultado.innerHTML = html;
+            } catch (error) {
+                resultado.innerHTML = `<p style="color: red;">Erro: ${error.message}</p>`;
+            }
+        }
+
+        // Executar verificação
+        verificarDados();
+    </script>
+</body>
+</html>

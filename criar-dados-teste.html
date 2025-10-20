@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Criar Dados de Teste</title>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore.js"></script>
+</head>
+<body>
+    <h1>Criar Dados de Teste</h1>
+    <button onclick="criarDados()">Criar Dados de Teste</button>
+    <div id="resultado"></div>
+
+    <script>
+        // Configuração do Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyBvQZ8QZ8QZ8QZ8QZ8QZ8QZ8QZ8QZ8QZ8Q",
+            authDomain: "estetica-anamnese.firebaseapp.com",
+            projectId: "estetica-anamnese",
+            storageBucket: "estetica-anamnese.appspot.com",
+            messagingSenderId: "123456789",
+            appId: "1:123456789:web:abcdef123456789"
+        };
+
+        // Inicializar Firebase
+        const app = firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        async function criarDados() {
+            const resultado = document.getElementById('resultado');
+            resultado.innerHTML = '<p>Criando dados de teste...</p>';
+
+            try {
+                const clinicaId = 'demo';
+
+                // 1. Criar cliente de teste
+                const clienteRef = await db.collection('clientes').add({
+                    nome: 'Maria Silva',
+                    telefone: '11999999999',
+                    email: 'maria@teste.com',
+                    clinicaId: clinicaId,
+                    ativo: true,
+                    totalAtendimentos: 0,
+                    totalGasto: 0,
+                    totalAnamneses: 1,
+                    dataCriacao: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                console.log('Cliente criado:', clienteRef.id);
+
+                // 2. Criar procedimento de teste
+                const procedimentoRef = await db.collection('catalogo_procedimentos').add({
+                    nome: 'Limpeza de Pele',
+                    categoria: 'facial',
+                    valor: 150.00,
+                    duracao: 60,
+                    sessoesRecomendadas: 1,
+                    descricao: 'Limpeza profunda da pele',
+                    observacoes: 'Procedimento básico',
+                    clinicaId: clinicaId,
+                    ativo: true,
+                    totalRealizados: 0,
+                    dataCriacao: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                console.log('Procedimento criado:', procedimentoRef.id);
+
+                // 3. Criar anamnese de teste
+                const anamneseRef = await db.collection('anamneses').add({
+                    nome: 'Maria Silva',
+                    telefone: '11999999999',
+                    email: 'maria@teste.com',
+                    dataNascimento: '1990-01-01',
+                    clinicaId: clinicaId,
+                    status: 'analisada',
+                    origem: 'profissional',
+                    clienteId: clienteRef.id,
+                    dataCriacao: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                console.log('Anamnese criada:', anamneseRef.id);
+
+                // 4. Criar agendamento de teste
+                const agendamentoRef = await db.collection('agendamentos').add({
+                    clienteId: clienteRef.id,
+                    clienteNome: 'Maria Silva',
+                    procedimentoId: procedimentoRef.id,
+                    procedimentoNome: 'Limpeza de Pele',
+                    dataHora: firebase.firestore.Timestamp.fromDate(new Date()),
+                    status: 'agendado',
+                    observacoes: 'Primeira consulta',
+                    clinicaId: clinicaId,
+                    dataCriacao: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                console.log('Agendamento criado:', agendamentoRef.id);
+
+                resultado.innerHTML = `
+                    <p style="color: green;">✅ Dados de teste criados com sucesso!</p>
+                    <p>Cliente: ${clienteRef.id}</p>
+                    <p>Procedimento: ${procedimentoRef.id}</p>
+                    <p>Anamnese: ${anamneseRef.id}</p>
+                    <p>Agendamento: ${agendamentoRef.id}</p>
+                `;
+
+            } catch (error) {
+                resultado.innerHTML = `<p style="color: red;">Erro: ${error.message}</p>`;
+                console.error('Erro:', error);
+            }
+        }
+    </script>
+</body>
+</html>
