@@ -227,13 +227,25 @@
           <button @click="fecharModal" class="btn-close"><i class="fas fa-times"></i></button>
         </div>
         <form @submit.prevent="salvarAgendamento">
-          <div class="form-group">
+          <div class="form-group autocomplete">
             <label>Paciente *</label>
-            <input v-model="formulario.pacienteNome" type="text" required placeholder="Nome do paciente">
-            <div style="margin-top: 8px;">
-              <button type="button" class="btn btn-secondary btn-small" @click="abrirModalPesquisaPaciente">
-                <i class="fas fa-search"></i> Pesquisar Paciente
-              </button>
+            <input
+              v-model="formulario.pacienteNome"
+              type="text"
+              required
+              placeholder="Digite nome ou CPF"
+              @focus="showSugPaciente = true"
+              @input="showSugPaciente = true"
+              @blur="onBlurPaciente"
+            >
+            <div v-if="showSugPaciente && pacientesSugeridos.length" class="autocomplete-list">
+              <div v-for="pac in pacientesSugeridos" :key="pac.id" class="autocomplete-item" @mousedown.prevent="selecionarPacienteInline(pac)">
+                <div class="avatar"><i class="fas fa-user"></i></div>
+                <div class="info">
+                  <div class="titulo">{{ pac.nome }}</div>
+                  <div class="sub">{{ pac.cpf || 'sem CPF' }} • {{ pac.telefone || '' }}</div>
+                </div>
+              </div>
             </div>
           </div>
           <div class="form-row">
@@ -257,13 +269,25 @@
             </div>
           </div>
           <div class="form-row">
-            <div class="form-group">
+            <div class="form-group autocomplete">
               <label>Profissional *</label>
-              <input v-model="formulario.profissional" type="text" required placeholder="Nome do profissional">
-              <div style="margin-top: 8px;">
-                <button type="button" class="btn btn-secondary btn-small" @click="abrirModalPesquisaProfissional">
-                  <i class="fas fa-search"></i> Pesquisar Profissional
-                </button>
+              <input
+                v-model="formulario.profissional"
+                type="text"
+                required
+                placeholder="Digite nome ou especialidade"
+                @focus="showSugProf = true"
+                @input="showSugProf = true"
+                @blur="onBlurProfissional"
+              >
+              <div v-if="showSugProf && profissionaisSugeridos.length" class="autocomplete-list">
+                <div v-for="prof in profissionaisSugeridos" :key="prof.id" class="autocomplete-item" @mousedown.prevent="selecionarProfissionalInline(prof)">
+                  <div class="avatar"><i class="fas fa-user-md"></i></div>
+                  <div class="info">
+                    <div class="titulo">{{ prof.nome }}</div>
+                    <div class="sub">{{ prof.especialidade || '' }}</div>
+                  </div>
+                </div>
               </div>
             </div>
             <div class="form-group">
@@ -271,13 +295,25 @@
               <input v-model.number="formulario.duracao" type="number" placeholder="60">
             </div>
           </div>
-          <div class="form-group">
+          <div class="form-group autocomplete">
             <label>Procedimento *</label>
-            <input v-model="formulario.procedimento" type="text" required placeholder="Ex: Limpeza de Pele">
-            <div style="margin-top: 8px;">
-              <button type="button" class="btn btn-secondary btn-small" @click="abrirModalPesquisaProcedimento">
-                <i class="fas fa-search"></i> Pesquisar Procedimento
-              </button>
+            <input
+              v-model="formulario.procedimento"
+              type="text"
+              required
+              placeholder="Digite nome ou categoria"
+              @focus="showSugProc = true"
+              @input="showSugProc = true"
+              @blur="onBlurProcedimento"
+            >
+            <div v-if="showSugProc && procedimentosSugeridos.length" class="autocomplete-list">
+              <div v-for="proc in procedimentosSugeridos" :key="proc.id" class="autocomplete-item" @mousedown.prevent="selecionarProcedimentoInline(proc)">
+                <div class="avatar"><i class="fas fa-spa"></i></div>
+                <div class="info">
+                  <div class="titulo">{{ proc.nome }}</div>
+                  <div class="sub">{{ proc.categoria || '' }} • R$ {{ new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 2 }).format(proc.valor || 0) }}</div>
+                </div>
+              </div>
             </div>
           </div>
           <div class="form-group">
@@ -372,8 +408,11 @@ onMounted(async () => {
     await inicializarClinica()
     console.log('clinicaId após inicialização:', clinicaId.value)
     
-    // 2. Buscar pacientes e agendamentos
-    await buscarClientes()
+    // 2. Buscar pacientes, profissionais e agendamentos
+    await Promise.all([
+      buscarClientes(),
+      buscarProfissionais(true)
+    ])
     console.log('--- Buscando agendamentos ---')
     const inicio = new Date(dataAtual.value)
     inicio.setDate(inicio.getDate() - 30)
@@ -580,6 +619,9 @@ const pacientesFiltrados = computed(() => {
     (c.cpf || '').toLowerCase().includes(t)
   )
 })
+const showSugPaciente = ref(false)
+const pacientesSugeridos = computed(() => pacientesFiltrados.value.slice(0, 8))
+const onBlurPaciente = () => setTimeout(() => { showSugPaciente.value = false }, 150)
 const abrirModalPesquisaPaciente = () => {
   termoPaciente.value = ''
   modalPesquisaPaciente.value = true
@@ -594,6 +636,11 @@ const aplicarSelecaoPaciente = (pac) => {
   formulario.value.pacienteEmail = pac.email || ''
   fecharModalPesquisaPaciente()
 }
+// Inline
+const selecionarPacienteInline = (pac) => {
+  aplicarSelecaoPaciente(pac)
+  showSugPaciente.value = false
+}
 
 // ===== Pesquisa de Profissional =====
 const modalPesquisaProfissional = ref(false)
@@ -606,6 +653,9 @@ const profissionaisFiltrados = computed(() => {
     (p.especialidade || '').toLowerCase().includes(t)
   )
 })
+const showSugProf = ref(false)
+const profissionaisSugeridos = computed(() => profissionaisFiltrados.value.slice(0, 8))
+const onBlurProfissional = () => setTimeout(() => { showSugProf.value = false }, 150)
 const abrirModalPesquisaProfissional = () => {
   termoProfissional.value = ''
   modalPesquisaProfissional.value = true
@@ -617,6 +667,10 @@ const aplicarSelecaoProfissional = (prof) => {
   formulario.value.profissionalId = prof.id
   formulario.value.profissional = prof.nome
   fecharModalPesquisaProfissional()
+}
+const selecionarProfissionalInline = (prof) => {
+  aplicarSelecaoProfissional(prof)
+  showSugProf.value = false
 }
 
 // ===== Pesquisa de Procedimento =====
@@ -630,6 +684,9 @@ const procedimentosFiltradosModal = computed(() => {
     (p.categoria || '').toLowerCase().includes(t)
   )
 })
+const showSugProc = ref(false)
+const procedimentosSugeridos = computed(() => procedimentosFiltradosModal.value.slice(0, 8))
+const onBlurProcedimento = () => setTimeout(() => { showSugProc.value = false }, 150)
 const abrirModalPesquisaProcedimento = () => {
   termoProc.value = ''
   modalPesquisaProcedimento.value = true
@@ -643,6 +700,10 @@ const aplicarSelecaoProced = (proc) => {
   formulario.value.duracao = proc.duracao || formulario.value.duracao
   formulario.value.valorEstimado = proc.valor || formulario.value.valorEstimado
   fecharModalPesquisaProcedimento()
+}
+const selecionarProcedimentoInline = (proc) => {
+  aplicarSelecaoProced(proc)
+  showSugProc.value = false
 }
 
 const navegarData = (direcao) => {
@@ -726,6 +787,13 @@ const formatarHora = (dataHora) => {
 .modal-content form { padding: 24px; }
 .modal-actions { display: flex; gap: 12px; justify-content: flex-end; margin-top: 24px; padding-top: 20px; border-top: 1px solid #e5e5ea; }
 .loading { text-align: center; padding: 60px; color: #6e6e73; }
+.autocomplete { position: relative; }
+.autocomplete-list { position: absolute; left: 0; right: 0; top: calc(100% + 6px); background: #fff; border: 1px solid #e5e5eb; border-radius: 10px; box-shadow: 0 8px 24px rgba(0,0,0,0.08); max-height: 280px; overflow: auto; z-index: 20; }
+.autocomplete-item { display: grid; grid-template-columns: 40px 1fr; gap: 10px; padding: 10px 12px; cursor: pointer; align-items: center; }
+.autocomplete-item:hover { background: #f8fafc; }
+.autocomplete-item .avatar { width: 40px; height: 40px; border-radius: 10px; background: #eef2ff; display: flex; align-items: center; justify-content: center; color: #6366f1; }
+.autocomplete-item .info .titulo { font-weight: 600; color: #111827; }
+.autocomplete-item .info .sub { font-size: 12px; color: #6b7280; }
 .btn-small { padding: 6px 12px; font-size: 13px; }
 .lista-resultados { display: grid; gap: 8px; margin-top: 12px; }
 .resultado-item { display: grid; grid-template-columns: 40px 1fr auto; align-items: center; gap: 12px; padding: 10px 12px; border: 1px solid #e5e5eb; border-radius: 10px; cursor: pointer; background: #fafafa; }
