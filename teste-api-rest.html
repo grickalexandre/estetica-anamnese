@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Teste API REST Firebase</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        button { background: #007bff; color: white; padding: 15px; border: none; border-radius: 5px; cursor: pointer; margin: 10px; }
+        .resultado { background: #f0f0f0; padding: 15px; margin: 10px 0; border-radius: 5px; }
+        .success { color: green; }
+        .error { color: red; }
+    </style>
+</head>
+<body>
+    <h1>🔧 Teste API REST Firebase</h1>
+    <p>Este teste usa a API REST do Firebase (sem SDK) para contornar problemas de carregamento.</p>
+    
+    <button onclick="testarAPI()">Testar API REST</button>
+    <div id="resultado" class="resultado">Clique no botão...</div>
+
+    <script>
+        async function testarAPI() {
+            const div = document.getElementById('resultado');
+            div.innerHTML = '🔄 Testando API REST do Firebase...';
+
+            try {
+                // URL da API REST do Firestore
+                const projectId = 'estetica-anamnese';
+                const baseUrl = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents`;
+                
+                // Criar agendamento usando API REST
+                const hoje = new Date();
+                hoje.setHours(20, 0, 0, 0);
+                
+                const agendamento = {
+                    fields: {
+                        clienteNome: { stringValue: 'Teste API REST' },
+                        procedimento: { stringValue: 'Teste' },
+                        dataHora: { timestampValue: hoje.toISOString() },
+                        status: { stringValue: 'agendado' },
+                        clinicaId: { stringValue: 'estetica-rho' }
+                    }
+                };
+
+                div.innerHTML += '<br>🔄 Criando agendamento via API REST...<br>';
+                
+                const response = await fetch(`${baseUrl}/agendamentos`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(agendamento)
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    div.innerHTML += `<span class="success">✅ Agendamento criado via API REST!</span><br>`;
+                    div.innerHTML += `<span class="success">✅ ID: ${result.name.split('/').pop()}</span><br>`;
+                    div.innerHTML += `<span class="success">✅ Data: ${hoje.toLocaleString('pt-BR')}</span><br>`;
+                    div.innerHTML += '<br><span class="success">🎉 SUCESSO! Agora vá para a Agenda!</span>';
+                } else {
+                    const error = await response.text();
+                    div.innerHTML += `<span class="error">❌ Erro da API: ${error}</span><br>`;
+                }
+
+            } catch (error) {
+                div.innerHTML += `<span class="error">❌ Erro: ${error.message}</span><br>`;
+                console.error('Erro completo:', error);
+            }
+        }
+    </script>
+</body>
+</html>

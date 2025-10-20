@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Teste Firebase v8</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        button { background: #007bff; color: white; padding: 15px; border: none; border-radius: 5px; cursor: pointer; margin: 10px; }
+        .resultado { background: #f0f0f0; padding: 15px; margin: 10px 0; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <h1>Teste Firebase v8 (Mais Estável)</h1>
+    <button onclick="testar()">Testar Firebase v8</button>
+    <div id="resultado" class="resultado">Clique no botão...</div>
+
+    <script>
+        async function testar() {
+            const div = document.getElementById('resultado');
+            div.innerHTML = 'Iniciando teste com Firebase v8...';
+
+            try {
+                // Verificar se Firebase está carregado
+                if (typeof firebase === 'undefined') {
+                    div.innerHTML = '❌ Firebase não carregado! Verifique sua conexão.';
+                    return;
+                }
+
+                // Configuração
+                const firebaseConfig = {
+                    apiKey: "AIzaSyBPd-t8X34vBzGqGM2XTSpxGh8lUdQe4jo",
+                    authDomain: "estetica-anamnese.firebaseapp.com",
+                    projectId: "estetica-anamnese",
+                    storageBucket: "estetica-anamnese.firebasestorage.app",
+                    messagingSenderId: "610199167597",
+                    appId: "1:610199167597:web:5a234a65466614408ad564"
+                };
+
+                // Inicializar
+                const app = firebase.initializeApp(firebaseConfig);
+                const db = firebase.firestore();
+
+                div.innerHTML = '✅ Firebase v8 inicializado!<br>';
+
+                // Testar conexão
+                div.innerHTML += 'Testando conexão...<br>';
+                const snapshot = await db.collection('agendamentos').limit(1).get();
+                div.innerHTML += `✅ Conexão OK! Encontrados: ${snapshot.size} agendamentos<br>`;
+
+                // Criar agendamento
+                div.innerHTML += 'Criando agendamento...<br>';
+                const hoje = new Date();
+                hoje.setHours(18, 0, 0, 0);
+                
+                const doc = await db.collection('agendamentos').add({
+                    clienteNome: 'Teste v8',
+                    procedimento: 'Teste',
+                    dataHora: firebase.firestore.Timestamp.fromDate(hoje),
+                    status: 'agendado',
+                    clinicaId: 'estetica-rho'
+                });
+
+                div.innerHTML += `✅ Agendamento criado: ${doc.id}<br>`;
+                div.innerHTML += `✅ Data: ${hoje.toLocaleString('pt-BR')}<br>`;
+                div.innerHTML += '<br>🎉 FUNCIONOU! Agora vá para a Agenda!';
+
+            } catch (error) {
+                div.innerHTML = `❌ Erro: ${error.message}`;
+                console.error('Erro completo:', error);
+            }
+        }
+    </script>
+
+    <!-- Firebase v8 SDK (mais estável) -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+</body>
+</html>

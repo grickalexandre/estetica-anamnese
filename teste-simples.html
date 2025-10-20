@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Teste Simples - Agendamento</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        button { background: #007bff; color: white; padding: 15px; border: none; border-radius: 5px; cursor: pointer; }
+        .resultado { background: #f0f0f0; padding: 15px; margin: 10px 0; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <h1>Teste Simples - Criar Agendamento</h1>
+    <button onclick="criarAgendamento()">Criar Agendamento</button>
+    <div id="resultado" class="resultado">Clique no botão...</div>
+
+    <script>
+        // Firebase config
+        const firebaseConfig = {
+            apiKey: "AIzaSyBPd-t8X34vBzGqGM2XTSpxGh8lUdQe4jo",
+            authDomain: "estetica-anamnese.firebaseapp.com",
+            projectId: "estetica-anamnese",
+            storageBucket: "estetica-anamnese.firebasestorage.app",
+            messagingSenderId: "610199167597",
+            appId: "1:610199167597:web:5a234a65466614408ad564"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        async function criarAgendamento() {
+            const resultado = document.getElementById('resultado');
+            resultado.innerHTML = 'Criando agendamento...';
+
+            try {
+                // Criar agendamento para HOJE às 14:00
+                const hoje = new Date();
+                hoje.setHours(14, 0, 0, 0);
+                
+                const agendamento = await db.collection('agendamentos').add({
+                    clienteNome: 'Teste Hoje',
+                    procedimento: 'Teste',
+                    dataHora: firebase.firestore.Timestamp.fromDate(hoje),
+                    status: 'agendado',
+                    clinicaId: 'estetica-rho',
+                    dataCriacao: firebase.firestore.FieldValue.serverTimestamp()
+                });
+
+                resultado.innerHTML = `
+                    <h3>✅ Sucesso!</h3>
+                    <p>Agendamento criado: ${agendamento.id}</p>
+                    <p>Data: ${hoje.toLocaleString('pt-BR')}</p>
+                    <p>Agora vá para a Agenda!</p>
+                `;
+
+            } catch (error) {
+                resultado.innerHTML = `
+                    <h3>❌ Erro:</h3>
+                    <p>${error.message}</p>
+                `;
+                console.error('Erro:', error);
+            }
+        }
+    </script>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore.js"></script>
+</body>
+</html>

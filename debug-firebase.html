@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug Firebase</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .teste { background: #f0f0f0; padding: 10px; margin: 10px 0; border-radius: 5px; }
+        button { background: #007bff; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; margin: 5px; }
+    </style>
+</head>
+<body>
+    <h1>Debug Firebase</h1>
+    
+    <div class="teste">
+        <h3>1. Testar Conexão Firebase</h3>
+        <button onclick="testarConexao()">Testar Conexão</button>
+        <div id="conexao"></div>
+    </div>
+
+    <div class="teste">
+        <h3>2. Listar Agendamentos</h3>
+        <button onclick="listarAgendamentos()">Listar Agendamentos</button>
+        <div id="agendamentos"></div>
+    </div>
+
+    <div class="teste">
+        <h3>3. Criar Agendamento Simples</h3>
+        <button onclick="criarSimples()">Criar Simples</button>
+        <div id="criar"></div>
+    </div>
+
+    <script>
+        // Firebase config
+        const firebaseConfig = {
+            apiKey: "AIzaSyBPd-t8X34vBzGqGM2XTSpxGh8lUdQe4jo",
+            authDomain: "estetica-anamnese.firebaseapp.com",
+            projectId: "estetica-anamnese",
+            storageBucket: "estetica-anamnese.firebasestorage.app",
+            messagingSenderId: "610199167597",
+            appId: "1:610199167597:web:5a234a65466614408ad564"
+        };
+
+        // Initialize Firebase
+        let db;
+        try {
+            firebase.initializeApp(firebaseConfig);
+            db = firebase.firestore();
+            console.log('✅ Firebase inicializado com sucesso');
+        } catch (error) {
+            console.error('❌ Erro ao inicializar Firebase:', error);
+        }
+
+        async function testarConexao() {
+            const div = document.getElementById('conexao');
+            try {
+                if (!db) {
+                    div.innerHTML = '❌ Firebase não inicializado!';
+                    return;
+                }
+                div.innerHTML = 'Testando conexão...';
+                await db.collection('teste').limit(1).get();
+                div.innerHTML = '✅ Conexão OK!';
+            } catch (error) {
+                div.innerHTML = `❌ Erro: ${error.message}`;
+            }
+        }
+
+        async function listarAgendamentos() {
+            const div = document.getElementById('agendamentos');
+            try {
+                if (!db) {
+                    div.innerHTML = '❌ Firebase não inicializado!';
+                    return;
+                }
+                div.innerHTML = 'Buscando agendamentos...';
+                const snapshot = await db.collection('agendamentos').get();
+                div.innerHTML = `✅ Encontrados: ${snapshot.size} agendamentos`;
+                
+                if (snapshot.size > 0) {
+                    snapshot.forEach(doc => {
+                        const data = doc.data();
+                        div.innerHTML += `<br>• ${data.clienteNome || 'Sem nome'} - ${data.clinicaId || 'Sem clinicaId'}`;
+                    });
+                }
+            } catch (error) {
+                div.innerHTML = `❌ Erro: ${error.message}`;
+            }
+        }
+
+        async function criarSimples() {
+            const div = document.getElementById('criar');
+            try {
+                if (!db) {
+                    div.innerHTML = '❌ Firebase não inicializado!';
+                    return;
+                }
+                div.innerHTML = 'Criando agendamento...';
+                
+                const hoje = new Date();
+                hoje.setHours(15, 0, 0, 0);
+                
+                const doc = await db.collection('agendamentos').add({
+                    clienteNome: 'Teste Debug',
+                    procedimento: 'Teste',
+                    dataHora: firebase.firestore.Timestamp.fromDate(hoje),
+                    status: 'agendado',
+                    clinicaId: 'estetica-rho'
+                });
+                
+                div.innerHTML = `✅ Criado: ${doc.id}`;
+            } catch (error) {
+                div.innerHTML = `❌ Erro: ${error.message}`;
+            }
+        }
+    </script>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore.js"></script>
+</body>
+</html>

@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Teste Firebase Robusto</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        button { background: #007bff; color: white; padding: 15px; border: none; border-radius: 5px; cursor: pointer; margin: 10px; }
+        .resultado { background: #f0f0f0; padding: 15px; margin: 10px 0; border-radius: 5px; }
+        .loading { color: blue; }
+        .success { color: green; }
+        .error { color: red; }
+    </style>
+</head>
+<body>
+    <h1>Teste Firebase Robusto</h1>
+    <button onclick="testar()">Testar Firebase</button>
+    <div id="resultado" class="resultado">Clique no botão...</div>
+
+    <script>
+        // Aguardar carregamento do Firebase
+        function aguardarFirebase() {
+            return new Promise((resolve, reject) => {
+                let tentativas = 0;
+                const maxTentativas = 10;
+                
+                const verificar = () => {
+                    tentativas++;
+                    if (typeof firebase !== 'undefined') {
+                        resolve();
+                    } else if (tentativas >= maxTentativas) {
+                        reject(new Error('Firebase não carregou após 10 tentativas'));
+                    } else {
+                        setTimeout(verificar, 500);
+                    }
+                };
+                
+                verificar();
+            });
+        }
+
+        async function testar() {
+            const div = document.getElementById('resultado');
+            div.innerHTML = '<span class="loading">🔄 Aguardando Firebase carregar...</span>';
+
+            try {
+                // Aguardar Firebase carregar
+                await aguardarFirebase();
+                div.innerHTML = '<span class="success">✅ Firebase carregado!</span><br>';
+
+                // Configuração
+                const firebaseConfig = {
+                    apiKey: "AIzaSyBPd-t8X34vBzGqGM2XTSpxGh8lUdQe4jo",
+                    authDomain: "estetica-anamnese.firebaseapp.com",
+                    projectId: "estetica-anamnese",
+                    storageBucket: "estetica-anamnese.firebasestorage.app",
+                    messagingSenderId: "610199167597",
+                    appId: "1:610199167597:web:5a234a65466614408ad564"
+                };
+
+                div.innerHTML += '<span class="loading">🔄 Inicializando Firebase...</span><br>';
+                
+                // Inicializar
+                const app = firebase.initializeApp(firebaseConfig);
+                const db = firebase.firestore();
+
+                div.innerHTML += '<span class="success">✅ Firebase inicializado!</span><br>';
+
+                // Testar conexão
+                div.innerHTML += '<span class="loading">🔄 Testando conexão...</span><br>';
+                const snapshot = await db.collection('agendamentos').limit(1).get();
+                div.innerHTML += `<span class="success">✅ Conexão OK! Encontrados: ${snapshot.size} agendamentos</span><br>`;
+
+                // Criar agendamento
+                div.innerHTML += '<span class="loading">🔄 Criando agendamento...</span><br>';
+                const hoje = new Date();
+                hoje.setHours(17, 0, 0, 0);
+                
+                const doc = await db.collection('agendamentos').add({
+                    clienteNome: 'Teste Robusto',
+                    procedimento: 'Teste',
+                    dataHora: firebase.firestore.Timestamp.fromDate(hoje),
+                    status: 'agendado',
+                    clinicaId: 'estetica-rho'
+                });
+
+                div.innerHTML += `<span class="success">✅ Agendamento criado: ${doc.id}</span><br>`;
+                div.innerHTML += `<span class="success">✅ Data: ${hoje.toLocaleString('pt-BR')}</span><br>`;
+                div.innerHTML += '<br><span class="success">🎉 TUDO FUNCIONANDO! Agora vá para a Agenda!</span>';
+
+            } catch (error) {
+                div.innerHTML = `<span class="error">❌ Erro: ${error.message}</span>`;
+                console.error('Erro completo:', error);
+            }
+        }
+    </script>
+
+    <!-- Firebase SDK com fallback -->
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app.js" 
+            onerror="console.error('Erro ao carregar firebase-app.js')"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore.js" 
+            onerror="console.error('Erro ao carregar firebase-firestore.js')"></script>
+    
+    <!-- Fallback para CDN alternativo -->
+    <script>
+        // Se Firebase não carregar, tentar CDN alternativo
+        if (typeof firebase === 'undefined') {
+            console.log('Tentando CDN alternativo...');
+            const script1 = document.createElement('script');
+            script1.src = 'https://cdn.jsdelivr.net/npm/firebase@9.0.0/firebase-app.js';
+            document.head.appendChild(script1);
+            
+            const script2 = document.createElement('script');
+            script2.src = 'https://cdn.jsdelivr.net/npm/firebase@9.0.0/firebase-firestore.js';
+            document.head.appendChild(script2);
+        }
+    </script>
+</body>
+</html>
