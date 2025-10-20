@@ -217,7 +217,7 @@ import { useClinica } from '../composables/useClinica.js'
 import VoltarHome from '../components/VoltarHome.vue'
 
 const router = useRouter()
-const { clinicaId } = useClinica()
+const { clinicaId, inicializarClinica } = useClinica()
 const { procedimentos, registrarAtendimento } = useProcedimentos()
 const { clientes, buscarClientes } = usePacientes()
 const { produtos, buscarProdutos } = useProdutos()
@@ -251,23 +251,43 @@ const procedimentosDisponiveis = computed(() => {
 
 onMounted(async () => {
   console.log('=== CARREGANDO DADOS PARA ATENDIMENTO ===')
-  console.log('clinicaId:', clinicaId.value)
   
-  await Promise.all([
-    buscarClientes(), // Buscar TODOS os clientes (ativos e inativos)
-    buscarProdutos(true),
-    buscarProfissionais(true)
-  ])
-  
-  console.log('Clientes carregados:', clientes.value.length)
-  console.log('Clientes ativos:', clientes.value.filter(c => c.ativo !== false).length)
-  console.log('Clientes inativos:', clientes.value.filter(c => c.ativo === false).length)
-  
-  const { buscarCatalogo } = useProcedimentos()
-  await buscarCatalogo()
-  console.log('Procedimentos carregados:', procedimentos.value.length)
-  console.log('Procedimentos disponíveis:', procedimentosDisponiveis.value.length)
-  adicionarProcedimento() // Inicia com um procedimento
+  try {
+    // 1. Inicializar clínica primeiro
+    console.log('--- Inicializando clínica ---')
+    await inicializarClinica()
+    console.log('clinicaId após inicialização:', clinicaId.value)
+    console.log('clinicaId type:', typeof clinicaId.value)
+    console.log('clinicaId truthy:', !!clinicaId.value)
+    
+    // 2. Buscar dados
+    console.log('--- Iniciando busca de dados ---')
+    await Promise.all([
+      buscarClientes(), // Buscar TODOS os clientes (ativos e inativos)
+      buscarProdutos(true),
+      buscarProfissionais(true)
+    ])
+    
+    console.log('--- Dados carregados ---')
+    console.log('Clientes carregados:', clientes.value.length)
+    console.log('Clientes ativos:', clientes.value.filter(c => c.ativo !== false).length)
+    console.log('Clientes inativos:', clientes.value.filter(c => c.ativo === false).length)
+    console.log('Lista de clientes:', clientes.value.map(c => ({ id: c.id, nome: c.nome, clinicaId: c.clinicaId })))
+    
+    const { buscarCatalogo } = useProcedimentos()
+    await buscarCatalogo()
+    console.log('Procedimentos carregados:', procedimentos.value.length)
+    console.log('Procedimentos disponíveis:', procedimentosDisponiveis.value.length)
+    console.log('Lista de procedimentos:', procedimentos.value.map(p => ({ id: p.id, nome: p.nome, clinicaId: p.clinicaId })))
+    
+    adicionarProcedimento() // Inicia com um procedimento
+    console.log('=== CARREGAMENTO CONCLUÍDO ===')
+  } catch (error) {
+    console.error('❌ ERRO NO CARREGAMENTO:', error)
+    console.error('Tipo do erro:', error.name)
+    console.error('Mensagem:', error.message)
+    console.error('Stack:', error.stack)
+  }
 })
 
 const selecionarCliente = () => {
