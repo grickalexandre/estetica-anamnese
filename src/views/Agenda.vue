@@ -213,7 +213,9 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useAgendamento } from '../composables/useAgendamento.js'
+import { useClinica } from '../composables/useClinica.js'
 
+const { clinicaId, inicializarClinica } = useClinica()
 const { 
   agendamentos, 
   carregando, 
@@ -247,11 +249,30 @@ const formulario = ref({
 const horariosTrabalho = ['08:00', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00']
 
 onMounted(async () => {
-  const inicio = new Date(dataAtual.value)
-  inicio.setDate(inicio.getDate() - 30)
-  const fim = new Date(dataAtual.value)
-  fim.setDate(fim.getDate() + 30)
-  await buscarAgendamentos(inicio.toISOString().split('T')[0], fim.toISOString().split('T')[0])
+  console.log('=== CARREGANDO AGENDA ===')
+  
+  try {
+    // 1. Inicializar clínica primeiro
+    console.log('--- Inicializando clínica ---')
+    await inicializarClinica()
+    console.log('clinicaId após inicialização:', clinicaId.value)
+    
+    // 2. Buscar agendamentos
+    console.log('--- Buscando agendamentos ---')
+    const inicio = new Date(dataAtual.value)
+    inicio.setDate(inicio.getDate() - 30)
+    const fim = new Date(dataAtual.value)
+    fim.setDate(fim.getDate() + 30)
+    
+    console.log('Período de busca:', inicio.toISOString().split('T')[0], 'até', fim.toISOString().split('T')[0])
+    await buscarAgendamentos(inicio.toISOString().split('T')[0], fim.toISOString().split('T')[0])
+    console.log('=== CARREGAMENTO DA AGENDA CONCLUÍDO ===')
+  } catch (error) {
+    console.error('❌ ERRO NO CARREGAMENTO DA AGENDA:', error)
+    console.error('Tipo do erro:', error.name)
+    console.error('Mensagem:', error.message)
+    console.error('Stack:', error.stack)
+  }
 })
 
 const diasSemana = computed(() => {

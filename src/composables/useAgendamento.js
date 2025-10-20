@@ -28,6 +28,10 @@ export function useAgendamento() {
     try {
       carregando.value = true
       erro.value = ''
+      console.log('=== BUSCANDO AGENDAMENTOS ===')
+      console.log('clinicaId:', clinicaId.value)
+      console.log('dataInicio:', dataInicio)
+      console.log('dataFim:', dataFim)
 
       let q = query(
         collection(db, 'agendamentos'),
@@ -35,6 +39,7 @@ export function useAgendamento() {
       )
 
       if (dataInicio && dataFim) {
+        console.log('Aplicando filtro de data')
         q = query(
           q,
           where('dataHora', '>=', Timestamp.fromDate(new Date(dataInicio))),
@@ -42,18 +47,31 @@ export function useAgendamento() {
           orderBy('dataHora', 'asc')
         )
       } else {
+        console.log('Buscando todos os agendamentos (sem filtro de data)')
         q = query(q, orderBy('dataHora', 'asc'))
       }
 
+      console.log('Executando query...')
       const snapshot = await getDocs(q)
       agendamentos.value = snapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
       }))
 
+      console.log('Total de agendamentos encontrados:', agendamentos.value.length)
+      console.log('Lista de agendamentos:', agendamentos.value.map(a => ({ 
+        id: a.id, 
+        cliente: a.clienteNome, 
+        dataHora: a.dataHora, 
+        clinicaId: a.clinicaId 
+      })))
+
       return agendamentos.value
     } catch (err) {
-      console.error('Erro ao buscar agendamentos:', err)
+      console.error('❌ ERRO AO BUSCAR AGENDAMENTOS:', err)
+      console.error('Tipo do erro:', err.name)
+      console.error('Mensagem:', err.message)
+      console.error('Stack:', err.stack)
       erro.value = 'Erro ao carregar agendamentos'
       return []
     } finally {

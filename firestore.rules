@@ -84,6 +84,11 @@ service cloud.firestore {
       allow read, write: if isAuthenticated();
     }
     
+    // Regras para agendamentos
+    match /agendamentos/{agendamentoId} {
+      allow read, write: if isAuthenticated();
+    }
+    
     // Regras para contas a pagar
     match /contas_pagar/{contaId} {
       allow read, write: if isAuthenticated();
