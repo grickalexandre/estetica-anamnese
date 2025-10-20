@@ -2,72 +2,151 @@
 <html>
 <head>
     <title>Verificar Dados Firestore</title>
-    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore.js"></script>
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js';
+        import { getFirestore, collection, getDocs } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js';
+    </script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        h1 {
+            color: #333;
+        }
+        h2 {
+            color: #666;
+            margin-top: 30px;
+        }
+        .collection {
+            background: white;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .total {
+            font-weight: bold;
+            color: #007bff;
+        }
+        .item {
+            padding: 5px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .error {
+            color: red;
+            background: #ffe6e6;
+            padding: 10px;
+            border-radius: 5px;
+        }
+    </style>
 </head>
 <body>
-    <h1>Verificar Dados no Firestore</h1>
-    <div id="resultado"></div>
+    <h1>🔍 Verificar Dados no Firestore - Agendamentos</h1>
+    <div id="resultado">Carregando...</div>
 
-    <script>
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js';
+        import { getFirestore, collection, getDocs } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js';
+
         // Configuração do Firebase
         const firebaseConfig = {
-            apiKey: "AIzaSyBvQZ8QZ8QZ8QZ8QZ8QZ8QZ8QZ8QZ8QZ8Q",
+            apiKey: "AIzaSyBPd-t8X34vBzGqGM2XTSpxGh8lUdQe4jo",
             authDomain: "estetica-anamnese.firebaseapp.com",
             projectId: "estetica-anamnese",
-            storageBucket: "estetica-anamnese.appspot.com",
-            messagingSenderId: "123456789",
-            appId: "1:123456789:web:abcdef123456789"
+            storageBucket: "estetica-anamnese.firebasestorage.app",
+            messagingSenderId: "610199167597",
+            appId: "1:610199167597:web:5a234a65466614408ad564"
         };
 
         // Inicializar Firebase
-        const app = firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
 
         async function verificarDados() {
             const resultado = document.getElementById('resultado');
-            resultado.innerHTML = '<p>Verificando dados...</p>';
+            resultado.innerHTML = '<p>🔍 Verificando dados...</p>';
 
             try {
+                let html = '';
+
+                // Verificar agendamentos (FOCO)
+                const agendamentosSnapshot = await getDocs(collection(db, 'agendamentos'));
+                html += '<div class="collection">';
+                html += '<h2>📅 Agendamentos</h2>';
+                html += `<p class="total">Total: ${agendamentosSnapshot.size}</p>`;
+                
+                if (agendamentosSnapshot.empty) {
+                    html += '<p style="color: orange;">⚠️ Nenhum agendamento encontrado!</p>';
+                } else {
+                    agendamentosSnapshot.forEach(doc => {
+                        const data = doc.data();
+                        const dataHora = data.dataHora?.toDate ? data.dataHora.toDate() : new Date(data.dataHora);
+                        html += `<div class="item">`;
+                        html += `<strong>${doc.id.substring(0, 8)}...</strong><br>`;
+                        html += `Cliente: ${data.clienteNome || 'Sem cliente'}<br>`;
+                        html += `Procedimento: ${data.procedimento || 'Sem procedimento'}<br>`;
+                        html += `Data/Hora: ${dataHora.toLocaleString('pt-BR')}<br>`;
+                        html += `Status: ${data.status || 'N/A'}<br>`;
+                        html += `ClinicaId: ${data.clinicaId || 'N/A'}`;
+                        html += `</div>`;
+                    });
+                }
+                html += '</div>';
+
                 // Verificar clientes
-                const clientesSnapshot = await db.collection('clientes').get();
-                let html = '<h2>Clientes:</h2>';
-                html += `<p>Total: ${clientesSnapshot.size}</p>`;
-                clientesSnapshot.forEach(doc => {
-                    const data = doc.data();
-                    html += `<p>- ${doc.id}: ${data.nome || 'Sem nome'} (clinicaId: ${data.clinicaId || 'N/A'})</p>`;
-                });
+                const clientesSnapshot = await getDocs(collection(db, 'clientes'));
+                html += '<div class="collection">';
+                html += '<h2>👥 Clientes</h2>';
+                html += `<p class="total">Total: ${clientesSnapshot.size}</p>`;
+                if (clientesSnapshot.empty) {
+                    html += '<p style="color: orange;">⚠️ Nenhum cliente encontrado!</p>';
+                } else {
+                    let count = 0;
+                    clientesSnapshot.forEach(doc => {
+                        if (count < 5) { // Mostrar apenas os 5 primeiros
+                            const data = doc.data();
+                            html += `<div class="item">`;
+                            html += `${data.nome || 'Sem nome'} (${data.clinicaId || 'N/A'})`;
+                            html += `</div>`;
+                            count++;
+                        }
+                    });
+                    if (clientesSnapshot.size > 5) {
+                        html += `<p>... e mais ${clientesSnapshot.size - 5} clientes</p>`;
+                    }
+                }
+                html += '</div>';
 
                 // Verificar procedimentos
-                const procedimentosSnapshot = await db.collection('catalogo_procedimentos').get();
-                html += '<h2>Procedimentos:</h2>';
-                html += `<p>Total: ${procedimentosSnapshot.size}</p>`;
-                procedimentosSnapshot.forEach(doc => {
-                    const data = doc.data();
-                    html += `<p>- ${doc.id}: ${data.nome || 'Sem nome'} (clinicaId: ${data.clinicaId || 'N/A'})</p>`;
-                });
-
-                // Verificar agendamentos
-                const agendamentosSnapshot = await db.collection('agendamentos').get();
-                html += '<h2>Agendamentos:</h2>';
-                html += `<p>Total: ${agendamentosSnapshot.size}</p>`;
-                agendamentosSnapshot.forEach(doc => {
-                    const data = doc.data();
-                    html += `<p>- ${doc.id}: ${data.clienteNome || 'Sem cliente'} (clinicaId: ${data.clinicaId || 'N/A'})</p>`;
-                });
-
-                // Verificar anamneses
-                const anamnesesSnapshot = await db.collection('anamneses').get();
-                html += '<h2>Anamneses:</h2>';
-                html += `<p>Total: ${anamnesesSnapshot.size}</p>`;
-                anamnesesSnapshot.forEach(doc => {
-                    const data = doc.data();
-                    html += `<p>- ${doc.id}: ${data.nome || 'Sem nome'} (clinicaId: ${data.clinicaId || 'N/A'})</p>`;
-                });
+                const procedimentosSnapshot = await getDocs(collection(db, 'catalogo_procedimentos'));
+                html += '<div class="collection">';
+                html += '<h2>💆 Procedimentos</h2>';
+                html += `<p class="total">Total: ${procedimentosSnapshot.size}</p>`;
+                if (procedimentosSnapshot.empty) {
+                    html += '<p style="color: orange;">⚠️ Nenhum procedimento encontrado!</p>';
+                } else {
+                    let count = 0;
+                    procedimentosSnapshot.forEach(doc => {
+                        if (count < 5) { // Mostrar apenas os 5 primeiros
+                            const data = doc.data();
+                            html += `<div class="item">`;
+                            html += `${data.nome || 'Sem nome'} - R$ ${data.valor || 0} (${data.clinicaId || 'N/A'})`;
+                            html += `</div>`;
+                            count++;
+                        }
+                    });
+                    if (procedimentosSnapshot.size > 5) {
+                        html += `<p>... e mais ${procedimentosSnapshot.size - 5} procedimentos</p>`;
+                    }
+                }
+                html += '</div>';
 
                 resultado.innerHTML = html;
             } catch (error) {
-                resultado.innerHTML = `<p style="color: red;">Erro: ${error.message}</p>`;
+                resultado.innerHTML = `<div class="error">❌ Erro: ${error.message}<br><br>Stack: ${error.stack}</div>`;
+                console.error('Erro ao verificar dados:', error);
             }
         }
 

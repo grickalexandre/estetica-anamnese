@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug Agenda</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .debug-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .error {
+            color: red;
+            background: #ffe6e6;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .success {
+            color: green;
+            background: #e6ffe6;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .info {
+            color: blue;
+            background: #e6f3ff;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 Debug Agenda - Investigar Problema</h1>
+    
+    <div class="debug-section">
+        <h2>1. Verificar Agendamentos no Firestore</h2>
+        <button onclick="verificarAgendamentos()">🔍 Verificar Agendamentos</button>
+        <div id="resultadoAgendamentos"></div>
+    </div>
+
+    <div class="debug-section">
+        <h2>2. Testar Query com Diferentes ClinicaIds</h2>
+        <button onclick="testarQueries()">🧪 Testar Queries</button>
+        <div id="resultadoQueries"></div>
+    </div>
+
+    <div class="debug-section">
+        <h2>3. Verificar Estrutura dos Dados</h2>
+        <button onclick="verificarEstrutura()">📋 Verificar Estrutura</button>
+        <div id="resultadoEstrutura"></div>
+    </div>
+
+    <script>
+        // Configuração do Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyBPd-t8X34vBzGqGM2XTSpxGh8lUdQe4jo",
+            authDomain: "estetica-anamnese.firebaseapp.com",
+            projectId: "estetica-anamnese",
+            storageBucket: "estetica-anamnese.firebasestorage.app",
+            messagingSenderId: "610199167597",
+            appId: "1:610199167597:web:5a234a65466614408ad564"
+        };
+
+        // Inicializar Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        async function verificarAgendamentos() {
+            const resultado = document.getElementById('resultadoAgendamentos');
+            resultado.innerHTML = '<p>🔍 Verificando agendamentos...</p>';
+
+            try {
+                // Buscar TODOS os agendamentos (sem filtro)
+                const snapshot = await db.collection('agendamentos').get();
+                
+                let html = `<div class="info"><strong>Total de agendamentos:</strong> ${snapshot.size}</div>`;
+                
+                if (snapshot.empty) {
+                    html += '<div class="error">❌ Nenhum agendamento encontrado!</div>';
+                } else {
+                    html += '<h3>📋 Lista de Agendamentos:</h3>';
+                    snapshot.forEach(doc => {
+                        const data = doc.data();
+                        const dataHora = data.dataHora?.toDate ? data.dataHora.toDate() : new Date(data.dataHora);
+                        html += `
+                            <div style="border: 1px solid #ddd; padding: 10px; margin: 5px 0; border-radius: 5px;">
+                                <strong>ID:</strong> ${doc.id}<br>
+                                <strong>Cliente:</strong> ${data.clienteNome || 'N/A'}<br>
+                                <strong>Procedimento:</strong> ${data.procedimento || 'N/A'}<br>
+                                <strong>Data/Hora:</strong> ${dataHora.toLocaleString('pt-BR')}<br>
+                                <strong>ClinicaId:</strong> ${data.clinicaId || 'N/A'}<br>
+                                <strong>Status:</strong> ${data.status || 'N/A'}
+                            </div>
+                        `;
+                    });
+                }
+                
+                resultado.innerHTML = html;
+            } catch (error) {
+                resultado.innerHTML = `<div class="error">❌ Erro: ${error.message}</div>`;
+            }
+        }
+
+        async function testarQueries() {
+            const resultado = document.getElementById('resultadoQueries');
+            resultado.innerHTML = '<p>🧪 Testando queries...</p>';
+
+            try {
+                const clinicaIds = ['estetica-rho', 'demo', null];
+                let html = '';
+
+                for (const clinicaId of clinicaIds) {
+                    html += `<h3>Testando com clinicaId: "${clinicaId || 'null'}"</h3>`;
+                    
+                    let query = db.collection('agendamentos');
+                    if (clinicaId) {
+                        query = query.where('clinicaId', '==', clinicaId);
+                    }
+                    
+                    const snapshot = await query.get();
+                    html += `<div class="info">Encontrados: ${snapshot.size} agendamentos</div>`;
+                    
+                    if (snapshot.size > 0) {
+                        snapshot.forEach(doc => {
+                            const data = doc.data();
+                            html += `<div style="margin: 5px 0; padding: 5px; background: #f0f0f0;">
+                                ${data.clienteNome} - ${data.clinicaId}
+                            </div>`;
+                        });
+                    }
+                }
+                
+                resultado.innerHTML = html;
+            } catch (error) {
+                resultado.innerHTML = `<div class="error">❌ Erro: ${error.message}</div>`;
+            }
+        }
+
+        async function verificarEstrutura() {
+            const resultado = document.getElementById('resultadoEstrutura');
+            resultado.innerHTML = '<p>📋 Verificando estrutura...</p>';
+
+            try {
+                const snapshot = await db.collection('agendamentos').limit(1).get();
+                
+                if (snapshot.empty) {
+                    resultado.innerHTML = '<div class="error">❌ Nenhum agendamento para verificar estrutura</div>';
+                    return;
+                }
+
+                const doc = snapshot.docs[0];
+                const data = doc.data();
+                
+                let html = '<h3>📋 Estrutura do Primeiro Agendamento:</h3>';
+                html += `<div style="background: #f0f0f0; padding: 10px; border-radius: 5px;">`;
+                
+                Object.keys(data).forEach(key => {
+                    const value = data[key];
+                    const type = typeof value;
+                    html += `<strong>${key}:</strong> ${type} = ${JSON.stringify(value)}<br>`;
+                });
+                
+                html += '</div>';
+                
+                // Verificar se dataHora é Timestamp
+                if (data.dataHora) {
+                    html += '<h3>🕐 Verificação de dataHora:</h3>';
+                    html += `<div class="info">
+                        Tipo: ${typeof data.dataHora}<br>
+                        É Timestamp: ${data.dataHora.toDate ? 'SIM' : 'NÃO'}<br>
+                        Valor: ${data.dataHora.toDate ? data.dataHora.toDate().toLocaleString('pt-BR') : data.dataHora}
+                    </div>`;
+                }
+                
+                resultado.innerHTML = html;
+            } catch (error) {
+                resultado.innerHTML = `<div class="error">❌ Erro: ${error.message}</div>`;
+            }
+        }
+    </script>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore.js"></script>
+</body>
+</html>

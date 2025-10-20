@@ -418,7 +418,7 @@ onMounted(async () => {
     const inicio = new Date(dataAtual.value)
     inicio.setDate(inicio.getDate() - 30)
     const fim = new Date(dataAtual.value)
-    fim.setDate(fim.getDate() + 30)
+    fim.setDate(fim.getDate() + 365) // Buscar 1 ano para frente
     
     console.log('Período de busca:', inicio.toISOString().split('T')[0], 'até', fim.toISOString().split('T')[0])
     await buscarAgendamentos(inicio.toISOString().split('T')[0], fim.toISOString().split('T')[0])
@@ -589,7 +589,12 @@ const salvarAgendamento = async () => {
       await criarAgendamento(dados)
     }
     
-    await buscarAgendamentos(dataAtual.value, dataAtual.value)
+    // Recarregar agendamentos com período amplo
+    const inicio = new Date(dataAtual.value)
+    inicio.setDate(inicio.getDate() - 30)
+    const fim = new Date(dataAtual.value)
+    fim.setDate(fim.getDate() + 365)
+    await buscarAgendamentos(inicio.toISOString().split('T')[0], fim.toISOString().split('T')[0])
     fecharModal()
     alert('Agendamento salvo com sucesso!')
   } catch (err) {
