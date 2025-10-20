@@ -14,6 +14,35 @@
       </div>
     </div>
 
+    <!-- Modal Pesquisa Paciente -->
+    <div v-if="modalPesquisaPaciente" class="modal-overlay" @click.self="fecharModalPesquisaPaciente">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2><i class="fas fa-users"></i> Pesquisar Paciente</h2>
+          <button @click="fecharModalPesquisaPaciente" class="btn-close"><i class="fas fa-times"></i></button>
+        </div>
+        <form @submit.prevent>
+          <div class="form-group">
+            <label>Buscar</label>
+            <input v-model="termoPaciente" type="text" placeholder="Nome, telefone ou CPF">
+          </div>
+          <div class="lista-resultados">
+            <div v-for="pac in pacientesFiltrados" :key="pac.id" class="resultado-item" @click="aplicarSelecaoPaciente(pac)">
+              <div class="avatar"><i class="fas fa-user"></i></div>
+              <div class="info">
+                <div class="titulo">{{ pac.nome }}</div>
+                <div class="sub">{{ pac.telefone }} • {{ pac.cpf || 'sem CPF' }}</div>
+              </div>
+              <div class="acao">Selecionar</div>
+            </div>
+          </div>
+          <div class="modal-actions">
+            <button type="button" class="btn btn-secondary" @click="fecharModalPesquisaPaciente">Fechar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
     <!-- Filtros e Visualização -->
     <div class="card toolbar">
       <div class="view-selector">
@@ -143,6 +172,11 @@
           <div class="form-group">
             <label>Paciente *</label>
             <input v-model="formulario.pacienteNome" type="text" required placeholder="Nome do paciente">
+            <div style="margin-top: 8px;">
+              <button type="button" class="btn btn-secondary btn-small" @click="abrirModalPesquisaPaciente">
+                <i class="fas fa-search"></i> Pesquisar Paciente
+              </button>
+            </div>
           </div>
           <div class="form-row">
             <div class="form-group">
@@ -214,6 +248,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useAgendamento } from '../composables/useAgendamento.js'
 import { useClinica } from '../composables/useClinica.js'
+import { usePacientes } from '../composables/usePacientes.js'
 
 const { clinicaId, inicializarClinica } = useClinica()
 const { 
@@ -225,6 +260,7 @@ const {
   atualizarAgendamento,
   cancelarAgendamento 
 } = useAgendamento()
+const { clientes, buscarClientes } = usePacientes()
 
 const visualizacao = ref('semana')
 const dataAtual = ref(new Date().toISOString().split('T')[0])
@@ -264,7 +300,8 @@ onMounted(async () => {
     await inicializarClinica()
     console.log('clinicaId após inicialização:', clinicaId.value)
     
-    // 2. Buscar agendamentos
+    // 2. Buscar pacientes e agendamentos
+    await buscarClientes()
     console.log('--- Buscando agendamentos ---')
     const inicio = new Date(dataAtual.value)
     inicio.setDate(inicio.getDate() - 30)
@@ -365,12 +402,15 @@ const abrirModalNovo = () => {
   modalAgendamento.value = true
   agendamentoEditando.value = null
   formulario.value = {
+    clienteId: '',
     pacienteNome: '',
     pacienteTelefone: '',
     pacienteEmail: '',
     data: dataAtual.value,
     hora: '09:00',
+    profissionalId: '',
     profissional: '',
+    procedimentoId: '',
     procedimento: '',
     duracao: 60,
     valorEstimado: 0,
@@ -384,12 +424,15 @@ const editarAgendamento = (agend) => {
   agendamentoEditando.value = agend
   const data = agend.dataHora?.toDate ? agend.dataHora.toDate() : new Date(agend.dataHora)
   formulario.value = {
+    clienteId: agend.clienteId || '',
     pacienteNome: agend.pacienteNome,
     pacienteTelefone: agend.pacienteTelefone,
     pacienteEmail: agend.pacienteEmail || '',
     data: data.toISOString().split('T')[0],
     hora: data.toTimeString().slice(0, 5),
+    profissionalId: agend.profissionalId || '',
     profissional: agend.profissional,
+    procedimentoId: agend.procedimentoId || '',
     procedimento: agend.procedimento,
     duracao: agend.duracao || 60,
     valorEstimado: agend.valorEstimado || 0,
@@ -451,6 +494,33 @@ const cancelarAgendamentoAtual = async () => {
 
 const fecharModal = () => {
   modalAgendamento.value = false
+}
+
+// ===== Pesquisa de Paciente (modal leve usando lista carregada) =====
+const modalPesquisaPaciente = ref(false)
+const termoPaciente = ref('')
+const pacientesFiltrados = computed(() => {
+  const t = termoPaciente.value.toLowerCase().trim()
+  if (!t) return clientes.value
+  return clientes.value.filter(c =>
+    (c.nome || '').toLowerCase().includes(t) ||
+    (c.telefone || '').toLowerCase().includes(t) ||
+    (c.cpf || '').toLowerCase().includes(t)
+  )
+})
+const abrirModalPesquisaPaciente = () => {
+  termoPaciente.value = ''
+  modalPesquisaPaciente.value = true
+}
+const fecharModalPesquisaPaciente = () => {
+  modalPesquisaPaciente.value = false
+}
+const aplicarSelecaoPaciente = (pac) => {
+  formulario.value.clienteId = pac.id
+  formulario.value.pacienteNome = pac.nome
+  formulario.value.pacienteTelefone = pac.telefone || ''
+  formulario.value.pacienteEmail = pac.email || ''
+  fecharModalPesquisaPaciente()
 }
 
 const navegarData = (direcao) => {
@@ -534,5 +604,13 @@ const formatarHora = (dataHora) => {
 .modal-content form { padding: 24px; }
 .modal-actions { display: flex; gap: 12px; justify-content: flex-end; margin-top: 24px; padding-top: 20px; border-top: 1px solid #e5e5ea; }
 .loading { text-align: center; padding: 60px; color: #6e6e73; }
+.btn-small { padding: 6px 12px; font-size: 13px; }
+.lista-resultados { display: grid; gap: 8px; margin-top: 12px; }
+.resultado-item { display: grid; grid-template-columns: 40px 1fr auto; align-items: center; gap: 12px; padding: 10px 12px; border: 1px solid #e5e5eb; border-radius: 10px; cursor: pointer; background: #fafafa; }
+.resultado-item:hover { background: #f3f4f6; }
+.resultado-item .avatar { width: 40px; height: 40px; border-radius: 10px; background: #eef2ff; display: flex; align-items: center; justify-content: center; color: #6366f1; }
+.resultado-item .info .titulo { font-weight: 600; color: #111827; }
+.resultado-item .info .sub { font-size: 12px; color: #6b7280; }
+.resultado-item .acao { font-weight: 600; color: #2563eb; }
 </style>
 
