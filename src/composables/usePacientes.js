@@ -11,18 +11,35 @@ export function usePacientes() {
   const buscarClientes = async (ativo = null) => {
     try {
       carregando.value = true
+      console.log('=== BUSCANDO CLIENTES ===')
+      console.log('clinicaId:', clinicaId.value)
+      console.log('Filtro ativo:', ativo)
+      
       let q = query(
         collection(db, 'clientes'),
         where('clinicaId', '==', clinicaId.value || 'demo')
       )
       if (ativo !== null) {
         q = query(q, where('ativo', '==', ativo))
+        console.log('Aplicando filtro ativo:', ativo)
+      } else {
+        console.log('Buscando TODOS os clientes (ativos e inativos)')
       }
+      
       const snapshot = await getDocs(q)
       clientes.value = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+      
+      console.log('Total de clientes encontrados:', clientes.value.length)
+      console.log('Clientes ativos:', clientes.value.filter(c => c.ativo !== false).length)
+      console.log('Clientes inativos:', clientes.value.filter(c => c.ativo === false).length)
+      console.log('Lista de clientes:', clientes.value.map(c => ({ id: c.id, nome: c.nome, ativo: c.ativo })))
+      
       return clientes.value
     } catch (err) {
-      console.error('Erro ao buscar clientes:', err)
+      console.error('❌ ERRO AO BUSCAR CLIENTES:', err)
+      console.error('Tipo do erro:', err.name)
+      console.error('Mensagem:', err.message)
+      console.error('Stack:', err.stack)
       return []
     } finally {
       carregando.value = false

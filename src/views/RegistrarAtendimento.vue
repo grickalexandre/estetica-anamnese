@@ -53,7 +53,7 @@
               <select v-model="item.procedimentoId" @change="selecionarProcedimentoMultiplo(index)" required>
                 <option value="">Escolha o procedimento...</option>
                 <option v-for="proc in procedimentosDisponiveis" :key="proc.id" :value="proc.id">
-                  {{ proc.nome }} - R$ {{ formatarMoeda(proc.preco) }} ({{ proc.duracao }}min)
+                  {{ proc.nome }} - R$ {{ formatarMoeda(proc.valor) }} ({{ proc.duracao }}min)
                 </option>
               </select>
             </div>
@@ -213,9 +213,11 @@ import { useProcedimentos } from '../composables/useProcedimentos.js'
 import { usePacientes } from '../composables/usePacientes.js'
 import { useProdutos } from '../composables/useProdutos.js'
 import { useProfissionais } from '../composables/useProfissionais.js'
+import { useClinica } from '../composables/useClinica.js'
 import VoltarHome from '../components/VoltarHome.vue'
 
 const router = useRouter()
+const { clinicaId } = useClinica()
 const { procedimentos, registrarAtendimento } = useProcedimentos()
 const { clientes, buscarClientes } = usePacientes()
 const { produtos, buscarProdutos } = useProdutos()
@@ -248,11 +250,19 @@ const procedimentosDisponiveis = computed(() => {
 })
 
 onMounted(async () => {
+  console.log('=== CARREGANDO DADOS PARA ATENDIMENTO ===')
+  console.log('clinicaId:', clinicaId.value)
+  
   await Promise.all([
-    buscarClientes(true),
+    buscarClientes(), // Buscar TODOS os clientes (ativos e inativos)
     buscarProdutos(true),
     buscarProfissionais(true)
   ])
+  
+  console.log('Clientes carregados:', clientes.value.length)
+  console.log('Clientes ativos:', clientes.value.filter(c => c.ativo !== false).length)
+  console.log('Clientes inativos:', clientes.value.filter(c => c.ativo === false).length)
+  
   const { buscarCatalogo } = useProcedimentos()
   await buscarCatalogo()
   console.log('Procedimentos carregados:', procedimentos.value.length)
@@ -302,8 +312,9 @@ const removerProcedimento = (index) => {
 const selecionarProcedimentoMultiplo = (index) => {
   const proc = procedimentos.value.find(p => p.id === form.value.procedimentos[index].procedimentoId)
   if (proc) {
+    console.log('Procedimento selecionado:', proc)
     form.value.procedimentos[index].procedimentoNome = proc.nome
-    form.value.procedimentos[index].valor = proc.preco
+    form.value.procedimentos[index].valor = proc.valor // Corrigido: usar 'valor' ao invés de 'preco'
     form.value.procedimentos[index].duracao = proc.duracao
     form.value.procedimentos[index].produtosDoProc = proc.produtosUtilizados ? JSON.parse(JSON.stringify(proc.produtosUtilizados)) : []
     

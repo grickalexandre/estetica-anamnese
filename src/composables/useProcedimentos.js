@@ -17,16 +17,34 @@ export function useProcedimentos() {
   const buscarCatalogo = async () => {
     try {
       carregando.value = true
+      console.log('=== BUSCANDO CATÁLOGO DE PROCEDIMENTOS ===')
+      console.log('clinicaId:', clinicaId.value)
+      
       const q = query(
         collection(db, 'catalogo_procedimentos'),
         where('clinicaId', '==', clinicaId.value || 'demo'),
         where('ativo', '==', true)
       )
+      console.log('Query criada para buscar procedimentos ativos')
+      
       const snapshot = await getDocs(q)
       procedimentos.value = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+      
+      console.log('Total de procedimentos encontrados:', procedimentos.value.length)
+      console.log('Lista de procedimentos:', procedimentos.value.map(p => ({ 
+        id: p.id, 
+        nome: p.nome, 
+        categoria: p.categoria, 
+        valor: p.valor,
+        ativo: p.ativo 
+      })))
+      
       return procedimentos.value
     } catch (err) {
-      console.error('Erro ao buscar catálogo:', err)
+      console.error('❌ ERRO AO BUSCAR CATÁLOGO:', err)
+      console.error('Tipo do erro:', err.name)
+      console.error('Mensagem:', err.message)
+      console.error('Stack:', err.stack)
       return []
     } finally {
       carregando.value = false
