@@ -371,7 +371,7 @@ const { profissionais, buscarProfissionais } = useProfissionais()
 const { procedimentos, buscarCatalogo } = useProcedimentos()
 
 const visualizacao = ref('semana')
-const dataAtual = ref(new Date().toISOString().split('T')[0])
+const dataAtual = ref('2025-10-20') // Data do agendamento criado
 const modalAgendamento = ref(false)
 const salvando = ref(false)
 const agendamentoEditando = ref(null)
@@ -420,9 +420,22 @@ onMounted(async () => {
     const fim = new Date(dataAtual.value)
     fim.setDate(fim.getDate() + 365) // Buscar 1 ano para frente
     
-    console.log('Período de busca:', inicio.toISOString().split('T')[0], 'até', fim.toISOString().split('T')[0])
+    console.log('📅 Data atual da agenda:', dataAtual.value)
+    console.log('📅 Período de busca:', inicio.toISOString().split('T')[0], 'até', fim.toISOString().split('T')[0])
     await buscarAgendamentos(inicio.toISOString().split('T')[0], fim.toISOString().split('T')[0])
     console.log('Agendamentos retornados:', agendamentos.value.length)
+    
+    // Log detalhado dos agendamentos
+    if (agendamentos.value.length > 0) {
+      console.log('📋 Lista de agendamentos carregados:')
+      agendamentos.value.forEach((ag, index) => {
+        const dataHora = ag.dataHora?.toDate ? ag.dataHora.toDate() : new Date(ag.dataHora)
+        console.log(`${index + 1}. ${ag.clienteNome} - ${dataHora.toLocaleString('pt-BR')} - ${ag.clinicaId}`)
+      })
+    } else {
+      console.log('⚠️ Nenhum agendamento encontrado!')
+    }
+    
     console.log('=== CARREGAMENTO DA AGENDA CONCLUÍDO ===')
   } catch (error) {
     console.error('❌ ERRO NO CARREGAMENTO DA AGENDA:', error)
