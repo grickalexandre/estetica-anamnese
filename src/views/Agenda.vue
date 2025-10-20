@@ -233,13 +233,20 @@ const salvando = ref(false)
 const agendamentoEditando = ref(null)
 
 const formulario = ref({
+  // Paciente
+  clienteId: '',
   pacienteNome: '',
   pacienteTelefone: '',
   pacienteEmail: '',
+  // Data/Hora
   data: new Date().toISOString().split('T')[0],
   hora: '09:00',
-  profissional: '',
-  procedimento: '',
+  // Profissional
+  profissionalId: '',
+  profissional: '', // label para exibição (retrocompatibilidade)
+  // Procedimento
+  procedimentoId: '',
+  procedimento: '', // label
   duracao: 60,
   valorEstimado: 0,
   status: 'confirmado',
@@ -397,11 +404,19 @@ const salvarAgendamento = async () => {
     const dataHora = `${formulario.value.data}T${formulario.value.hora}:00`
     
     const dados = {
-      pacienteNome: formulario.value.pacienteNome,
+      // Paciente
+      clienteId: formulario.value.clienteId,
+      clienteNome: formulario.value.pacienteNome,
+      pacienteNome: formulario.value.pacienteNome, // retrocompatibilidade
       pacienteTelefone: formulario.value.pacienteTelefone,
       pacienteEmail: formulario.value.pacienteEmail,
+      // Data/Hora
       dataHora,
+      // Profissional
+      profissionalId: formulario.value.profissionalId,
       profissional: formulario.value.profissional,
+      // Procedimento
+      procedimentoId: formulario.value.procedimentoId,
       procedimento: formulario.value.procedimento,
       duracao: formulario.value.duracao,
       valorEstimado: formulario.value.valorEstimado,

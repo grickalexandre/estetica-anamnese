@@ -87,8 +87,8 @@ export function useAgendamento() {
       carregando.value = true
       erro.value = ''
 
-      // Verificar conflito de horário
-      const conflito = await verificarConflito(dados.dataHora, dados.profissional)
+      // Verificar conflito de horário (usa profissionalId se disponível)
+      const conflito = await verificarConflito(dados.dataHora, dados.profissionalId || dados.profissional)
       if (conflito) {
         erro.value = 'Já existe um agendamento neste horário para este profissional'
         return { success: false, error: erro.value }
@@ -96,6 +96,13 @@ export function useAgendamento() {
 
       const agendamento = {
         ...dados,
+        // Normalização dos campos de associação (armazenar chaves e rótulos)
+        clienteId: dados.clienteId || dados.pacienteId || null,
+        clienteNome: dados.clienteNome || dados.pacienteNome || '',
+        profissionalId: dados.profissionalId || null,
+        profissional: dados.profissional || '',
+        procedimentoId: dados.procedimentoId || null,
+        procedimento: dados.procedimento || '',
         clinicaId: clinicaId.value || 'demo',
         dataHora: Timestamp.fromDate(new Date(dados.dataHora)),
         status: dados.status || 'confirmado',
@@ -212,20 +219,28 @@ export function useAgendamento() {
   /**
    * Verificar conflito de horário
    */
-  const verificarConflito = async (dataHora, profissional) => {
+  const verificarConflito = async (dataHora, profissionalOuId) => {
     try {
       const dataConsulta = new Date(dataHora)
       const inicio = new Date(dataConsulta.getTime() - 30 * 60000) // 30 min antes
       const fim = new Date(dataConsulta.getTime() + 30 * 60000) // 30 min depois
 
-      const q = query(
-        collection(db, 'agendamentos'),
+      // Priorizar verificação por ID se fornecido
+      const filtrosBase = [
         where('clinicaId', '==', clinicaId.value || 'demo'),
-        where('profissional', '==', profissional),
         where('status', 'in', ['confirmado', 'aguardando']),
         where('dataHora', '>=', Timestamp.fromDate(inicio)),
         where('dataHora', '<=', Timestamp.fromDate(fim))
-      )
+      ]
+
+      let q
+      if (profissionalOuId && typeof profissionalOuId === 'string' && profissionalOuId.length > 0) {
+        // Tentar por ID
+        q = query(collection(db, 'agendamentos'), where('profissionalId', '==', profissionalOuId), ...filtrosBase)
+      } else {
+        // Fallback por nome (retrocompatibilidade)
+        q = query(collection(db, 'agendamentos'), where('profissional', '==', profissionalOuId || ''), ...filtrosBase)
+      }
 
       const snapshot = await getDocs(q)
       return snapshot.size > 0
