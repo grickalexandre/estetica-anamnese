@@ -43,6 +43,64 @@
       </div>
     </div>
 
+    <!-- Modal Pesquisa Profissional -->
+    <div v-if="modalPesquisaProfissional" class="modal-overlay" @click.self="fecharModalPesquisaProfissional">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2><i class="fas fa-user-md"></i> Pesquisar Profissional</h2>
+          <button @click="fecharModalPesquisaProfissional" class="btn-close"><i class="fas fa-times"></i></button>
+        </div>
+        <form @submit.prevent>
+          <div class="form-group">
+            <label>Buscar</label>
+            <input v-model="termoProfissional" type="text" placeholder="Nome ou especialidade">
+          </div>
+          <div class="lista-resultados">
+            <div v-for="prof in profissionaisFiltrados" :key="prof.id" class="resultado-item" @click="aplicarSelecaoProfissional(prof)">
+              <div class="avatar"><i class="fas fa-user-md"></i></div>
+              <div class="info">
+                <div class="titulo">{{ prof.nome }}</div>
+                <div class="sub">{{ prof.especialidade || 'Profissional' }}</div>
+              </div>
+              <div class="acao">Selecionar</div>
+            </div>
+          </div>
+          <div class="modal-actions">
+            <button type="button" class="btn btn-secondary" @click="fecharModalPesquisaProfissional">Fechar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Modal Pesquisa Procedimento -->
+    <div v-if="modalPesquisaProcedimento" class="modal-overlay" @click.self="fecharModalPesquisaProcedimento">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2><i class="fas fa-spa"></i> Pesquisar Procedimento</h2>
+          <button @click="fecharModalPesquisaProcedimento" class="btn-close"><i class="fas fa-times"></i></button>
+        </div>
+        <form @submit.prevent>
+          <div class="form-group">
+            <label>Buscar</label>
+            <input v-model="termoProc" type="text" placeholder="Nome ou categoria">
+          </div>
+          <div class="lista-resultados">
+            <div v-for="proc in procedimentosFiltradosModal" :key="proc.id" class="resultado-item" @click="aplicarSelecaoProced(proc)">
+              <div class="avatar"><i class="fas fa-spa"></i></div>
+              <div class="info">
+                <div class="titulo">{{ proc.nome }}</div>
+                <div class="sub">{{ proc.categoria || 'Procedimento' }} • R$ {{ new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 2 }).format(proc.valor || 0) }}</div>
+              </div>
+              <div class="acao">Selecionar</div>
+            </div>
+          </div>
+          <div class="modal-actions">
+            <button type="button" class="btn btn-secondary" @click="fecharModalPesquisaProcedimento">Fechar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
     <!-- Filtros e Visualização -->
     <div class="card toolbar">
       <div class="view-selector">
@@ -202,6 +260,11 @@
             <div class="form-group">
               <label>Profissional *</label>
               <input v-model="formulario.profissional" type="text" required placeholder="Nome do profissional">
+              <div style="margin-top: 8px;">
+                <button type="button" class="btn btn-secondary btn-small" @click="abrirModalPesquisaProfissional">
+                  <i class="fas fa-search"></i> Pesquisar Profissional
+                </button>
+              </div>
             </div>
             <div class="form-group">
               <label>Duração (min)</label>
@@ -211,6 +274,11 @@
           <div class="form-group">
             <label>Procedimento *</label>
             <input v-model="formulario.procedimento" type="text" required placeholder="Ex: Limpeza de Pele">
+            <div style="margin-top: 8px;">
+              <button type="button" class="btn btn-secondary btn-small" @click="abrirModalPesquisaProcedimento">
+                <i class="fas fa-search"></i> Pesquisar Procedimento
+              </button>
+            </div>
           </div>
           <div class="form-group">
             <label>Valor Estimado</label>
@@ -248,6 +316,8 @@
 import { ref, computed, onMounted } from 'vue'
 import { useAgendamento } from '../composables/useAgendamento.js'
 import { useClinica } from '../composables/useClinica.js'
+import { useProfissionais } from '../composables/useProfissionais.js'
+import { useProcedimentos } from '../composables/useProcedimentos.js'
 import { usePacientes } from '../composables/usePacientes.js'
 
 const { clinicaId, inicializarClinica } = useClinica()
@@ -261,6 +331,8 @@ const {
   cancelarAgendamento 
 } = useAgendamento()
 const { clientes, buscarClientes } = usePacientes()
+const { profissionais, buscarProfissionais } = useProfissionais()
+const { procedimentos } = useProcedimentos()
 
 const visualizacao = ref('semana')
 const dataAtual = ref(new Date().toISOString().split('T')[0])
@@ -521,6 +593,56 @@ const aplicarSelecaoPaciente = (pac) => {
   formulario.value.pacienteTelefone = pac.telefone || ''
   formulario.value.pacienteEmail = pac.email || ''
   fecharModalPesquisaPaciente()
+}
+
+// ===== Pesquisa de Profissional =====
+const modalPesquisaProfissional = ref(false)
+const termoProfissional = ref('')
+const profissionaisFiltrados = computed(() => {
+  const t = termoProfissional.value.toLowerCase().trim()
+  if (!t) return profissionais.value
+  return profissionais.value.filter(p =>
+    (p.nome || '').toLowerCase().includes(t) ||
+    (p.especialidade || '').toLowerCase().includes(t)
+  )
+})
+const abrirModalPesquisaProfissional = () => {
+  termoProfissional.value = ''
+  modalPesquisaProfissional.value = true
+}
+const fecharModalPesquisaProfissional = () => {
+  modalPesquisaProfissional.value = false
+}
+const aplicarSelecaoProfissional = (prof) => {
+  formulario.value.profissionalId = prof.id
+  formulario.value.profissional = prof.nome
+  fecharModalPesquisaProfissional()
+}
+
+// ===== Pesquisa de Procedimento =====
+const modalPesquisaProcedimento = ref(false)
+const termoProc = ref('')
+const procedimentosFiltradosModal = computed(() => {
+  const t = termoProc.value.toLowerCase().trim()
+  if (!t) return procedimentos.value
+  return procedimentos.value.filter(p =>
+    (p.nome || '').toLowerCase().includes(t) ||
+    (p.categoria || '').toLowerCase().includes(t)
+  )
+})
+const abrirModalPesquisaProcedimento = () => {
+  termoProc.value = ''
+  modalPesquisaProcedimento.value = true
+}
+const fecharModalPesquisaProcedimento = () => {
+  modalPesquisaProcedimento.value = false
+}
+const aplicarSelecaoProced = (proc) => {
+  formulario.value.procedimentoId = proc.id
+  formulario.value.procedimento = proc.nome
+  formulario.value.duracao = proc.duracao || formulario.value.duracao
+  formulario.value.valorEstimado = proc.valor || formulario.value.valorEstimado
+  fecharModalPesquisaProcedimento()
 }
 
 const navegarData = (direcao) => {
