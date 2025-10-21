@@ -38,20 +38,22 @@ export function useAgendamento() {
         where('clinicaId', '==', clinicaId.value || 'demo')
       )
 
-      if (dataInicio && dataFim) {
-        console.log('Aplicando filtro de data')
-        const ini = new Date(dataInicio)
-        ini.setHours(0, 0, 0, 0)
-        const fim = new Date(dataFim)
-        fim.setHours(23, 59, 59, 999)
-        q = query(q,
-          where('dataHora', '>=', Timestamp.fromDate(ini)),
-          where('dataHora', '<=', Timestamp.fromDate(fim)),
-          orderBy('dataHora', 'asc'))
-      } else {
-        console.log('Buscando todos os agendamentos (sem filtro de data)')
-        q = query(q, orderBy('dataHora', 'asc'))
-      }
+      // TEMPORÁRIO: Buscar todos os agendamentos sem filtro de data para evitar erro de índice
+      console.log('Buscando todos os agendamentos (sem filtro de data - temporário)')
+      q = query(q, orderBy('dataHora', 'asc'))
+      
+      // TODO: Implementar filtro de data após criar índice no Firebase
+      // if (dataInicio && dataFim) {
+      //   console.log('Aplicando filtro de data')
+      //   const ini = new Date(dataInicio)
+      //   ini.setHours(0, 0, 0, 0)
+      //   const fim = new Date(dataFim)
+      //   fim.setHours(23, 59, 59, 999)
+      //   q = query(q,
+      //     where('dataHora', '>=', Timestamp.fromDate(ini)),
+      //     where('dataHora', '<=', Timestamp.fromDate(fim)),
+      //     orderBy('dataHora', 'asc'))
+      // }
 
       console.log('Executando query...')
       const snapshot = await getDocs(q)
