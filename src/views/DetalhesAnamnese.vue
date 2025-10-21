@@ -305,10 +305,6 @@ onMounted(async () => {
   color: white;
 }
 
-
-  color: #1d1d1f;
-}
-
 /* Modal */
 .modal-overlay {
   position: fixed;
