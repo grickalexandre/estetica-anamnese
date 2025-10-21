@@ -122,6 +122,21 @@
       </form>
     </div>
   </div>
+
+  <!-- Toast/Notificação -->
+  <div v-if="toast.show" class="toast" :class="`toast-${toast.type}`">
+    <div class="toast-content">
+      <i class="toast-icon" :class="{
+        'fas fa-check-circle': toast.type === 'success',
+        'fas fa-exclamation-triangle': toast.type === 'warning',
+        'fas fa-times-circle': toast.type === 'error'
+      }"></i>
+      <span class="toast-message">{{ toast.message }}</span>
+      <button @click="fecharToast" class="toast-close" aria-label="Fechar notificação">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+  </div>
 </template>
 
 <script setup>
@@ -142,6 +157,42 @@ const carregando = ref(true)
 const salvando = ref(false)
 const paciente = ref(null)
 const fotoPreview = ref(null)
+
+// Estado para toast/notificação
+const toast = ref({
+  show: false,
+  message: '',
+  type: 'error' // 'success', 'error', 'warning'
+})
+
+const mostrarToast = (message, type = 'error') => {
+  // Limpar timeout anterior se existir
+  if (toast.value.timeoutId) {
+    clearTimeout(toast.value.timeoutId)
+  }
+  
+  toast.value = {
+    show: true,
+    message,
+    type,
+    timeoutId: null
+  }
+  
+  // Auto-hide após tempo baseado no tipo
+  const timeoutDuration = type === 'error' ? 6000 : 4000 // Erros ficam mais tempo
+  toast.value.timeoutId = setTimeout(() => {
+    toast.value.show = false
+    toast.value.timeoutId = null
+  }, timeoutDuration)
+}
+
+const fecharToast = () => {
+  if (toast.value.timeoutId) {
+    clearTimeout(toast.value.timeoutId)
+    toast.value.timeoutId = null
+  }
+  toast.value.show = false
+}
 
 // Formulário
 const form = ref({
@@ -227,13 +278,18 @@ const removerFoto = () => {
 const salvar = async () => {
   try {
     salvando.value = true
+    console.log('=== SALVANDO CLIENTE ===')
+    console.log('ID do documento:', route.params.id)
+    console.log('Dados do formulário:', form.value)
     
     // Upload da nova foto se houver
     let fotoURL = form.value.fotoURL
     if (fotoPreview.value) {
+      console.log('Fazendo upload da nova foto...')
       const file = fileInput.value.files[0]
       if (file) {
         fotoURL = await uploadToCloudinary(file, 'estetica/clientes')
+        console.log('Foto enviada com sucesso:', fotoURL)
       }
     }
     
@@ -249,15 +305,27 @@ const salvar = async () => {
       dataAtualizacao: serverTimestamp()
     }
     
-    const docRef = doc(db, 'anamneses', route.params.id)
-    await updateDoc(docRef, dadosAtualizacao)
+    console.log('Dados para atualização:', dadosAtualizacao)
     
-    alert('Cliente atualizado com sucesso!')
-    router.push('/lista')
+    const docRef = doc(db, 'anamneses', route.params.id)
+    console.log('Referência do documento:', docRef.path)
+    
+    await updateDoc(docRef, dadosAtualizacao)
+    console.log('Documento atualizado com sucesso!')
+    
+    mostrarToast('Cliente atualizado com sucesso!', 'success')
+    setTimeout(() => {
+      router.push('/lista')
+    }, 1500)
     
   } catch (error) {
     console.error('Erro ao salvar cliente:', error)
-    alert('Erro ao salvar alterações. Tente novamente.')
+    console.error('Detalhes do erro:', {
+      code: error.code,
+      message: error.message,
+      stack: error.stack
+    })
+    mostrarToast('Erro ao salvar alterações. Tente novamente.', 'error')
   } finally {
     salvando.value = false
   }
@@ -465,6 +533,144 @@ onMounted(() => {
   
   .form-actions {
     flex-direction: column;
+  }
+}
+
+/* Toast/Notificação - Mobile First */
+.toast {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  right: 20px;
+  z-index: 1000;
+  padding: 16px 20px;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  animation: slideInMobile 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.toast-success {
+  background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+  border-color: #28a745;
+  color: #155724;
+}
+
+.toast-warning {
+  background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+  border-color: #ffc107;
+  color: #856404;
+}
+
+.toast-error {
+  background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+  border-color: #dc3545;
+  color: #721c24;
+}
+
+.toast-content {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  position: relative;
+}
+
+.toast-icon {
+  font-size: 24px;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.toast-message {
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.5;
+  flex: 1;
+  padding-right: 40px;
+}
+
+.toast-close {
+  position: absolute;
+  top: 0;
+  right: 0;
+  background: none;
+  border: none;
+  color: inherit;
+  font-size: 18px;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+  opacity: 0.7;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+}
+
+.toast-close:hover {
+  opacity: 1;
+  background: rgba(0, 0, 0, 0.1);
+  transform: scale(1.1);
+}
+
+.toast-close:active {
+  transform: scale(0.95);
+}
+
+@keyframes slideInMobile {
+  from {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@media (min-width: 769px) {
+  .toast {
+    top: 20px;
+    right: 20px;
+    left: auto;
+    max-width: 400px;
+    min-width: 350px;
+    animation: slideInDesktop 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  }
+  
+  .toast-content {
+    align-items: center;
+  }
+  
+  .toast-icon {
+    font-size: 20px;
+    margin-top: 0;
+  }
+  
+  .toast-message {
+    font-size: 15px;
+  }
+}
+
+@keyframes slideInDesktop {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@supports (padding: max(0px)) {
+  .toast {
+    top: max(20px, env(safe-area-inset-top));
+    left: max(20px, env(safe-area-inset-left));
+    right: max(20px, env(safe-area-inset-right));
   }
 }
 </style>
