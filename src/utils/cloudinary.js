@@ -14,10 +14,10 @@ export async function uploadToCloudinary(file, { preset, folder, cloudName = 'dk
   const formData = new FormData();
   formData.append('file', file);
   
-  // Se não há preset, usar upload unsigned
-  if (preset) {
-    formData.append('upload_preset', preset);
-  }
+  // Usar preset padrão que existe no Cloudinary
+  const uploadPreset = preset || 'unsigned';
+  formData.append('upload_preset', uploadPreset);
+  
   if (folder) formData.append('folder', folder);
 
   console.log('📤 Enviando requisição para:', endpoint);
