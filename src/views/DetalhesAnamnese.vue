@@ -124,13 +124,6 @@
         </div>
       </section>
 
-      <!-- Observações -->
-      <section v-if="anamnese.observacoes">
-        <h2><i class="fas fa-sticky-note"></i> Observações Adicionais</h2>
-        <div style="background: #f9fafb; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
-          <p>{{ anamnese.observacoes }}</p>
-        </div>
-      </section>
 
       <!-- Data de Criação -->
       <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb; color: #6b7280; font-size: 14px;">
@@ -142,75 +135,7 @@
       <p>Anamnese não encontrada.</p>
     </div>
 
-    <!-- Seção de Observações -->
-    <div v-if="anamnese" class="card observacoes-section">
-      <div class="observacoes-header">
-        <h2><i class="fas fa-sticky-note"></i> Observações e Alterações</h2>
-        <button @click="abrirModalObservacao" class="btn btn-primary btn-small">
-          <i class="fas fa-plus"></i> Adicionar Observação
-        </button>
-      </div>
 
-      <div v-if="observacoes.length === 0" class="empty-observacoes">
-        <i class="fas fa-sticky-note"></i>
-        <p>Nenhuma observação registrada</p>
-      </div>
-
-      <div v-else class="observacoes-list">
-        <div v-for="obs in observacoes" :key="obs.id" class="observacao-item">
-          <div class="observacao-header">
-            <div class="observacao-info">
-              <span class="observacao-data">{{ formatarDataCriacao(obs.dataCriacao) }}</span>
-              <span class="observacao-tipo" :class="obs.tipo">{{ obs.tipo }}</span>
-            </div>
-            <button @click="editarObservacao(obs)" class="btn-icon btn-edit" title="Editar">
-              <i class="fas fa-edit"></i>
-            </button>
-          </div>
-          <div class="observacao-conteudo">
-            <p>{{ obs.conteudo }}</p>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Modal de Observação -->
-    <div v-if="modalObservacao" class="modal-overlay" @click.self="fecharModalObservacao">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h2><i class="fas fa-sticky-note"></i> {{ observacaoEditando ? 'Editar' : 'Nova' }} Observação</h2>
-          <button @click="fecharModalObservacao" class="btn-close"><i class="fas fa-times"></i></button>
-        </div>
-        <form @submit.prevent="salvarObservacao">
-          <div class="form-group">
-            <label>Tipo *</label>
-            <select v-model="formObservacao.tipo" required>
-              <option value="observacao">Observação</option>
-              <option value="alteracao">Alteração</option>
-              <option value="lembrete">Lembrete</option>
-              <option value="contato">Contato</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label>Conteúdo *</label>
-            <textarea 
-              v-model="formObservacao.conteudo" 
-              required 
-              rows="4" 
-              placeholder="Digite sua observação..."
-            ></textarea>
-          </div>
-          <div class="form-actions">
-            <button type="button" @click="fecharModalObservacao" class="btn btn-secondary">Cancelar</button>
-            <button type="submit" class="btn btn-primary" :disabled="salvando">
-              <i v-if="!salvando" class="fas fa-save"></i>
-              <i v-else class="fas fa-spinner fa-spin"></i>
-              {{ salvando ? 'Salvando...' : 'Salvar' }}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
   </div>
 </template>
 
@@ -229,15 +154,6 @@ const anamnese = ref(null)
 const carregando = ref(true)
 const atualizando = ref(false)
 
-// Observações
-const observacoes = ref([])
-const modalObservacao = ref(false)
-const observacaoEditando = ref(null)
-const salvando = ref(false)
-const formObservacao = ref({
-  tipo: 'observacao',
-  conteudo: ''
-})
 
 const carregarAnamnese = async () => {
   try {
@@ -290,87 +206,9 @@ const formatarDataCriacao = (timestamp) => {
   return formatarData(timestamp, true)
 }
 
-// Funções de observações
-const carregarObservacoes = async () => {
-  try {
-    const q = query(
-      collection(db, 'observacoes_anamnese'),
-      where('anamneseId', '==', route.params.id),
-      orderBy('dataCriacao', 'desc')
-    )
-    const snapshot = await getDocs(q)
-    observacoes.value = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
-  } catch (err) {
-    console.error('Erro ao carregar observações:', err)
-  }
-}
-
-const abrirModalObservacao = () => {
-  modalObservacao.value = true
-  observacaoEditando.value = null
-  formObservacao.value = {
-    tipo: 'observacao',
-    conteudo: ''
-  }
-}
-
-const fecharModalObservacao = () => {
-  modalObservacao.value = false
-  observacaoEditando.value = null
-  formObservacao.value = {
-    tipo: 'observacao',
-    conteudo: ''
-  }
-}
-
-const editarObservacao = (obs) => {
-  observacaoEditando.value = obs
-  formObservacao.value = {
-    tipo: obs.tipo,
-    conteudo: obs.conteudo
-  }
-  modalObservacao.value = true
-}
-
-const salvarObservacao = async () => {
-  try {
-    salvando.value = true
-    
-    const dadosObservacao = {
-      anamneseId: route.params.id,
-      clinicaId: clinicaId.value || 'demo',
-      tipo: formObservacao.value.tipo,
-      conteudo: formObservacao.value.conteudo,
-      dataCriacao: serverTimestamp()
-    }
-
-    if (observacaoEditando.value) {
-      // Editar observação existente
-      const docRef = doc(db, 'observacoes_anamnese', observacaoEditando.value.id)
-      await updateDoc(docRef, {
-        tipo: formObservacao.value.tipo,
-        conteudo: formObservacao.value.conteudo,
-        dataAtualizacao: serverTimestamp()
-      })
-    } else {
-      // Nova observação
-      await addDoc(collection(db, 'observacoes_anamnese'), dadosObservacao)
-    }
-
-    await carregarObservacoes()
-    fecharModalObservacao()
-    
-  } catch (err) {
-    console.error('Erro ao salvar observação:', err)
-    alert('Erro ao salvar observação. Tente novamente.')
-  } finally {
-    salvando.value = false
-  }
-}
 
 onMounted(async () => {
   await carregarAnamnese()
-  await carregarObservacoes()
 })
 </script>
 
@@ -467,100 +305,7 @@ onMounted(async () => {
   color: white;
 }
 
-/* Observações */
-.observacoes-section {
-  margin-top: 30px;
-}
 
-.observacoes-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-}
-
-.observacoes-header h2 {
-  font-size: 20px;
-  color: #1d1d1f;
-  margin: 0;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.empty-observacoes {
-  text-align: center;
-  padding: 40px;
-  color: #9ca3af;
-}
-
-.empty-observacoes i {
-  font-size: 48px;
-  margin-bottom: 16px;
-}
-
-.observacoes-list {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.observacao-item {
-  background: #f8f9fa;
-  border: 1px solid #e5e5ea;
-  border-radius: 12px;
-  padding: 16px;
-}
-
-.observacao-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 12px;
-}
-
-.observacao-info {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.observacao-data {
-  font-size: 12px;
-  color: #6e6e73;
-}
-
-.observacao-tipo {
-  padding: 2px 8px;
-  border-radius: 12px;
-  font-size: 11px;
-  font-weight: 600;
-  text-transform: uppercase;
-}
-
-.observacao-tipo.observacao {
-  background: #e3f2fd;
-  color: #1976d2;
-}
-
-.observacao-tipo.alteracao {
-  background: #fff3e0;
-  color: #f57c00;
-}
-
-.observacao-tipo.lembrete {
-  background: #f3e5f5;
-  color: #7b1fa2;
-}
-
-.observacao-tipo.contato {
-  background: #e8f5e8;
-  color: #388e3c;
-}
-
-.observacao-conteudo p {
-  margin: 0;
-  line-height: 1.5;
   color: #1d1d1f;
 }
 

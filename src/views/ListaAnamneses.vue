@@ -54,7 +54,7 @@
                       <i class="fas fa-phone"></i> {{ grupo.paciente.telefone }}
                       <span v-if="grupo.paciente.email"> • <i class="fas fa-envelope"></i> {{ grupo.paciente.email }}</span>
                     </p>
-                    <div style="display: flex; gap: 8px; margin-top: 8px;">
+                    <div style="display: flex; gap: 8px; margin-top: 8px; align-items: center;">
                       <span class="anamnese-count">
                         <i class="fas fa-file-medical"></i>
                         {{ grupo.anamneses.length }} anamnese{{ grupo.anamneses.length > 1 ? 's' : '' }}
@@ -63,6 +63,9 @@
                         <i class="fas fa-clock"></i>
                         Pendente
                       </span>
+                      <button @click="editarPaciente(grupo.paciente)" class="btn btn-sm btn-outline">
+                        <i class="fas fa-edit"></i> Editar Cliente
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -300,6 +303,11 @@ const handleImageError = (event) => {
   if (icon) {
     icon.style.display = 'flex'
   }
+}
+
+const editarPaciente = (paciente) => {
+  // Redirecionar para página de edição do paciente
+  router.push(`/editar-paciente/${paciente.id}`)
 }
 
 onMounted(async () => {
@@ -594,6 +602,22 @@ onMounted(async () => {
     gap: 8px;
     align-items: flex-start;
   }
+}
+
+.btn-outline {
+  background: transparent;
+  border: 1px solid #007bff;
+  color: #007bff;
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-outline:hover {
+  background: #007bff;
+  color: white;
 }
 </style>
 
