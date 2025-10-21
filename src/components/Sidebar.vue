@@ -14,7 +14,7 @@
           </span>
         </div>
       </div>
-      <button @click="toggleCollapse" class="collapse-btn">
+      <button @click="toggleCollapse" class="collapse-btn" :class="{ 'collapsed': collapsed }">
         <i :class="collapsed ? 'fas fa-chevron-right' : 'fas fa-chevron-left'"></i>
       </button>
     </div>
@@ -279,6 +279,7 @@ const irParaHome = () => {
   justify-content: space-between;
   background: rgba(255, 255, 255, 0.8);
   backdrop-filter: blur(10px);
+  position: relative;
 }
 
 .sidebar-brand {
@@ -362,6 +363,21 @@ const irParaHome = () => {
 .collapse-btn:hover {
   background: rgba(29, 29, 31, 0.1);
   color: #1d1d1f;
+}
+
+.collapse-btn.collapsed {
+  position: absolute;
+  top: 16px;
+  right: 8px;
+  z-index: 10;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid #e0e0e0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.collapse-btn.collapsed:hover {
+  background: rgba(255, 255, 255, 1);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
 }
 
 /* Navigation */
