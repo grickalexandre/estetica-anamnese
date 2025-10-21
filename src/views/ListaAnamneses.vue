@@ -144,6 +144,9 @@
         'fas fa-times-circle': toast.type === 'error'
       }"></i>
       <span class="toast-message">{{ toast.message }}</span>
+      <button @click="fecharToast" class="toast-close" aria-label="Fechar notificação">
+        <i class="fas fa-times"></i>
+      </button>
     </div>
   </div>
 </template>
@@ -346,16 +349,32 @@ const toast = ref({
 })
 
 const mostrarToast = (message, type = 'error') => {
+  // Limpar timeout anterior se existir
+  if (toast.value.timeoutId) {
+    clearTimeout(toast.value.timeoutId)
+  }
+  
   toast.value = {
     show: true,
     message,
-    type
+    type,
+    timeoutId: null
   }
   
-  // Auto-hide após 4 segundos
-  setTimeout(() => {
+  // Auto-hide após tempo baseado no tipo
+  const timeoutDuration = type === 'error' ? 6000 : 4000 // Erros ficam mais tempo
+  toast.value.timeoutId = setTimeout(() => {
     toast.value.show = false
-  }, 4000)
+    toast.value.timeoutId = null
+  }, timeoutDuration)
+}
+
+const fecharToast = () => {
+  if (toast.value.timeoutId) {
+    clearTimeout(toast.value.timeoutId)
+    toast.value.timeoutId = null
+  }
+  toast.value.show = false
 }
 
 const editarPaciente = (paciente) => {
@@ -716,56 +735,127 @@ onMounted(async () => {
   color: white;
 }
 
-/* Toast/Notificação */
+/* Toast/Notificação - Mobile First */
 .toast {
   position: fixed;
   top: 20px;
+  left: 20px;
   right: 20px;
   z-index: 1000;
-  max-width: 350px;
-  min-width: 300px;
-  padding: 16px;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  animation: slideIn 0.3s ease-out;
+  padding: 16px 20px;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  animation: slideInMobile 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .toast-success {
-  background: #d4edda;
-  border: 1px solid #c3e6cb;
+  background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+  border-color: #28a745;
   color: #155724;
 }
 
 .toast-warning {
-  background: #fff3cd;
-  border: 1px solid #ffeaa7;
+  background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+  border-color: #ffc107;
   color: #856404;
 }
 
 .toast-error {
-  background: #f8d7da;
-  border: 1px solid #f5c6cb;
+  background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+  border-color: #dc3545;
   color: #721c24;
 }
 
 .toast-content {
   display: flex;
-  align-items: center;
-  gap: 12px;
+  align-items: flex-start;
+  gap: 16px;
+  position: relative;
 }
 
 .toast-icon {
-  font-size: 18px;
+  font-size: 24px;
   flex-shrink: 0;
+  margin-top: 2px;
 }
 
 .toast-message {
-  font-size: 14px;
-  font-weight: 500;
-  line-height: 1.4;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.5;
+  flex: 1;
+  padding-right: 40px; /* Espaço para o botão de fechar */
 }
 
-@keyframes slideIn {
+.toast-close {
+  position: absolute;
+  top: 0;
+  right: 0;
+  background: none;
+  border: none;
+  color: inherit;
+  font-size: 18px;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+  opacity: 0.7;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+}
+
+.toast-close:hover {
+  opacity: 1;
+  background: rgba(0, 0, 0, 0.1);
+  transform: scale(1.1);
+}
+
+.toast-close:active {
+  transform: scale(0.95);
+}
+
+@keyframes slideInMobile {
+  from {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Desktop - posicionamento lateral */
+@media (min-width: 769px) {
+  .toast {
+    top: 20px;
+    right: 20px;
+    left: auto;
+    max-width: 400px;
+    min-width: 350px;
+    animation: slideInDesktop 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  }
+  
+  .toast-content {
+    align-items: center;
+  }
+  
+  .toast-icon {
+    font-size: 20px;
+    margin-top: 0;
+  }
+  
+  .toast-message {
+    font-size: 15px;
+  }
+}
+
+@keyframes slideInDesktop {
   from {
     transform: translateX(100%);
     opacity: 0;
@@ -776,14 +866,12 @@ onMounted(async () => {
   }
 }
 
-/* Responsivo para mobile */
-@media (max-width: 768px) {
+/* PWA - Safe Area para dispositivos com notch */
+@supports (padding: max(0px)) {
   .toast {
-    top: 10px;
-    right: 10px;
-    left: 10px;
-    max-width: none;
-    min-width: auto;
+    top: max(20px, env(safe-area-inset-top));
+    left: max(20px, env(safe-area-inset-left));
+    right: max(20px, env(safe-area-inset-right));
   }
 }
 </style>
