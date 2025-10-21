@@ -5,6 +5,7 @@
       v-if="!isClientPage" 
       :pending-count="pendingCount"
       @logout="handleLogout"
+      @toggle="handleSidebarToggle"
       class="desktop-sidebar"
     />
     
@@ -17,7 +18,10 @@
     />
     
     <!-- Main Content -->
-    <main class="main-content" :class="{ 'with-sidebar': !isClientPage }">
+    <main class="main-content" :class="{ 
+      'with-sidebar': !isClientPage && !sidebarCollapsed,
+      'with-sidebar-collapsed': !isClientPage && sidebarCollapsed
+    }">
       <router-view></router-view>
     </main>
     
@@ -54,6 +58,7 @@ import MobileMenu from './components/MobileMenu.vue'
 const route = useRoute()
 const router = useRouter()
 const pendingCount = ref(0)
+const sidebarCollapsed = ref(false)
 const notification = ref({
   show: false,
   type: 'info',
@@ -67,6 +72,10 @@ const { isAuthenticated, isFree, isPaid, logout, initAuth } = useAuth()
 const isClientPage = computed(() => {
   return route.path === '/anamnese-cliente'
 })
+
+const handleSidebarToggle = (collapsed) => {
+  sidebarCollapsed.value = collapsed
+}
 
 
 const showNotification = (type, title, message) => {
@@ -164,6 +173,10 @@ watch(isClientPage, (newValue) => {
 
 .main-content.with-sidebar {
   margin-left: 280px;
+}
+
+.main-content.with-sidebar-collapsed {
+  margin-left: 70px;
 }
 
 /* Sidebar Desktop */

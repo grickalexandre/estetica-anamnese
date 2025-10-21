@@ -198,7 +198,7 @@ const props = defineProps({
 })
 
 // Emits
-const emit = defineEmits(['logout'])
+const emit = defineEmits(['logout', 'toggle'])
 
 // Estado do sidebar
 const collapsed = ref(false)
@@ -215,6 +215,8 @@ const toggleCollapse = () => {
     showFinanceiro.value = false
     showRelatorios.value = false
   }
+  // Emitir evento para o componente pai
+  emit('toggle', collapsed.value)
 }
 
 const toggleCadastros = () => {
