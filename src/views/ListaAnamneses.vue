@@ -368,15 +368,40 @@ const editarPaciente = (paciente) => {
   console.log('É array?', Array.isArray(paciente.anamneses))
   console.log('Length das anamneses:', paciente.anamneses?.length)
   
-  // Redirecionar para página de edição do paciente
-  // Usar o ID da primeira anamnese do paciente
+  // Tentar diferentes abordagens para encontrar anamnese
+  let anamneseId = null
+  
+  // Abordagem 1: Verificar se anamneses existe e é array
   if (paciente.anamneses && Array.isArray(paciente.anamneses) && paciente.anamneses.length > 0) {
-    console.log('ID da anamnese:', paciente.anamneses[0].id)
-    console.log('Primeira anamnese completa:', paciente.anamneses[0])
-    router.push(`/editar-paciente/${paciente.anamneses[0].id}`)
+    anamneseId = paciente.anamneses[0].id
+    console.log('Abordagem 1 - ID da anamnese:', anamneseId)
+  }
+  
+  // Abordagem 2: Procurar por anamnese com mesmo nome e telefone
+  if (!anamneseId) {
+    console.log('Tentando abordagem 2 - buscar por nome e telefone')
+    const anamneseEncontrada = anamneses.value.find(a => 
+      a.nome === paciente.nome && a.telefone === paciente.telefone
+    )
+    if (anamneseEncontrada) {
+      anamneseId = anamneseEncontrada.id
+      console.log('Abordagem 2 - Anamnese encontrada:', anamneseEncontrada)
+    }
+  }
+  
+  // Abordagem 3: Usar primeira anamnese disponível se não encontrar específica
+  if (!anamneseId && anamneses.value.length > 0) {
+    anamneseId = anamneses.value[0].id
+    console.log('Abordagem 3 - Usando primeira anamnese disponível:', anamneseId)
+  }
+  
+  if (anamneseId) {
+    console.log('Navegando para editar paciente com ID:', anamneseId)
+    router.push(`/editar-paciente/${anamneseId}`)
   } else {
     console.error('Nenhuma anamnese encontrada para este paciente')
     console.error('Estrutura do paciente:', JSON.stringify(paciente, null, 2))
+    console.error('Total de anamneses disponíveis:', anamneses.value.length)
     mostrarToast('Nenhuma anamnese encontrada para este paciente', 'warning')
   }
 }
