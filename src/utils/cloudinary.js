@@ -9,12 +9,15 @@ export async function uploadToCloudinary(file, { preset, folder, cloudName = 'dk
   });
 
   if (!file) throw new Error('Arquivo não encontrado para upload');
-  if (!preset) throw new Error('Upload preset não informado');
 
   const endpoint = `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`;
   const formData = new FormData();
   formData.append('file', file);
-  formData.append('upload_preset', preset);
+  
+  // Se não há preset, usar upload unsigned
+  if (preset) {
+    formData.append('upload_preset', preset);
+  }
   if (folder) formData.append('folder', folder);
 
   console.log('📤 Enviando requisição para:', endpoint);
