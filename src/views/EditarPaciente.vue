@@ -243,23 +243,39 @@ const carregarPaciente = async () => {
 // Manipular seleção de arquivo
 const handleFileSelect = (event) => {
   const file = event.target.files[0]
+  console.log('📁 Arquivo selecionado:', {
+    nome: file?.name,
+    tamanho: file?.size,
+    tipo: file?.type,
+    existe: !!file
+  })
+  
   if (file) {
     // Validar tipo de arquivo
     if (!file.type.startsWith('image/')) {
-      alert('Por favor, selecione apenas arquivos de imagem.')
+      console.error('❌ Tipo de arquivo inválido:', file.type)
+      mostrarToast('Por favor, selecione apenas arquivos de imagem.', 'error')
       return
     }
     
     // Validar tamanho (máximo 5MB)
     if (file.size > 5 * 1024 * 1024) {
-      alert('A imagem deve ter no máximo 5MB.')
+      console.error('❌ Arquivo muito grande:', file.size)
+      mostrarToast('A imagem deve ter no máximo 5MB.', 'error')
       return
     }
+    
+    console.log('✅ Arquivo válido, criando preview...')
     
     // Criar preview
     const reader = new FileReader()
     reader.onload = (e) => {
       fotoPreview.value = e.target.result
+      console.log('✅ Preview criado com sucesso')
+    }
+    reader.onerror = (error) => {
+      console.error('❌ Erro ao ler arquivo:', error)
+      mostrarToast('Erro ao processar a imagem.', 'error')
     }
     reader.readAsDataURL(file)
   }
@@ -284,16 +300,39 @@ const salvar = async () => {
     
     // Upload da nova foto se houver
     let fotoURL = form.value.fotoURL
+    console.log('📸 Estado da foto:', {
+      fotoURLAtual: form.value.fotoURL,
+      temPreview: !!fotoPreview.value,
+      temFileInput: !!fileInput.value,
+      temFile: fileInput.value?.files?.[0]
+    })
+    
     if (fotoPreview.value) {
-      console.log('Fazendo upload da nova foto...')
+      console.log('📤 Fazendo upload da nova foto...')
       const file = fileInput.value.files[0]
       if (file) {
-        fotoURL = await uploadToCloudinary(file, { 
-          preset: 'estetica_clientes',
-          folder: 'estetica/clientes'
-        })
-        console.log('Foto enviada com sucesso:', fotoURL)
+        try {
+          console.log('📁 Arquivo para upload:', {
+            nome: file.name,
+            tamanho: file.size,
+            tipo: file.type
+          })
+          
+          fotoURL = await uploadToCloudinary(file, { 
+            preset: 'estetica_clientes',
+            folder: 'estetica/clientes'
+          })
+          console.log('✅ Foto enviada com sucesso:', fotoURL)
+        } catch (uploadError) {
+          console.error('❌ Erro no upload:', uploadError)
+          mostrarToast('Erro ao fazer upload da foto. Tente novamente.', 'error')
+          return
+        }
+      } else {
+        console.warn('⚠️ Preview existe mas não há arquivo selecionado')
       }
+    } else {
+      console.log('ℹ️ Nenhuma nova foto para upload, mantendo URL atual:', fotoURL)
     }
     
     // Atualizar dados do paciente

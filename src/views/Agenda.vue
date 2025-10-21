@@ -164,6 +164,7 @@
                         :alt="agend.pacienteNome"
                         class="avatar-image"
                         @error="handleImageError"
+                        @load="handleImageLoad"
                       >
                       <i v-else class="fas fa-user avatar-icon"></i>
                     </div>
@@ -202,6 +203,7 @@
                         :alt="agend.pacienteNome"
                         class="avatar-image-mes"
                         @error="handleImageError"
+                        @load="handleImageLoad"
                       >
                       <i v-else class="fas fa-user avatar-icon-mes"></i>
                     </div>
@@ -452,6 +454,14 @@ onMounted(async () => {
       buscarProfissionais(true),
       buscarCatalogo()
     ])
+    
+    console.log('👥 Clientes carregados:', clientes.value.length)
+    console.log('📸 Clientes com foto:', clientes.value.filter(c => c.fotoURL).length)
+    console.log('📋 Primeiros 3 clientes:', clientes.value.slice(0, 3).map(c => ({
+      nome: c.nome,
+      temFoto: !!c.fotoURL,
+      fotoURL: c.fotoURL
+    })))
     console.log('--- Buscando agendamentos ---')
     const inicio = new Date(dataAtual.value)
     inicio.setDate(inicio.getDate() - 30)
@@ -744,7 +754,8 @@ const aplicarSelecaoPaciente = (pac) => {
     id: pac.id,
     nome: pac.nome,
     fotoURL: pac.fotoURL,
-    temFoto: !!pac.fotoURL
+    temFoto: !!pac.fotoURL,
+    todosOsCampos: Object.keys(pac)
   })
   
   formulario.value.clienteId = pac.id
@@ -755,7 +766,8 @@ const aplicarSelecaoPaciente = (pac) => {
   
   console.log('📝 Formulário atualizado:', {
     pacienteFoto: formulario.value.pacienteFoto,
-    pacienteNome: formulario.value.pacienteNome
+    pacienteNome: formulario.value.pacienteNome,
+    temFoto: !!formulario.value.pacienteFoto
   })
   
   fecharModalPesquisaPaciente()
@@ -855,9 +867,13 @@ const formatarHora = (dataHora) => {
 
 // Função para lidar com erro de carregamento de imagem
 const handleImageError = (event) => {
-  console.log('❌ Erro ao carregar imagem do paciente:', event.target.src)
-  console.log('Elemento da imagem:', event.target)
-  console.log('Parent element:', event.target.parentElement)
+  console.log('❌ Erro ao carregar imagem do paciente:', {
+    src: event.target.src,
+    alt: event.target.alt,
+    naturalWidth: event.target.naturalWidth,
+    naturalHeight: event.target.naturalHeight,
+    complete: event.target.complete
+  })
   
   // Esconder a imagem
   event.target.style.display = 'none'
@@ -871,6 +887,15 @@ const handleImageError = (event) => {
   } else {
     console.log('❌ Ícone de fallback não encontrado')
   }
+}
+
+// Função para verificar se a imagem carregou com sucesso
+const handleImageLoad = (event) => {
+  console.log('✅ Imagem carregada com sucesso:', {
+    src: event.target.src,
+    naturalWidth: event.target.naturalWidth,
+    naturalHeight: event.target.naturalHeight
+  })
 }
 
 // Função para obter ícone do status
