@@ -150,7 +150,7 @@ import { useClinica } from '../composables/useClinica.js'
 
 const route = useRoute()
 const router = useRouter()
-const { clinicaId } = useClinica()
+const { clinicaId, inicializarClinica } = useClinica()
 
 // Estados
 const carregando = ref(true)
@@ -340,8 +340,13 @@ const cancelar = () => {
 }
 
 // Lifecycle
-onMounted(() => {
-  carregarPaciente()
+onMounted(async () => {
+  try {
+    await inicializarClinica()
+    await carregarPaciente()
+  } catch (error) {
+    console.error('Erro ao inicializar:', error)
+  }
 })
 </script>
 

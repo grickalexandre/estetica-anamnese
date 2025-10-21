@@ -589,7 +589,9 @@ const agendamentosPorDiaHora = (data, hora) => {
         paciente: agend.pacienteNome,
         foto: agend.pacienteFoto,
         temFoto: !!agend.pacienteFoto,
-        urlFoto: agend.pacienteFoto
+        urlFoto: agend.pacienteFoto,
+        status: agend.status,
+        todosOsCampos: Object.keys(agend)
       })
     })
   }
@@ -647,6 +649,12 @@ const salvarAgendamento = async () => {
     salvando.value = true
     const dataHora = `${formulario.value.data}T${formulario.value.hora}:00`
     
+    console.log('💾 Dados do formulário antes de salvar:', {
+      pacienteNome: formulario.value.pacienteNome,
+      pacienteFoto: formulario.value.pacienteFoto,
+      temFoto: !!formulario.value.pacienteFoto
+    })
+    
     const dados = {
       // Paciente
       clienteId: formulario.value.clienteId,
@@ -668,6 +676,12 @@ const salvarAgendamento = async () => {
       status: formulario.value.status,
       observacoes: formulario.value.observacoes
     }
+    
+    console.log('💾 Dados que serão salvos:', {
+      pacienteFoto: dados.pacienteFoto,
+      pacienteNome: dados.pacienteNome,
+      temFoto: !!dados.pacienteFoto
+    })
     
     if (agendamentoEditando.value) {
       await atualizarAgendamento(agendamentoEditando.value.id, dados)
@@ -726,11 +740,24 @@ const fecharModalPesquisaPaciente = () => {
   modalPesquisaPaciente.value = false
 }
 const aplicarSelecaoPaciente = (pac) => {
+  console.log('🎯 Selecionando paciente:', {
+    id: pac.id,
+    nome: pac.nome,
+    fotoURL: pac.fotoURL,
+    temFoto: !!pac.fotoURL
+  })
+  
   formulario.value.clienteId = pac.id
   formulario.value.pacienteNome = pac.nome
   formulario.value.pacienteTelefone = pac.telefone || ''
   formulario.value.pacienteEmail = pac.email || ''
   formulario.value.pacienteFoto = pac.fotoURL || ''
+  
+  console.log('📝 Formulário atualizado:', {
+    pacienteFoto: formulario.value.pacienteFoto,
+    pacienteNome: formulario.value.pacienteNome
+  })
+  
   fecharModalPesquisaPaciente()
 }
 // Inline
