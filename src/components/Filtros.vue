@@ -7,11 +7,34 @@
         @click="limparFiltros" 
         class="btn-limpar-filtros"
       >
-        <i class="fas fa-times"></i> Limpar Filtros
+        <i class="fas fa-times"></i> Limpar
       </button>
     </div>
 
-    <div class="filtros-grid">
+    <!-- Mobile: Filtros colapsáveis -->
+    <div class="filtros-mobile" v-if="isMobile">
+      <button @click="toggleFiltros" class="btn-toggle-filtros">
+        <i class="fas fa-filter"></i>
+        <span>Filtros</span>
+        <i :class="filtrosAbertos ? 'fas fa-chevron-up' : 'fas fa-chevron-down'"></i>
+      </button>
+      
+      <div v-if="filtrosAbertos" class="filtros-content-mobile">
+        <!-- Busca Mobile -->
+        <div class="filtro-item-mobile">
+          <label><i class="fas fa-search"></i> Buscar</label>
+          <input 
+            v-model="filtros.busca"
+            type="text" 
+            placeholder="Digite para buscar..."
+            class="input-mobile"
+          >
+        </div>
+      </div>
+    </div>
+
+    <!-- Desktop: Grid normal -->
+    <div v-else class="filtros-grid">
       <!-- Busca -->
       <div class="filtro-item">
         <label>Buscar</label>
@@ -108,7 +131,7 @@
 </template>
 
 <script setup>
-import { watch } from 'vue'
+import { watch, ref, onMounted, onUnmounted } from 'vue'
 import { useFiltros } from '../composables/useFiltros.js'
 
 const props = defineProps({
@@ -131,6 +154,10 @@ const props = defineProps({
 
 const emit = defineEmits(['filtros-alterados'])
 
+// Estados para mobile
+const isMobile = ref(false)
+const filtrosAbertos = ref(false)
+
 const {
   filtros,
   filtrosAtivos,
@@ -138,6 +165,26 @@ const {
   limparFiltros: limparTodosFiltros,
   limparFiltro
 } = useFiltros()
+
+// Detectar mobile
+const checkMobile = () => {
+  isMobile.value = window.innerWidth <= 768
+}
+
+// Toggle filtros mobile
+const toggleFiltros = () => {
+  filtrosAbertos.value = !filtrosAbertos.value
+}
+
+// Lifecycle
+onMounted(() => {
+  checkMobile()
+  window.addEventListener('resize', checkMobile)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('resize', checkMobile)
+})
 
 // Watch para emitir mudanças
 watch(filtros, () => {
@@ -324,10 +371,93 @@ const removerFiltro = (filtroTexto) => {
   background: rgba(255, 255, 255, 0.3);
 }
 
+/* Mobile Styles */
+.filtros-mobile {
+  display: none;
+}
+
+.btn-toggle-filtros {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.btn-toggle-filtros:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+}
+
+.btn-toggle-filtros:active {
+  transform: translateY(0);
+}
+
+.filtros-content-mobile {
+  margin-top: 16px;
+  padding: 20px;
+  background: white;
+  border-radius: 12px;
+  border: 1px solid #e5e5ea;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.filtro-item-mobile {
+  margin-bottom: 20px;
+}
+
+.filtro-item-mobile:last-child {
+  margin-bottom: 0;
+}
+
+.filtro-item-mobile label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #1d1d1f;
+  margin-bottom: 8px;
+}
+
+.input-mobile {
+  width: 100%;
+  padding: 14px 16px;
+  border: 2px solid #e5e5ea;
+  border-radius: 12px;
+  font-size: 16px;
+  background: #f8f9fa;
+  transition: all 0.3s ease;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+}
+
+.input-mobile:focus {
+  outline: none;
+  border-color: #667eea;
+  background: white;
+  box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+  transform: translateY(-1px);
+}
+
 /* Responsivo */
 @media (max-width: 768px) {
+  .filtros-mobile {
+    display: block;
+  }
+  
   .filtros-grid {
-    grid-template-columns: 1fr;
+    display: none;
   }
   
   .filtros-header {
@@ -339,6 +469,28 @@ const removerFiltro = (filtroTexto) => {
   .filtros-ativos {
     flex-direction: column;
     align-items: flex-start;
+  }
+  
+  .filtros-container {
+    padding: 16px;
+    margin-bottom: 16px;
+  }
+  
+  .btn-limpar-filtros {
+    width: 100%;
+    justify-content: center;
+    padding: 12px 16px;
+    font-size: 14px;
+  }
+}
+
+@media (min-width: 769px) {
+  .filtros-mobile {
+    display: none;
+  }
+  
+  .filtros-grid {
+    display: grid;
   }
 }
 </style>
