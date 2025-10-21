@@ -290,6 +290,9 @@ const carregarAnamneses = async () => {
       ...doc.data()
     }))
     
+    console.log('Anamneses mapeadas:', anamneses.value.length)
+    console.log('Primeira anamnese:', anamneses.value[0])
+    
     // Ordenar manualmente por data
     anamneses.value.sort((a, b) => {
       const dataA = a.dataCriacao?.toDate ? a.dataCriacao.toDate() : new Date(a.dataCriacao)
@@ -298,6 +301,11 @@ const carregarAnamneses = async () => {
     })
     
     console.log('Anamneses carregadas e ordenadas:', anamneses.value.length)
+    console.log('Estrutura da primeira anamnese:', {
+      id: anamneses.value[0]?.id,
+      nome: anamneses.value[0]?.nome,
+      telefone: anamneses.value[0]?.telefone
+    })
   } catch (err) {
     console.error('Erro ao carregar anamneses:', err)
   } finally {
@@ -351,16 +359,24 @@ const mostrarToast = (message, type = 'error') => {
 }
 
 const editarPaciente = (paciente) => {
+  console.log('=== EDITAR PACIENTE ===')
   console.log('Paciente selecionado:', paciente)
+  console.log('Tipo do paciente:', typeof paciente)
+  console.log('Propriedades do paciente:', Object.keys(paciente))
   console.log('Anamneses do paciente:', paciente.anamneses)
+  console.log('Tipo das anamneses:', typeof paciente.anamneses)
+  console.log('É array?', Array.isArray(paciente.anamneses))
+  console.log('Length das anamneses:', paciente.anamneses?.length)
   
   // Redirecionar para página de edição do paciente
   // Usar o ID da primeira anamnese do paciente
-  if (paciente.anamneses && paciente.anamneses.length > 0) {
+  if (paciente.anamneses && Array.isArray(paciente.anamneses) && paciente.anamneses.length > 0) {
     console.log('ID da anamnese:', paciente.anamneses[0].id)
+    console.log('Primeira anamnese completa:', paciente.anamneses[0])
     router.push(`/editar-paciente/${paciente.anamneses[0].id}`)
   } else {
     console.error('Nenhuma anamnese encontrada para este paciente')
+    console.error('Estrutura do paciente:', JSON.stringify(paciente, null, 2))
     mostrarToast('Nenhuma anamnese encontrada para este paciente', 'warning')
   }
 }
