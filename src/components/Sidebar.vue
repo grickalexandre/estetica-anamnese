@@ -37,6 +37,14 @@
         <span v-if="!collapsed" class="nav-text">Agenda</span>
       </router-link>
 
+      <!-- Atendimento Agendado -->
+      <router-link to="/registrar-atendimento-agendado" class="nav-item" :class="{ 'collapsed': collapsed }">
+        <div class="nav-icon">
+          <i class="fas fa-user-check"></i>
+        </div>
+        <span v-if="!collapsed" class="nav-text">Atendimento Agendado</span>
+      </router-link>
+
       <!-- Pacientes -->
       <router-link to="/lista" class="nav-item notification-badge" :class="{ 'collapsed': collapsed }">
         <div class="nav-icon">
