@@ -297,6 +297,34 @@
               <input v-model="formulario.pacienteEmail" type="email" placeholder="email@exemplo.com">
             </div>
           </div>
+          
+          <!-- Foto do Paciente -->
+          <div class="form-group">
+            <label><i class="fas fa-camera"></i> Foto do Paciente</label>
+            <div class="photo-upload">
+              <div v-if="!fotoPreview && !formulario.pacienteFoto" class="photo-placeholder" @click="triggerFileInput">
+                <i class="fas fa-user"></i>
+                <p>Clique para adicionar foto</p>
+              </div>
+              <div v-else class="photo-preview" @click="triggerFileInput">
+                <img :src="fotoPreview || formulario.pacienteFoto" :alt="formulario.pacienteNome" class="preview-image">
+                <div class="photo-overlay">
+                  <i class="fas fa-camera"></i>
+                  <span>Alterar foto</span>
+                </div>
+              </div>
+              <input 
+                ref="fileInput" 
+                type="file" 
+                accept="image/*" 
+                @change="handleFileSelect" 
+                style="display: none"
+              >
+              <button v-if="fotoPreview || formulario.pacienteFoto" type="button" @click="removerFoto" class="btn-remove-photo">
+                <i class="fas fa-times"></i> Remover foto
+              </button>
+            </div>
+          </div>
           <div class="form-row">
             <div class="form-group">
               <label>Data *</label>
@@ -414,6 +442,10 @@ const dataAtual = ref('2025-10-20') // Data do agendamento criado
 const modalAgendamento = ref(false)
 const salvando = ref(false)
 const agendamentoEditando = ref(null)
+
+// Variáveis para foto do paciente
+const fotoPreview = ref(null)
+const fileInput = ref(null)
 
 const formulario = ref({
   // Paciente
@@ -662,8 +694,42 @@ const salvarAgendamento = async () => {
     console.log('💾 Dados do formulário antes de salvar:', {
       pacienteNome: formulario.value.pacienteNome,
       pacienteFoto: formulario.value.pacienteFoto,
-      temFoto: !!formulario.value.pacienteFoto
+      temFoto: !!formulario.value.pacienteFoto,
+      temPreview: !!fotoPreview.value
     })
+    
+    // Upload da nova foto se houver
+    let fotoURL = formulario.value.pacienteFoto
+    if (fotoPreview.value) {
+      console.log('📤 Fazendo upload da nova foto na agenda...')
+      const file = fileInput.value.files[0]
+      if (file) {
+        try {
+          console.log('📁 Arquivo para upload:', {
+            nome: file.name,
+            tamanho: file.size,
+            tipo: file.type
+          })
+          
+          // Importar uploadToCloudinary dinamicamente
+          const { uploadToCloudinary } = await import('../utils/cloudinary.js')
+          
+          fotoURL = await uploadToCloudinary(file, { 
+            preset: 'estetica_clientes',
+            folder: 'estetica/clientes'
+          })
+          console.log('✅ Foto enviada com sucesso:', fotoURL)
+        } catch (uploadError) {
+          console.error('❌ Erro no upload:', uploadError)
+          mostrarToast('Erro ao fazer upload da foto. Tente novamente.', 'error')
+          return
+        }
+      } else {
+        console.warn('⚠️ Preview existe mas não há arquivo selecionado')
+      }
+    } else {
+      console.log('ℹ️ Nenhuma nova foto para upload, mantendo URL atual:', fotoURL)
+    }
     
     const dados = {
       // Paciente
@@ -672,7 +738,7 @@ const salvarAgendamento = async () => {
       pacienteNome: formulario.value.pacienteNome, // retrocompatibilidade
       pacienteTelefone: formulario.value.pacienteTelefone,
       pacienteEmail: formulario.value.pacienteEmail,
-      pacienteFoto: formulario.value.pacienteFoto,
+      pacienteFoto: fotoURL,
       // Data/Hora
       dataHora,
       // Profissional
@@ -908,6 +974,66 @@ const getStatusIcon = (status) => {
     'agendado': 'fas fa-calendar-check'
   }
   return icons[status] || 'fas fa-question-circle'
+}
+
+// Funções para manipular foto do paciente
+const triggerFileInput = () => {
+  fileInput.value?.click()
+}
+
+const handleFileSelect = (event) => {
+  const file = event.target.files[0]
+  console.log('📁 Arquivo selecionado na agenda:', {
+    nome: file?.name,
+    tamanho: file?.size,
+    tipo: file?.type,
+    existe: !!file
+  })
+  
+  if (file) {
+    // Validar tipo de arquivo
+    if (!file.type.startsWith('image/')) {
+      console.error('❌ Tipo de arquivo inválido:', file.type)
+      mostrarToast('Por favor, selecione apenas arquivos de imagem.', 'error')
+      return
+    }
+    
+    // Validar tamanho (máximo 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      console.error('❌ Arquivo muito grande:', file.size)
+      mostrarToast('A imagem deve ter no máximo 5MB.', 'error')
+      return
+    }
+    
+    console.log('✅ Arquivo válido, criando preview...')
+    
+    // Criar preview
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      fotoPreview.value = e.target.result
+      console.log('✅ Preview criado com sucesso na agenda')
+    }
+    reader.onerror = (error) => {
+      console.error('❌ Erro ao ler arquivo:', error)
+      mostrarToast('Erro ao processar a imagem.', 'error')
+    }
+    reader.readAsDataURL(file)
+  }
+}
+
+const removerFoto = () => {
+  formulario.value.pacienteFoto = ''
+  fotoPreview.value = null
+  if (fileInput.value) {
+    fileInput.value.value = ''
+  }
+  console.log('🗑️ Foto removida do formulário')
+}
+
+// Função para mostrar toast (simplificada)
+const mostrarToast = (message, type = 'error') => {
+  // Por enquanto, usar alert. Pode ser melhorado depois
+  alert(message)
 }
 </script>
 
@@ -1212,6 +1338,132 @@ const getStatusIcon = (status) => {
   
   .avatar-icon-mes {
     font-size: 8px;
+  }
+}
+
+/* Estilos para upload de foto na agenda */
+.photo-upload {
+  position: relative;
+  display: inline-block;
+}
+
+.photo-placeholder {
+  width: 120px;
+  height: 120px;
+  border: 2px dashed #d2d2d7;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background: #f8f9fa;
+}
+
+.photo-placeholder:hover {
+  border-color: #667eea;
+  background: #f0f4ff;
+  transform: translateY(-2px);
+}
+
+.photo-placeholder i {
+  font-size: 32px;
+  color: #8e8e93;
+  margin-bottom: 8px;
+}
+
+.photo-placeholder p {
+  font-size: 12px;
+  color: #6e6e73;
+  margin: 0;
+  text-align: center;
+}
+
+.photo-preview {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  border-radius: 12px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.photo-preview:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+.preview-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.photo-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  color: white;
+}
+
+.photo-preview:hover .photo-overlay {
+  opacity: 1;
+}
+
+.photo-overlay i {
+  font-size: 24px;
+  margin-bottom: 4px;
+}
+
+.photo-overlay span {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.btn-remove-photo {
+  margin-top: 8px;
+  padding: 6px 12px;
+  background: #ff3b30;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.btn-remove-photo:hover {
+  background: #d70015;
+  transform: translateY(-1px);
+}
+
+@media (max-width: 768px) {
+  .photo-placeholder,
+  .photo-preview {
+    width: 100px;
+    height: 100px;
+  }
+  
+  .photo-placeholder i {
+    font-size: 24px;
+  }
+  
+  .photo-overlay i {
+    font-size: 20px;
   }
 }
 </style>
