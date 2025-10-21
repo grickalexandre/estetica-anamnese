@@ -37,8 +37,15 @@
               <!-- Cabeçalho do Paciente -->
               <div class="patient-header">
                 <div style="display: flex; align-items: center; gap: 20px;">
-                  <div style="width: 60px; height: 60px; border-radius: 50%; background: linear-gradient(135deg, #1d1d1f 0%, #2c2c2e 100%); display: flex; align-items: center; justify-content: center; font-size: 24px; color: white; box-shadow: 0 2px 8px rgba(29, 29, 31, 0.2);">
-                    <i class="fas fa-user"></i>
+                  <div class="patient-avatar">
+                    <img 
+                      v-if="grupo.paciente.fotoURL" 
+                      :src="grupo.paciente.fotoURL" 
+                      :alt="grupo.paciente.nome"
+                      class="avatar-image"
+                      @error="handleImageError"
+                    >
+                    <i v-else class="fas fa-user avatar-icon"></i>
                   </div>
 
                   <div style="flex: 1;">
@@ -285,6 +292,16 @@ const formatarDataCriacao = (timestamp) => {
   return data.toLocaleDateString('pt-BR') + ' ' + data.toLocaleTimeString('pt-BR')
 }
 
+const handleImageError = (event) => {
+  // Se a imagem falhar ao carregar, esconder a img e mostrar o ícone
+  event.target.style.display = 'none'
+  const avatar = event.target.parentElement
+  const icon = avatar.querySelector('.avatar-icon')
+  if (icon) {
+    icon.style.display = 'flex'
+  }
+}
+
 onMounted(async () => {
   await carregarAnamneses()
   // Inicializar paginação com o total de itens
@@ -448,6 +465,36 @@ onMounted(async () => {
     0 8px 24px rgba(0, 0, 0, 0.12),
     0 2px 8px rgba(0, 0, 0, 0.08),
     inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+.patient-avatar {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #1d1d1f 0%, #2c2c2e 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  color: white;
+  box-shadow: 0 2px 8px rgba(29, 29, 31, 0.2);
+  overflow: hidden;
+  position: relative;
+}
+
+.avatar-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+.avatar-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
 }
 
 .patient-header {
