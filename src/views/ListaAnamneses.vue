@@ -134,6 +134,18 @@
       />
     </div>
   </div>
+
+  <!-- Toast/Notificação -->
+  <div v-if="toast.show" class="toast" :class="`toast-${toast.type}`">
+    <div class="toast-content">
+      <i class="toast-icon" :class="{
+        'fas fa-check-circle': toast.type === 'success',
+        'fas fa-exclamation-triangle': toast.type === 'warning',
+        'fas fa-times-circle': toast.type === 'error'
+      }"></i>
+      <span class="toast-message">{{ toast.message }}</span>
+    </div>
+  </div>
 </template>
 
 <script setup>
@@ -206,7 +218,16 @@ const anamnesesPaginadas = computed(() => {
 const anamnesesAgrupadas = computed(() => {
   const grupos = {}
   
-  anamnesesPaginadas.value.forEach(anamnese => {
+  console.log('=== AGRUPANDO ANAMNESES ===')
+  console.log('Anamneses paginadas:', anamnesesPaginadas.value.length)
+  
+  anamnesesPaginadas.value.forEach((anamnese, index) => {
+    console.log(`Anamnese ${index}:`, {
+      id: anamnese.id,
+      nome: anamnese.nome,
+      telefone: anamnese.telefone
+    })
+    
     const chave = `${anamnese.nome}-${anamnese.telefone}`
     
     if (!grupos[chave]) {
@@ -233,7 +254,11 @@ const anamnesesAgrupadas = computed(() => {
     })
   })
   
-  return Object.values(grupos)
+  const resultado = Object.values(grupos)
+  console.log('Grupos criados:', resultado.length)
+  console.log('Primeiro grupo:', resultado[0])
+  
+  return resultado
 })
 
 // Função para aplicar filtros
@@ -305,6 +330,26 @@ const handleImageError = (event) => {
   }
 }
 
+// Estado para toast/notificação
+const toast = ref({
+  show: false,
+  message: '',
+  type: 'error' // 'success', 'error', 'warning'
+})
+
+const mostrarToast = (message, type = 'error') => {
+  toast.value = {
+    show: true,
+    message,
+    type
+  }
+  
+  // Auto-hide após 4 segundos
+  setTimeout(() => {
+    toast.value.show = false
+  }, 4000)
+}
+
 const editarPaciente = (paciente) => {
   console.log('Paciente selecionado:', paciente)
   console.log('Anamneses do paciente:', paciente.anamneses)
@@ -316,7 +361,7 @@ const editarPaciente = (paciente) => {
     router.push(`/editar-paciente/${paciente.anamneses[0].id}`)
   } else {
     console.error('Nenhuma anamnese encontrada para este paciente')
-    alert('Nenhuma anamnese encontrada para este paciente')
+    mostrarToast('Nenhuma anamnese encontrada para este paciente', 'warning')
   }
 }
 
@@ -628,6 +673,77 @@ onMounted(async () => {
 .btn-outline:hover {
   background: #007bff;
   color: white;
+}
+
+/* Toast/Notificação */
+.toast {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 1000;
+  max-width: 350px;
+  min-width: 300px;
+  padding: 16px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  animation: slideIn 0.3s ease-out;
+}
+
+.toast-success {
+  background: #d4edda;
+  border: 1px solid #c3e6cb;
+  color: #155724;
+}
+
+.toast-warning {
+  background: #fff3cd;
+  border: 1px solid #ffeaa7;
+  color: #856404;
+}
+
+.toast-error {
+  background: #f8d7da;
+  border: 1px solid #f5c6cb;
+  color: #721c24;
+}
+
+.toast-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.toast-icon {
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.toast-message {
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* Responsivo para mobile */
+@media (max-width: 768px) {
+  .toast {
+    top: 10px;
+    right: 10px;
+    left: 10px;
+    max-width: none;
+    min-width: auto;
+  }
 }
 </style>
 
