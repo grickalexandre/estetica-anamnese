@@ -328,7 +328,6 @@ const salvar = async () => {
           
           console.log('📤 Iniciando upload para Cloudinary...')
           fotoURL = await uploadToCloudinary(file, { 
-            preset: 'unsigned',
             folder: 'estetica/clientes'
           })
           console.log('✅ Foto enviada com sucesso:', fotoURL)

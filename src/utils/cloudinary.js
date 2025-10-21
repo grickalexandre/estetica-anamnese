@@ -10,13 +10,15 @@ export async function uploadToCloudinary(file, { preset, folder, cloudName = 'dk
 
   if (!file) throw new Error('Arquivo não encontrado para upload');
 
+  // Tentar diferentes abordagens de upload
   const endpoint = `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`;
   const formData = new FormData();
   formData.append('file', file);
   
-  // Usar preset padrão que existe no Cloudinary
-  const uploadPreset = preset || 'unsigned';
-  formData.append('upload_preset', uploadPreset);
+  // Se não há preset, tentar upload sem preset (signed upload)
+  if (preset) {
+    formData.append('upload_preset', preset);
+  }
   
   if (folder) formData.append('folder', folder);
 
@@ -38,6 +40,13 @@ export async function uploadToCloudinary(file, { preset, folder, cloudName = 'dk
     if (!response.ok) {
       const text = await response.text();
       console.error('❌ Erro na resposta:', text);
+      
+      // Se erro de preset, tentar upload sem preset
+      if (text.includes('preset') && preset) {
+        console.log('🔄 Tentando upload sem preset...');
+        return await uploadToCloudinary(file, { folder, cloudName });
+      }
+      
       throw new Error(`Falha no upload Cloudinary: ${response.status} ${text}`);
     }
     
@@ -54,6 +63,18 @@ export async function uploadToCloudinary(file, { preset, folder, cloudName = 'dk
     return json.secure_url;
   } catch (error) {
     console.error('❌ Erro no upload Cloudinary:', error);
-    throw error;
+    
+    // Se erro de preset, tentar upload sem preset
+    if (error.message.includes('preset') && preset) {
+      console.log('🔄 Tentando upload sem preset...');
+      try {
+        return await uploadToCloudinary(file, { folder, cloudName });
+      } catch (retryError) {
+        console.error('❌ Erro no retry:', retryError);
+        throw new Error(`Erro ao fazer upload da foto: ${retryError.message}`);
+      }
+    }
+    
+    throw new Error(`Erro ao fazer upload da foto: ${error.message}`);
   }
 }
