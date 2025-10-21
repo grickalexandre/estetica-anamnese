@@ -715,13 +715,18 @@ const salvarAgendamento = async () => {
           const { uploadToCloudinary } = await import('../utils/cloudinary.js')
           
           fotoURL = await uploadToCloudinary(file, { 
-            preset: 'estetica_clientes',
+            preset: 'ml_default',
             folder: 'estetica/clientes'
           })
           console.log('✅ Foto enviada com sucesso:', fotoURL)
         } catch (uploadError) {
           console.error('❌ Erro no upload:', uploadError)
-          mostrarToast('Erro ao fazer upload da foto. Tente novamente.', 'error')
+          console.error('❌ Detalhes do erro:', {
+            name: uploadError.name,
+            message: uploadError.message,
+            stack: uploadError.stack
+          })
+          mostrarToast(`Erro ao fazer upload da foto: ${uploadError.message}`, 'error')
           return
         }
       } else {
@@ -992,9 +997,10 @@ const handleFileSelect = (event) => {
   
   if (file) {
     // Validar tipo de arquivo
-    if (!file.type.startsWith('image/')) {
+    const tiposPermitidos = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp']
+    if (!tiposPermitidos.includes(file.type)) {
       console.error('❌ Tipo de arquivo inválido:', file.type)
-      mostrarToast('Por favor, selecione apenas arquivos de imagem.', 'error')
+      mostrarToast('Por favor, selecione apenas arquivos de imagem (JPG, PNG, GIF, WebP).', 'error')
       return
     }
     
@@ -1002,6 +1008,13 @@ const handleFileSelect = (event) => {
     if (file.size > 5 * 1024 * 1024) {
       console.error('❌ Arquivo muito grande:', file.size)
       mostrarToast('A imagem deve ter no máximo 5MB.', 'error')
+      return
+    }
+    
+    // Validar se o arquivo não está vazio
+    if (file.size === 0) {
+      console.error('❌ Arquivo vazio')
+      mostrarToast('O arquivo selecionado está vazio.', 'error')
       return
     }
     
