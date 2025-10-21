@@ -22,7 +22,6 @@ import DashboardAnalitico from './views/DashboardAnalitico.vue'
 import Fornecedores from './views/Fornecedores.vue'
 import Produtos from './views/Produtos.vue'
 import CatalogoProcedimentos from './views/CatalogoProcedimentos.vue'
-import RegistrarAtendimento from './views/RegistrarAtendimento.vue'
 import RegistrarAtendimentoAgendado from './views/RegistrarAtendimentoAgendado.vue'
 import RelatorioAtendimentos from './views/RelatorioAtendimentos.vue'
 import EntradaProdutos from './views/EntradaProdutos.vue'
@@ -72,7 +71,6 @@ const routes = [
   { path: '/comissoes', component: Comissoes, meta: { requiresAuth: true } },
   
   // Rotas de atendimento
-  { path: '/registrar-atendimento', component: RegistrarAtendimento, meta: { requiresAuth: true } },
   { path: '/registrar-atendimento-agendado', component: RegistrarAtendimentoAgendado, meta: { requiresAuth: true } },
   { path: '/relatorio-atendimentos', component: RelatorioAtendimentos, meta: { requiresAuth: true } },
   

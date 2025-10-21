@@ -45,16 +45,6 @@
       </div>
     </div>
 
-    <div class="auth-info">
-      <h3>✨ Recursos Incluídos</h3>
-      <ul>
-        <li><i class="fas fa-check"></i> Anamneses ilimitadas (plano free: 100)</li>
-        <li><i class="fas fa-check"></i> Upload de fotos</li>
-        <li><i class="fas fa-check"></i> Relatórios e estatísticas</li>
-        <li><i class="fas fa-check"></i> Formulário online para pacientes</li>
-        <li><i class="fas fa-check"></i> Multi-clínica (SaaS)</li>
-      </ul>
-    </div>
   </div>
 </template>
 

@@ -46,43 +46,6 @@
       </div>
     </div>
 
-    <div class="card">
-      <h2><i class="fas fa-star"></i> Funcionalidades</h2>
-      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-top: 20px;">
-        <div>
-          <h3><i class="fas fa-chart-pie"></i> Dashboard Analítico</h3>
-          <p>KPIs e indicadores de performance em tempo real</p>
-        </div>
-        <div>
-          <h3><i class="fas fa-calendar-alt"></i> Agenda Inteligente</h3>
-          <p>Calendário completo com controle de horários e conflitos</p>
-        </div>
-        <div>
-          <h3><i class="fas fa-dollar-sign"></i> Gestão Financeira</h3>
-          <p>Contas a pagar/receber, DRE, fluxo de caixa e análises</p>
-        </div>
-        <div>
-          <h3><i class="fas fa-clipboard-list"></i> Anamneses</h3>
-          <p>Formulários completos com upload de fotos</p>
-        </div>
-        <div>
-          <h3><i class="fas fa-file-invoice-dollar"></i> Relatórios</h3>
-          <p>DRE, tendências, exportação PDF e gráficos</p>
-        </div>
-        <div>
-          <h3><i class="fas fa-sitemap"></i> Plano de Contas</h3>
-          <p>Estrutura DRE profissional e categorias</p>
-        </div>
-        <div>
-          <h3><i class="fas fa-cloud"></i> Multi-tenancy</h3>
-          <p>Sistema SaaS com isolamento total de dados</p>
-        </div>
-        <div>
-          <h3><i class="fas fa-user-edit"></i> Link Público</h3>
-          <p>Clientes preenchem anamneses online</p>
-        </div>
-      </div>
-    </div>
   </div>
 
   <!-- Informações da Clínica -->

@@ -8,7 +8,7 @@
     <!-- Filtros -->
     <div class="filters-section">
       <div class="filter-group">
-        <label>Filtrar por Data:</label>
+        <label><i class="fas fa-calendar-alt"></i> Filtrar por Data:</label>
         <input 
           type="date" 
           v-model="filtroData" 
@@ -17,13 +17,13 @@
         >
       </div>
       <div class="filter-group">
-        <label>Filtrar por Status:</label>
+        <label><i class="fas fa-filter"></i> Filtrar por Status:</label>
         <select v-model="filtroStatus" @change="filtrarAgendamentos" class="form-control">
           <option value="">Todos os status</option>
-          <option value="agendado">Agendado</option>
-          <option value="confirmado">Confirmado</option>
-          <option value="realizado">Realizado</option>
-          <option value="cancelado">Cancelado</option>
+          <option value="agendado">📅 Agendado</option>
+          <option value="confirmado">✅ Confirmado</option>
+          <option value="realizado">✅ Realizado</option>
+          <option value="cancelado">❌ Cancelado</option>
         </select>
       </div>
       <button @click="limparFiltros" class="btn btn-secondary">
@@ -163,29 +163,29 @@
                 >
               </div>
               <div class="form-group">
-                <label>Forma de Pagamento *</label>
+                <label><i class="fas fa-credit-card"></i> Forma de Pagamento *</label>
                 <select v-model="formAtendimento.formaPagamento" required class="form-control">
                   <option value="">Selecione...</option>
-                  <option value="dinheiro">Dinheiro</option>
-                  <option value="cartao_debito">Cartão Débito</option>
-                  <option value="cartao_credito">Cartão Crédito</option>
-                  <option value="pix">PIX</option>
-                  <option value="transferencia">Transferência</option>
+                  <option value="dinheiro">💵 Dinheiro</option>
+                  <option value="cartao_debito">💳 Cartão Débito</option>
+                  <option value="cartao_credito">💳 Cartão Crédito</option>
+                  <option value="pix">📱 PIX</option>
+                  <option value="transferencia">🏦 Transferência</option>
                 </select>
               </div>
             </div>
 
             <div class="form-row">
               <div class="form-group">
-                <label>Status do Atendimento *</label>
+                <label><i class="fas fa-check-circle"></i> Status do Atendimento *</label>
                 <select v-model="formAtendimento.status" required class="form-control">
-                  <option value="realizado">Realizado</option>
-                  <option value="nao_compareceu">Não Compareceu</option>
-                  <option value="cancelado">Cancelado</option>
+                  <option value="realizado">✅ Realizado</option>
+                  <option value="nao_compareceu">❌ Não Compareceu</option>
+                  <option value="cancelado">🚫 Cancelado</option>
                 </select>
               </div>
               <div class="form-group">
-                <label>Data do Atendimento</label>
+                <label><i class="fas fa-calendar"></i> Data do Atendimento</label>
                 <input 
                   type="datetime-local" 
                   v-model="formAtendimento.dataAtendimento" 
@@ -195,7 +195,7 @@
             </div>
 
             <div class="form-group">
-              <label>Observações do Atendimento</label>
+              <label><i class="fas fa-comment"></i> Observações do Atendimento</label>
               <textarea 
                 v-model="formAtendimento.observacoes" 
                 placeholder="Observações sobre o atendimento realizado..."
