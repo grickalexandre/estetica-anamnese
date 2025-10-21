@@ -44,83 +44,165 @@
         <p>Nenhum agendamento encontrado</p>
       </div>
 
-      <div v-else class="agendamentos-grid">
+      <div v-else class="agendamentos-lista">
+        <div class="lista-header">
+          <div class="col-cliente">Cliente</div>
+          <div class="col-procedimento">Procedimento</div>
+          <div class="col-data">Data/Hora</div>
+          <div class="col-profissional">Profissional</div>
+          <div class="col-valor">Valor</div>
+          <div class="col-status">Status</div>
+          <div class="col-acoes">Ações</div>
+        </div>
+        
         <div 
           v-for="agendamento in agendamentosFiltrados" 
           :key="agendamento.id"
-          class="agendamento-card"
+          class="agendamento-linha"
           :class="'status-' + agendamento.status"
-          @click="selecionarAgendamento(agendamento)"
         >
-          <div class="agendamento-header">
-            <div class="cliente-info">
-              <h4>{{ agendamento.clienteNome }}</h4>
-              <p class="procedimento">{{ agendamento.procedimento }}</p>
-            </div>
-            <div class="status-badge" :class="'status-' + agendamento.status">
-              {{ formatarStatus(agendamento.status) }}
+          <div class="col-cliente">
+            <div class="cliente-nome">{{ agendamento.clienteNome }}</div>
+            <div class="cliente-detalhes">
+              <i class="fas fa-clock"></i> {{ agendamento.duracao }} min
             </div>
           </div>
           
-          <div class="agendamento-details">
-            <div class="detail-item">
-              <i class="fas fa-clock"></i>
-              <span>{{ formatarDataHora(agendamento.dataHora) }}</span>
-            </div>
-            <div class="detail-item">
-              <i class="fas fa-user-md"></i>
-              <span>{{ agendamento.profissional }}</span>
-            </div>
-            <div class="detail-item">
-              <i class="fas fa-clock"></i>
-              <span>{{ agendamento.duracao }} min</span>
-            </div>
-            <div class="detail-item">
-              <i class="fas fa-dollar-sign"></i>
-              <span>R$ {{ formatarMoeda(agendamento.valorEstimado) }}</span>
-            </div>
+          <div class="col-procedimento">
+            {{ agendamento.procedimento }}
           </div>
-
-          <div class="agendamento-actions">
+          
+          <div class="col-data">
+            {{ formatarDataHora(agendamento.dataHora) }}
+          </div>
+          
+          <div class="col-profissional">
+            {{ agendamento.profissional }}
+          </div>
+          
+          <div class="col-valor">
+            R$ {{ formatarMoeda(agendamento.valorEstimado) }}
+          </div>
+          
+          <div class="col-status">
+            <span class="status-badge" :class="'status-' + agendamento.status">
+              {{ formatarStatus(agendamento.status) }}
+            </span>
+          </div>
+          
+          <div class="col-acoes">
             <button 
-              @click.stop="registrarAtendimento(agendamento)"
-              class="btn btn-primary"
+              @click="registrarAtendimento(agendamento)"
+              class="btn btn-primary btn-sm"
               :disabled="agendamento.status === 'realizado'"
             >
-              <i class="fas fa-check"></i> Registrar Atendimento
+              <i class="fas fa-check"></i> Registrar
             </button>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Modal de Confirmação -->
+    <!-- Modal de Registro de Atendimento -->
     <div v-if="modalConfirmacao" class="modal-overlay" @click.self="fecharModal">
-      <div class="modal-content">
+      <div class="modal-content modal-large">
         <div class="modal-header">
-          <h3><i class="fas fa-check-circle"></i> Confirmar Atendimento</h3>
+          <h3><i class="fas fa-user-md"></i> Registrar Atendimento</h3>
           <button @click="fecharModal" class="btn-close">
             <i class="fas fa-times"></i>
           </button>
         </div>
         
         <div class="modal-body">
-          <div class="confirmacao-info">
-            <h4>{{ agendamentoSelecionado?.clienteNome }}</h4>
-            <p><strong>Procedimento:</strong> {{ agendamentoSelecionado?.procedimento }}</p>
-            <p><strong>Data/Hora:</strong> {{ formatarDataHora(agendamentoSelecionado?.dataHora) }}</p>
-            <p><strong>Profissional:</strong> {{ agendamentoSelecionado?.profissional }}</p>
-            <p><strong>Valor:</strong> R$ {{ formatarMoeda(agendamentoSelecionado?.valorEstimado) }}</p>
+          <!-- Informações do Agendamento -->
+          <div class="agendamento-info">
+            <h4><i class="fas fa-calendar-check"></i> Dados do Agendamento</h4>
+            <div class="info-grid">
+              <div class="info-item">
+                <label>Cliente:</label>
+                <span>{{ agendamentoSelecionado?.clienteNome }}</span>
+              </div>
+              <div class="info-item">
+                <label>Procedimento:</label>
+                <span>{{ agendamentoSelecionado?.procedimento }}</span>
+              </div>
+              <div class="info-item">
+                <label>Data/Hora:</label>
+                <span>{{ formatarDataHora(agendamentoSelecionado?.dataHora) }}</span>
+              </div>
+              <div class="info-item">
+                <label>Profissional:</label>
+                <span>{{ agendamentoSelecionado?.profissional }}</span>
+              </div>
+              <div class="info-item">
+                <label>Duração:</label>
+                <span>{{ agendamentoSelecionado?.duracao }} minutos</span>
+              </div>
+              <div class="info-item">
+                <label>Valor Estimado:</label>
+                <span>R$ {{ formatarMoeda(agendamentoSelecionado?.valorEstimado) }}</span>
+              </div>
+            </div>
           </div>
-          
-          <div class="form-group">
-            <label>Observações do Atendimento:</label>
-            <textarea 
-              v-model="observacoesAtendimento" 
-              placeholder="Observações sobre o atendimento realizado..."
-              class="form-control"
-              rows="3"
-            ></textarea>
+
+          <!-- Formulário de Atendimento -->
+          <div class="atendimento-form">
+            <h4><i class="fas fa-edit"></i> Dados do Atendimento</h4>
+            
+            <div class="form-row">
+              <div class="form-group">
+                <label>Valor Cobrado *</label>
+                <input 
+                  type="number" 
+                  v-model="formAtendimento.valorCobrado" 
+                  step="0.01"
+                  min="0"
+                  required
+                  class="form-control"
+                  placeholder="0,00"
+                >
+              </div>
+              <div class="form-group">
+                <label>Forma de Pagamento *</label>
+                <select v-model="formAtendimento.formaPagamento" required class="form-control">
+                  <option value="">Selecione...</option>
+                  <option value="dinheiro">Dinheiro</option>
+                  <option value="cartao_debito">Cartão Débito</option>
+                  <option value="cartao_credito">Cartão Crédito</option>
+                  <option value="pix">PIX</option>
+                  <option value="transferencia">Transferência</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label>Status do Atendimento *</label>
+                <select v-model="formAtendimento.status" required class="form-control">
+                  <option value="realizado">Realizado</option>
+                  <option value="nao_compareceu">Não Compareceu</option>
+                  <option value="cancelado">Cancelado</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Data do Atendimento</label>
+                <input 
+                  type="datetime-local" 
+                  v-model="formAtendimento.dataAtendimento" 
+                  class="form-control"
+                >
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>Observações do Atendimento</label>
+              <textarea 
+                v-model="formAtendimento.observacoes" 
+                placeholder="Observações sobre o atendimento realizado..."
+                class="form-control"
+                rows="3"
+              ></textarea>
+            </div>
           </div>
         </div>
         
@@ -131,7 +213,7 @@
           <button @click="confirmarAtendimento" class="btn btn-success" :disabled="processando">
             <i class="fas fa-check" v-if="!processando"></i>
             <i class="fas fa-spinner fa-spin" v-else></i>
-            {{ processando ? 'Registrando...' : 'Confirmar Atendimento' }}
+            {{ processando ? 'Registrando...' : 'Registrar Atendimento' }}
           </button>
         </div>
       </div>
@@ -153,8 +235,16 @@ const filtroData = ref('')
 const filtroStatus = ref('')
 const modalConfirmacao = ref(false)
 const agendamentoSelecionado = ref(null)
-const observacoesAtendimento = ref('')
 const processando = ref(false)
+
+// Formulário de atendimento
+const formAtendimento = ref({
+  valorCobrado: 0,
+  formaPagamento: '',
+  status: 'realizado',
+  dataAtendimento: '',
+  observacoes: ''
+})
 
 // Computed
 const agendamentosFiltrados = computed(() => {
@@ -221,7 +311,16 @@ const selecionarAgendamento = (agendamento) => {
 
 const registrarAtendimento = (agendamento) => {
   agendamentoSelecionado.value = agendamento
-  observacoesAtendimento.value = ''
+  
+  // Preencher formulário com dados do agendamento
+  formAtendimento.value = {
+    valorCobrado: agendamento.valorEstimado || 0,
+    formaPagamento: '',
+    status: 'realizado',
+    dataAtendimento: new Date().toISOString().slice(0, 16),
+    observacoes: ''
+  }
+  
   modalConfirmacao.value = true
 }
 
@@ -229,11 +328,19 @@ const confirmarAtendimento = async () => {
   try {
     processando.value = true
     
-    // Atualizar status do agendamento para "realizado"
+    // Validar formulário
+    if (!formAtendimento.value.formaPagamento) {
+      alert('Por favor, selecione a forma de pagamento.')
+      return
+    }
+    
+    // Atualizar agendamento com dados do atendimento
     await atualizarAgendamento(agendamentoSelecionado.value.id, {
-      status: 'realizado',
-      observacoes: observacoesAtendimento.value,
-      dataAtendimento: new Date()
+      status: formAtendimento.value.status,
+      valorCobrado: formAtendimento.value.valorCobrado,
+      formaPagamento: formAtendimento.value.formaPagamento,
+      dataAtendimento: formAtendimento.value.dataAtendimento ? new Date(formAtendimento.value.dataAtendimento) : new Date(),
+      observacoes: formAtendimento.value.observacoes
     })
     
     // Recarregar agendamentos
@@ -254,7 +361,13 @@ const confirmarAtendimento = async () => {
 const fecharModal = () => {
   modalConfirmacao.value = false
   agendamentoSelecionado.value = null
-  observacoesAtendimento.value = ''
+  formAtendimento.value = {
+    valorCobrado: 0,
+    formaPagamento: '',
+    status: 'realizado',
+    dataAtendimento: '',
+    observacoes: ''
+  }
 }
 
 // Utilitários
@@ -370,10 +483,90 @@ onMounted(() => {
   color: #666;
 }
 
-.agendamentos-grid {
+.agendamentos-lista {
+  background: white;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.lista-header {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-  gap: 20px;
+  grid-template-columns: 2fr 1.5fr 1.5fr 1fr 1fr 1fr 1fr;
+  gap: 15px;
+  padding: 15px 20px;
+  background: #f8f9fa;
+  font-weight: 600;
+  color: #555;
+  border-bottom: 1px solid #ddd;
+}
+
+.agendamento-linha {
+  display: grid;
+  grid-template-columns: 2fr 1.5fr 1.5fr 1fr 1fr 1fr 1fr;
+  gap: 15px;
+  padding: 15px 20px;
+  border-bottom: 1px solid #eee;
+  transition: background-color 0.2s;
+  align-items: center;
+}
+
+.agendamento-linha:hover {
+  background: #f8f9fa;
+}
+
+.agendamento-linha.status-realizado {
+  opacity: 0.6;
+  background: #f8f9fa;
+}
+
+.col-cliente .cliente-nome {
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 4px;
+}
+
+.col-cliente .cliente-detalhes {
+  font-size: 12px;
+  color: #666;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.col-procedimento {
+  font-weight: 500;
+  color: #555;
+}
+
+.col-data {
+  font-size: 14px;
+  color: #666;
+}
+
+.col-profissional {
+  font-size: 14px;
+  color: #666;
+}
+
+.col-valor {
+  font-weight: 600;
+  color: #28a745;
+}
+
+.col-status {
+  display: flex;
+  justify-content: center;
+}
+
+.col-acoes {
+  display: flex;
+  justify-content: center;
+}
+
+.btn-sm {
+  padding: 6px 12px;
+  font-size: 12px;
 }
 
 .agendamento-card {
@@ -493,6 +686,10 @@ onMounted(() => {
   overflow-y: auto;
 }
 
+.modal-large {
+  max-width: 800px;
+}
+
 .modal-header {
   display: flex;
   justify-content: space-between;
@@ -535,6 +732,88 @@ onMounted(() => {
   color: #666;
 }
 
+.agendamento-info {
+  background: #f8f9fa;
+  padding: 20px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.agendamento-info h4 {
+  margin: 0 0 15px 0;
+  color: #333;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.info-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+}
+
+.info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.info-item label {
+  font-weight: 600;
+  color: #555;
+  font-size: 14px;
+}
+
+.info-item span {
+  color: #333;
+  font-size: 14px;
+}
+
+.atendimento-form {
+  margin-top: 20px;
+}
+
+.atendimento-form h4 {
+  margin: 0 0 15px 0;
+  color: #333;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+  margin-bottom: 15px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.form-group label {
+  font-weight: 600;
+  color: #555;
+  font-size: 14px;
+}
+
+.form-control {
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.form-control:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+}
+
 .modal-footer {
   display: flex;
   justify-content: flex-end;
@@ -549,11 +828,57 @@ onMounted(() => {
     align-items: stretch;
   }
   
-  .agendamentos-grid {
+  .lista-header,
+  .agendamento-linha {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  
+  .lista-header {
+    display: none;
+  }
+  
+  .agendamento-linha {
+    display: flex;
+    flex-direction: column;
+    padding: 15px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    margin-bottom: 10px;
+  }
+  
+  .col-cliente,
+  .col-procedimento,
+  .col-data,
+  .col-profissional,
+  .col-valor,
+  .col-status,
+  .col-acoes {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 5px 0;
+    border-bottom: 1px solid #f0f0f0;
+  }
+  
+  .col-cliente::before { content: "Cliente: "; font-weight: 600; }
+  .col-procedimento::before { content: "Procedimento: "; font-weight: 600; }
+  .col-data::before { content: "Data/Hora: "; font-weight: 600; }
+  .col-profissional::before { content: "Profissional: "; font-weight: 600; }
+  .col-valor::before { content: "Valor: "; font-weight: 600; }
+  .col-status::before { content: "Status: "; font-weight: 600; }
+  .col-acoes::before { content: "Ações: "; font-weight: 600; }
+  
+  .col-acoes {
+    border-bottom: none;
+    justify-content: center;
+  }
+  
+  .form-row {
     grid-template-columns: 1fr;
   }
   
-  .agendamento-details {
+  .info-grid {
     grid-template-columns: 1fr;
   }
 }
