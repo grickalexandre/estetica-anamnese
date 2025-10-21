@@ -156,7 +156,22 @@
                   @click="editarAgendamento(agend)"
                   :class="['agendamento-mini', 'status-' + agend.status]"
                 >
-                  {{ agend.pacienteNome }} - {{ agend.procedimento }}
+                  <div class="agendamento-content">
+                    <div class="agendamento-avatar">
+                      <img 
+                        v-if="agend.pacienteFoto" 
+                        :src="agend.pacienteFoto" 
+                        :alt="agend.pacienteNome"
+                        class="avatar-image"
+                        @error="handleImageError"
+                      >
+                      <i v-else class="fas fa-user avatar-icon"></i>
+                    </div>
+                    <div class="agendamento-info">
+                      <div class="paciente-nome">{{ agend.pacienteNome }}</div>
+                      <div class="procedimento">{{ agend.procedimento }}</div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </template>
@@ -174,7 +189,23 @@
                   @click="editarAgendamento(agend)"
                   :class="['agend-badge', 'status-' + agend.status]"
                 >
-                  {{ formatarHora(agend.dataHora) }} - {{ agend.pacienteNome }} - {{ agend.procedimento }}
+                  <div class="agendamento-content-mes">
+                    <div class="agendamento-avatar-mes">
+                      <img 
+                        v-if="agend.pacienteFoto" 
+                        :src="agend.pacienteFoto" 
+                        :alt="agend.pacienteNome"
+                        class="avatar-image-mes"
+                        @error="handleImageError"
+                      >
+                      <i v-else class="fas fa-user avatar-icon-mes"></i>
+                    </div>
+                    <div class="agendamento-info-mes">
+                      <div class="hora">{{ formatarHora(agend.dataHora) }}</div>
+                      <div class="paciente-nome">{{ agend.pacienteNome }}</div>
+                      <div class="procedimento">{{ agend.procedimento }}</div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -378,6 +409,7 @@ const formulario = ref({
   pacienteNome: '',
   pacienteTelefone: '',
   pacienteEmail: '',
+  pacienteFoto: '',
   // Data/Hora
   data: new Date().toISOString().split('T')[0],
   hora: '09:00',
@@ -571,6 +603,7 @@ const editarAgendamento = (agend) => {
     pacienteNome: agend.pacienteNome,
     pacienteTelefone: agend.pacienteTelefone,
     pacienteEmail: agend.pacienteEmail || '',
+    pacienteFoto: agend.pacienteFoto || '',
     data: data.toISOString().split('T')[0],
     hora: data.toTimeString().slice(0, 5),
     profissionalId: agend.profissionalId || '',
@@ -596,6 +629,7 @@ const salvarAgendamento = async () => {
       pacienteNome: formulario.value.pacienteNome, // retrocompatibilidade
       pacienteTelefone: formulario.value.pacienteTelefone,
       pacienteEmail: formulario.value.pacienteEmail,
+      pacienteFoto: formulario.value.pacienteFoto,
       // Data/Hora
       dataHora,
       // Profissional
@@ -671,6 +705,7 @@ const aplicarSelecaoPaciente = (pac) => {
   formulario.value.pacienteNome = pac.nome
   formulario.value.pacienteTelefone = pac.telefone || ''
   formulario.value.pacienteEmail = pac.email || ''
+  formulario.value.pacienteFoto = pac.fotoURL || ''
   fecharModalPesquisaPaciente()
 }
 // Inline
@@ -765,6 +800,17 @@ const formatarHora = (dataHora) => {
   const data = dataHora?.toDate ? dataHora.toDate() : new Date(dataHora)
   return data.toTimeString().slice(0, 5)
 }
+
+// Função para lidar com erro de carregamento de imagem
+const handleImageError = (event) => {
+  console.log('Erro ao carregar imagem do paciente:', event.target.src)
+  event.target.style.display = 'none'
+  const avatar = event.target.parentElement
+  const icon = avatar.querySelector('.avatar-icon, .avatar-icon-mes')
+  if (icon) {
+    icon.style.display = 'flex'
+  }
+}
 </script>
 
 <style scoped>
@@ -801,14 +847,39 @@ const formatarHora = (dataHora) => {
 .dia-data { font-size: 13px; color: #6e6e73; }
 .horario-label { background: #f5f5f7; padding: 8px; text-align: center; font-size: 12px; color: #6e6e73; }
 .hora-cell { background: white; padding: 4px; min-height: 60px; }
-.agendamento-mini { padding: 4px 6px; border-radius: 4px; font-size: 11px; cursor: pointer; margin-bottom: 2px; }
+.agendamento-mini { 
+  padding: 6px 8px; 
+  border-radius: 8px; 
+  font-size: 11px; 
+  cursor: pointer; 
+  margin-bottom: 2px; 
+  transition: all 0.2s ease;
+}
+.agendamento-mini:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
 .mes-view { padding: 20px; }
 .mes-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; background: #e5e5ea; }
 .dia-cell { background: white; min-height: 100px; padding: 8px; }
 .dia-cell.hoje { background: rgba(102, 126, 234, 0.05); }
 .dia-cell.outro-mes { opacity: 0.5; }
 .dia-numero { font-weight: 700; margin-bottom: 4px; }
-.agend-badge { padding: 4px; border-radius: 4px; font-size: 11px; margin-bottom: 2px; cursor: pointer; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.agend-badge { 
+  padding: 6px 8px; 
+  border-radius: 8px; 
+  font-size: 11px; 
+  margin-bottom: 2px; 
+  cursor: pointer; 
+  overflow: hidden; 
+  text-overflow: ellipsis; 
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+.agend-badge:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
 .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-top: 20px; }
 .stat-card { display: flex; align-items: center; gap: 16px; padding: 20px; border-radius: 12px; background: white; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
 .stat-card i { font-size: 32px; }
@@ -841,5 +912,128 @@ const formatarHora = (dataHora) => {
 .resultado-item .info .titulo { font-weight: 600; color: #111827; }
 .resultado-item .info .sub { font-size: 12px; color: #6b7280; }
 .resultado-item .acao { font-weight: 600; color: #2563eb; }
+
+/* Avatar e conteúdo dos agendamentos */
+.agendamento-content {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.agendamento-avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  overflow: hidden;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.avatar-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.avatar-icon {
+  font-size: 12px;
+  color: inherit;
+}
+
+.agendamento-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.paciente-nome {
+  font-weight: 600;
+  font-size: 11px;
+  line-height: 1.2;
+  margin-bottom: 2px;
+}
+
+.procedimento {
+  font-size: 10px;
+  opacity: 0.8;
+  line-height: 1.2;
+}
+
+/* Layout para visualização mensal */
+.agendamento-content-mes {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.agendamento-avatar-mes {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  overflow: hidden;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.avatar-image-mes {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.avatar-icon-mes {
+  font-size: 10px;
+  color: inherit;
+}
+
+.agendamento-info-mes {
+  flex: 1;
+  min-width: 0;
+}
+
+.agendamento-info-mes .hora {
+  font-size: 9px;
+  font-weight: 600;
+  margin-bottom: 1px;
+}
+
+.agendamento-info-mes .paciente-nome {
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1.2;
+  margin-bottom: 1px;
+}
+
+.agendamento-info-mes .procedimento {
+  font-size: 9px;
+  opacity: 0.8;
+  line-height: 1.2;
+}
+
+@media (max-width: 768px) {
+  /* Mobile: avatares menores */
+  .agendamento-avatar {
+    width: 20px;
+    height: 20px;
+  }
+  
+  .agendamento-avatar-mes {
+    width: 16px;
+    height: 16px;
+  }
+  
+  .avatar-icon {
+    font-size: 10px;
+  }
+  
+  .avatar-icon-mes {
+    font-size: 8px;
+  }
+}
 </style>
 
