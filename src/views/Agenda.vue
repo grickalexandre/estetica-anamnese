@@ -713,10 +713,15 @@ const salvarAgendamento = async () => {
           
           // Importar uploadToCloudinary dinamicamente
           const { uploadToCloudinary } = await import('../utils/cloudinary.js')
+          const { compressProfileImage } = await import('../utils/imageCompressor.js')
           
-          // Tentar upload com diferentes estratégias
-          fotoURL = await uploadToCloudinary(file, { 
-            preset: 'unsigned', // Tentar preset unsigned primeiro
+          // Comprimir imagem antes do upload (igual NovaAnamnese)
+          const compressed = await compressProfileImage(file)
+          console.log('📦 Imagem comprimida, fazendo upload...')
+          
+          // Usar mesmo preset que funciona na NovaAnamnese
+          fotoURL = await uploadToCloudinary(compressed, { 
+            preset: 'pacientes',
             folder: 'estetica/clientes'
           })
           console.log('✅ Foto enviada com sucesso:', fotoURL)

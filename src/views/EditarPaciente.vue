@@ -145,6 +145,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { db } from '../firebase.js'
 import { doc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore'
 import { uploadToCloudinary } from '../utils/cloudinary.js'
+import { compressProfileImage } from '../utils/imageCompressor.js'
 import VoltarHome from '../components/VoltarHome.vue'
 import { useClinica } from '../composables/useClinica.js'
 
@@ -327,9 +328,13 @@ const salvar = async () => {
           })
           
           console.log('📤 Iniciando upload para Cloudinary...')
-          // Tentar upload com diferentes estratégias
-          fotoURL = await uploadToCloudinary(file, { 
-            preset: 'unsigned', // Tentar preset unsigned primeiro
+          // Comprimir imagem antes do upload (igual NovaAnamnese)
+          const compressed = await compressProfileImage(file)
+          console.log('📦 Imagem comprimida, fazendo upload...')
+          
+          // Usar mesmo preset que funciona na NovaAnamnese
+          fotoURL = await uploadToCloudinary(compressed, { 
+            preset: 'pacientes',
             folder: 'estetica/clientes'
           })
           console.log('✅ Foto enviada com sucesso:', fotoURL)
