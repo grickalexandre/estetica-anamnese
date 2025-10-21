@@ -714,7 +714,9 @@ const salvarAgendamento = async () => {
           // Importar uploadToCloudinary dinamicamente
           const { uploadToCloudinary } = await import('../utils/cloudinary.js')
           
+          // Tentar upload com diferentes estratégias
           fotoURL = await uploadToCloudinary(file, { 
+            preset: 'unsigned', // Tentar preset unsigned primeiro
             folder: 'estetica/clientes'
           })
           console.log('✅ Foto enviada com sucesso:', fotoURL)

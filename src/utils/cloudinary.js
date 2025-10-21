@@ -10,71 +10,66 @@ export async function uploadToCloudinary(file, { preset, folder, cloudName = 'dk
 
   if (!file) throw new Error('Arquivo não encontrado para upload');
 
-  // Tentar diferentes abordagens de upload
-  const endpoint = `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`;
-  const formData = new FormData();
-  formData.append('file', file);
-  
-  // Se não há preset, tentar upload sem preset (signed upload)
-  if (preset) {
-    formData.append('upload_preset', preset);
+  // Validar tipo de arquivo
+  const tiposPermitidos = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+  if (!tiposPermitidos.includes(file.type)) {
+    throw new Error('Tipo de arquivo não suportado. Use JPG, PNG ou WebP.');
   }
+
+  // Validar tamanho (máximo 10MB)
+  const maxSize = 10 * 1024 * 1024; // 10MB
+  if (file.size > maxSize) {
+    throw new Error('Arquivo muito grande. Tamanho máximo: 10MB.');
+  }
+
+  const endpoint = `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`;
   
-  if (folder) formData.append('folder', folder);
+  // Estratégia 1: Tentar com preset se fornecido
+  if (preset) {
+    try {
+      console.log('📤 Tentativa 1: Upload com preset', preset);
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('upload_preset', preset);
+      if (folder) formData.append('folder', folder);
 
-  console.log('📤 Enviando requisição para:', endpoint);
-  console.log('📤 FormData contents:', {
-    file: file.name,
-    upload_preset: preset,
-    folder: folder || 'não especificado'
-  });
+      const response = await fetch(endpoint, { method: 'POST', body: formData });
+      
+      if (response.ok) {
+        const json = await response.json();
+        console.log('✅ Upload com preset bem-sucedido:', json.secure_url);
+        return json.secure_url;
+      } else {
+        const errorText = await response.text();
+        console.warn('⚠️ Upload com preset falhou:', errorText);
+        throw new Error(`Preset upload failed: ${response.status}`);
+      }
+    } catch (error) {
+      console.warn('⚠️ Erro no upload com preset:', error.message);
+      // Continuar para estratégia 2
+    }
+  }
 
+  // Estratégia 2: Upload sem preset (unsigned)
   try {
-    const response = await fetch(endpoint, { method: 'POST', body: formData });
-    console.log('📤 Resposta recebida:', {
-      status: response.status,
-      statusText: response.statusText,
-      ok: response.ok
-    });
+    console.log('📤 Tentativa 2: Upload sem preset (unsigned)');
+    const formData = new FormData();
+    formData.append('file', file);
+    if (folder) formData.append('folder', folder);
 
-    if (!response.ok) {
-      const text = await response.text();
-      console.error('❌ Erro na resposta:', text);
-      
-      // Se erro de preset, tentar upload sem preset
-      if (text.includes('preset') && preset) {
-        console.log('🔄 Tentando upload sem preset...');
-        return await uploadToCloudinary(file, { folder, cloudName });
-      }
-      
-      throw new Error(`Falha no upload Cloudinary: ${response.status} ${text}`);
+    const response = await fetch(endpoint, { method: 'POST', body: formData });
+    
+    if (response.ok) {
+      const json = await response.json();
+      console.log('✅ Upload sem preset bem-sucedido:', json.secure_url);
+      return json.secure_url;
+    } else {
+      const errorText = await response.text();
+      console.error('❌ Upload sem preset falhou:', errorText);
+      throw new Error(`Unsigned upload failed: ${response.status} ${errorText}`);
     }
-    
-    const json = await response.json();
-    console.log('✅ Upload bem-sucedido:', {
-      public_id: json.public_id,
-      secure_url: json.secure_url,
-      format: json.format,
-      width: json.width,
-      height: json.height
-    });
-    
-    // secure_url é a URL pública HTTPS do asset
-    return json.secure_url;
   } catch (error) {
-    console.error('❌ Erro no upload Cloudinary:', error);
-    
-    // Se erro de preset, tentar upload sem preset
-    if (error.message.includes('preset') && preset) {
-      console.log('🔄 Tentando upload sem preset...');
-      try {
-        return await uploadToCloudinary(file, { folder, cloudName });
-      } catch (retryError) {
-        console.error('❌ Erro no retry:', retryError);
-        throw new Error(`Erro ao fazer upload da foto: ${retryError.message}`);
-      }
-    }
-    
+    console.error('❌ Erro no upload sem preset:', error);
     throw new Error(`Erro ao fazer upload da foto: ${error.message}`);
   }
 }

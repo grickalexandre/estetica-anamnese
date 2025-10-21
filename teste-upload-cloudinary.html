@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste Upload Cloudinary</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .upload-area {
+            border: 2px dashed #ccc;
+            border-radius: 10px;
+            padding: 40px;
+            text-align: center;
+            margin: 20px 0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .upload-area:hover {
+            border-color: #007bff;
+            background: #f8f9fa;
+        }
+        .upload-area.dragover {
+            border-color: #007bff;
+            background: #e3f2fd;
+        }
+        input[type="file"] {
+            display: none;
+        }
+        .btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px 5px;
+        }
+        .btn:hover {
+            background: #0056b3;
+        }
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .result {
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 5px;
+            display: none;
+        }
+        .result.success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .result.error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        .preview {
+            max-width: 200px;
+            max-height: 200px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        .log {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 10px 0;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Teste Upload Cloudinary</h1>
+        <p>Teste diferentes estratégias de upload para identificar o problema.</p>
+        
+        <div class="upload-area" id="uploadArea">
+            <p>📁 Clique aqui ou arraste uma imagem</p>
+            <input type="file" id="fileInput" accept="image/*">
+        </div>
+        
+        <div>
+            <button class="btn" onclick="testUpload()" id="uploadBtn" disabled>📤 Testar Upload</button>
+            <button class="btn" onclick="clearLog()">🗑️ Limpar Log</button>
+        </div>
+        
+        <div id="preview"></div>
+        
+        <div id="result" class="result"></div>
+        
+        <div id="log" class="log"></div>
+    </div>
+
+    <script>
+        const fileInput = document.getElementById('fileInput');
+        const uploadArea = document.getElementById('uploadArea');
+        const uploadBtn = document.getElementById('uploadBtn');
+        const preview = document.getElementById('preview');
+        const result = document.getElementById('result');
+        const log = document.getElementById('log');
+        
+        let selectedFile = null;
+        
+        // Log function
+        function addLog(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = document.createElement('div');
+            logEntry.innerHTML = `<span style="color: #666;">[${timestamp}]</span> <span style="color: ${type === 'error' ? '#dc3545' : type === 'success' ? '#28a745' : '#007bff'};">${message}</span>`;
+            log.appendChild(logEntry);
+            log.scrollTop = log.scrollHeight;
+        }
+        
+        function clearLog() {
+            log.innerHTML = '';
+        }
+        
+        function showResult(message, isSuccess = true) {
+            result.className = `result ${isSuccess ? 'success' : 'error'}`;
+            result.textContent = message;
+            result.style.display = 'block';
+        }
+        
+        // File selection
+        uploadArea.addEventListener('click', () => fileInput.click());
+        
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                selectedFile = file;
+                uploadBtn.disabled = false;
+                
+                // Show preview
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    preview.innerHTML = `<img src="${e.target.result}" class="preview" alt="Preview">`;
+                };
+                reader.readAsDataURL(file);
+                
+                addLog(`Arquivo selecionado: ${file.name} (${(file.size / 1024).toFixed(1)}KB)`, 'success');
+            }
+        });
+        
+        // Drag and drop
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+        
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+        
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            
+            const file = e.dataTransfer.files[0];
+            if (file && file.type.startsWith('image/')) {
+                selectedFile = file;
+                uploadBtn.disabled = false;
+                
+                // Show preview
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    preview.innerHTML = `<img src="${e.target.result}" class="preview" alt="Preview">`;
+                };
+                reader.readAsDataURL(file);
+                
+                addLog(`Arquivo arrastado: ${file.name} (${(file.size / 1024).toFixed(1)}KB)`, 'success');
+            }
+        });
+        
+        // Upload function
+        async function uploadToCloudinary(file, options = {}) {
+            const { preset, folder, cloudName = 'dkliyeyoq' } = options;
+            
+            addLog(`📤 Iniciando upload: ${file.name}`, 'info');
+            addLog(`📤 Opções: preset=${preset || 'nenhum'}, folder=${folder || 'nenhum'}, cloudName=${cloudName}`, 'info');
+            
+            // Validar arquivo
+            const tiposPermitidos = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+            if (!tiposPermitidos.includes(file.type)) {
+                throw new Error('Tipo de arquivo não suportado. Use JPG, PNG ou WebP.');
+            }
+            
+            const maxSize = 10 * 1024 * 1024; // 10MB
+            if (file.size > maxSize) {
+                throw new Error('Arquivo muito grande. Tamanho máximo: 10MB.');
+            }
+            
+            const endpoint = `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`;
+            
+            // Estratégia 1: Com preset
+            if (preset) {
+                try {
+                    addLog(`📤 Tentativa 1: Upload com preset '${preset}'`, 'info');
+                    const formData = new FormData();
+                    formData.append('file', file);
+                    formData.append('upload_preset', preset);
+                    if (folder) formData.append('folder', folder);
+                    
+                    const response = await fetch(endpoint, { method: 'POST', body: formData });
+                    addLog(`📤 Resposta: ${response.status} ${response.statusText}`, response.ok ? 'success' : 'error');
+                    
+                    if (response.ok) {
+                        const json = await response.json();
+                        addLog(`✅ Upload com preset bem-sucedido: ${json.secure_url}`, 'success');
+                        return json.secure_url;
+                    } else {
+                        const errorText = await response.text();
+                        addLog(`❌ Upload com preset falhou: ${errorText}`, 'error');
+                        throw new Error(`Preset upload failed: ${response.status}`);
+                    }
+                } catch (error) {
+                    addLog(`⚠️ Erro no upload com preset: ${error.message}`, 'error');
+                    // Continuar para estratégia 2
+                }
+            }
+            
+            // Estratégia 2: Sem preset (unsigned)
+            try {
+                addLog(`📤 Tentativa 2: Upload sem preset (unsigned)`, 'info');
+                const formData = new FormData();
+                formData.append('file', file);
+                if (folder) formData.append('folder', folder);
+                
+                const response = await fetch(endpoint, { method: 'POST', body: formData });
+                addLog(`📤 Resposta: ${response.status} ${response.statusText}`, response.ok ? 'success' : 'error');
+                
+                if (response.ok) {
+                    const json = await response.json();
+                    addLog(`✅ Upload sem preset bem-sucedido: ${json.secure_url}`, 'success');
+                    return json.secure_url;
+                } else {
+                    const errorText = await response.text();
+                    addLog(`❌ Upload sem preset falhou: ${errorText}`, 'error');
+                    throw new Error(`Unsigned upload failed: ${response.status} ${errorText}`);
+                }
+            } catch (error) {
+                addLog(`❌ Erro no upload sem preset: ${error.message}`, 'error');
+                throw new Error(`Erro ao fazer upload da foto: ${error.message}`);
+            }
+        }
+        
+        async function testUpload() {
+            if (!selectedFile) {
+                showResult('Nenhum arquivo selecionado', false);
+                return;
+            }
+            
+            uploadBtn.disabled = true;
+            uploadBtn.textContent = '⏳ Testando...';
+            
+            try {
+                // Teste 1: Com preset 'unsigned'
+                addLog('🧪 TESTE 1: Upload com preset "unsigned"', 'info');
+                const url1 = await uploadToCloudinary(selectedFile, {
+                    preset: 'unsigned',
+                    folder: 'estetica/teste'
+                });
+                showResult(`✅ Upload bem-sucedido com preset: ${url1}`, true);
+                return;
+            } catch (error1) {
+                addLog(`❌ Teste 1 falhou: ${error1.message}`, 'error');
+            }
+            
+            try {
+                // Teste 2: Sem preset
+                addLog('🧪 TESTE 2: Upload sem preset', 'info');
+                const url2 = await uploadToCloudinary(selectedFile, {
+                    folder: 'estetica/teste'
+                });
+                showResult(`✅ Upload bem-sucedido sem preset: ${url2}`, true);
+                return;
+            } catch (error2) {
+                addLog(`❌ Teste 2 falhou: ${error2.message}`, 'error');
+            }
+            
+            try {
+                // Teste 3: Sem folder
+                addLog('🧪 TESTE 3: Upload sem folder', 'info');
+                const url3 = await uploadToCloudinary(selectedFile, {});
+                showResult(`✅ Upload bem-sucedido sem folder: ${url3}`, true);
+                return;
+            } catch (error3) {
+                addLog(`❌ Teste 3 falhou: ${error3.message}`, 'error');
+            }
+            
+            showResult('❌ Todos os testes falharam. Verifique a configuração do Cloudinary.', false);
+        }
+        
+        // Initialize
+        addLog('🚀 Teste de Upload Cloudinary iniciado', 'info');
+        addLog('📋 Cloud Name: dkliyeyoq', 'info');
+        addLog('📋 Selecione uma imagem para testar diferentes estratégias de upload', 'info');
+    </script>
+</body>
+</html>
