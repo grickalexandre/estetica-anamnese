@@ -160,7 +160,7 @@
                   @click="editarAgendamento(agend)"
                   :class="['agendamento-mini', 'status-' + agend.status]"
                 >
-                  {{ agend.pacienteNome }}
+                  {{ agend.pacienteNome }} - {{ agend.procedimento }}
                 </div>
               </div>
             </template>
@@ -178,7 +178,7 @@
                   @click="editarAgendamento(agend)"
                   :class="['agend-badge', 'status-' + agend.status]"
                 >
-                  {{ formatarHora(agend.dataHora) }} - {{ agend.pacienteNome }}
+                  {{ formatarHora(agend.dataHora) }} - {{ agend.pacienteNome }} - {{ agend.procedimento }}
                 </div>
               </div>
             </div>

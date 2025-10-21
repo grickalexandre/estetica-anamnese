@@ -66,6 +66,7 @@ export function useAgendamento() {
       console.log('Lista de agendamentos:', agendamentos.value.map(a => ({ 
         id: a.id, 
         cliente: a.clienteNome, 
+        procedimento: a.procedimento,
         dataHora: a.dataHora, 
         clinicaId: a.clinicaId 
       })))
