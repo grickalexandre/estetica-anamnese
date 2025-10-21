@@ -288,7 +288,10 @@ const salvar = async () => {
       console.log('Fazendo upload da nova foto...')
       const file = fileInput.value.files[0]
       if (file) {
-        fotoURL = await uploadToCloudinary(file, 'estetica/clientes')
+        fotoURL = await uploadToCloudinary(file, { 
+          preset: 'estetica_clientes',
+          folder: 'estetica/clientes'
+        })
         console.log('Foto enviada com sucesso:', fotoURL)
       }
     }

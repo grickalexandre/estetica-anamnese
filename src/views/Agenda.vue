@@ -168,7 +168,12 @@
                       <i v-else class="fas fa-user avatar-icon"></i>
                     </div>
                     <div class="agendamento-info">
-                      <div class="paciente-nome">{{ agend.pacienteNome }}</div>
+                      <div class="agendamento-header">
+                        <div class="status-icon" :class="'status-' + agend.status">
+                          <i :class="getStatusIcon(agend.status)"></i>
+                        </div>
+                        <div class="paciente-nome">{{ agend.pacienteNome }}</div>
+                      </div>
                       <div class="procedimento">{{ agend.procedimento }}</div>
                     </div>
                   </div>
@@ -201,7 +206,12 @@
                       <i v-else class="fas fa-user avatar-icon-mes"></i>
                     </div>
                     <div class="agendamento-info-mes">
-                      <div class="hora">{{ formatarHora(agend.dataHora) }}</div>
+                      <div class="agendamento-header-mes">
+                        <div class="status-icon-mes" :class="'status-' + agend.status">
+                          <i :class="getStatusIcon(agend.status)"></i>
+                        </div>
+                        <div class="hora">{{ formatarHora(agend.dataHora) }}</div>
+                      </div>
                       <div class="paciente-nome">{{ agend.pacienteNome }}</div>
                       <div class="procedimento">{{ agend.procedimento }}</div>
                     </div>
@@ -835,6 +845,18 @@ const handleImageError = (event) => {
     console.log('❌ Ícone de fallback não encontrado')
   }
 }
+
+// Função para obter ícone do status
+const getStatusIcon = (status) => {
+  const icons = {
+    'confirmado': 'fas fa-check-circle',
+    'realizado': 'fas fa-check-double',
+    'cancelado': 'fas fa-times-circle',
+    'pendente': 'fas fa-clock',
+    'agendado': 'fas fa-calendar-check'
+  }
+  return icons[status] || 'fas fa-question-circle'
+}
 </script>
 
 <style scoped>
@@ -974,11 +996,50 @@ const handleImageError = (event) => {
   min-width: 0;
 }
 
+.agendamento-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 2px;
+}
+
+.status-icon {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  flex-shrink: 0;
+}
+
+.status-icon.status-confirmado {
+  background: #e3f2fd;
+  color: #1976d2;
+}
+
+.status-icon.status-realizado {
+  background: #e8f5e8;
+  color: #2e7d32;
+}
+
+.status-icon.status-cancelado {
+  background: #ffebee;
+  color: #d32f2f;
+}
+
+.status-icon.status-pendente {
+  background: #fff3e0;
+  color: #f57c00;
+}
+
 .paciente-nome {
   font-weight: 600;
   font-size: 11px;
   line-height: 1.2;
-  margin-bottom: 2px;
+  flex: 1;
+  min-width: 0;
 }
 
 .procedimento {
@@ -1024,10 +1085,48 @@ const handleImageError = (event) => {
   min-width: 0;
 }
 
+.agendamento-header-mes {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 1px;
+}
+
+.status-icon-mes {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 8px;
+  flex-shrink: 0;
+}
+
+.status-icon-mes.status-confirmado {
+  background: #e3f2fd;
+  color: #1976d2;
+}
+
+.status-icon-mes.status-realizado {
+  background: #e8f5e8;
+  color: #2e7d32;
+}
+
+.status-icon-mes.status-cancelado {
+  background: #ffebee;
+  color: #d32f2f;
+}
+
+.status-icon-mes.status-pendente {
+  background: #fff3e0;
+  color: #f57c00;
+}
+
 .agendamento-info-mes .hora {
   font-size: 9px;
   font-weight: 600;
-  margin-bottom: 1px;
+  flex: 1;
 }
 
 .agendamento-info-mes .paciente-nome {
