@@ -306,11 +306,16 @@ const handleImageError = (event) => {
 }
 
 const editarPaciente = (paciente) => {
+  console.log('Paciente selecionado:', paciente)
+  console.log('Anamneses do paciente:', paciente.anamneses)
+  
   // Redirecionar para página de edição do paciente
   // Usar o ID da primeira anamnese do paciente
   if (paciente.anamneses && paciente.anamneses.length > 0) {
+    console.log('ID da anamnese:', paciente.anamneses[0].id)
     router.push(`/editar-paciente/${paciente.anamneses[0].id}`)
   } else {
+    console.error('Nenhuma anamnese encontrada para este paciente')
     alert('Nenhuma anamnese encontrada para este paciente')
   }
 }

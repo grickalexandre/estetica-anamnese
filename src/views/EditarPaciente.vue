@@ -158,11 +158,14 @@ const form = ref({
 const carregarPaciente = async () => {
   try {
     carregando.value = true
+    console.log('ID recebido:', route.params.id)
     const docRef = doc(db, 'anamneses', route.params.id)
     const docSnap = await getDoc(docRef)
     
+    console.log('Documento existe:', docSnap.exists())
     if (docSnap.exists()) {
       const data = docSnap.data()
+      console.log('Dados do documento:', data)
       paciente.value = { id: docSnap.id, ...data }
       
       // Preencher formulário com dados do paciente
@@ -175,6 +178,7 @@ const carregarPaciente = async () => {
         endereco: data.endereco || '',
         fotoURL: data.fotoURL || ''
       }
+      console.log('Formulário preenchido:', form.value)
     } else {
       console.error('Paciente não encontrado')
     }
