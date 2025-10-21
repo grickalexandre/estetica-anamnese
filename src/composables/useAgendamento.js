@@ -38,9 +38,9 @@ export function useAgendamento() {
         where('clinicaId', '==', clinicaId.value || 'demo')
       )
 
-      // TEMPORÁRIO: Buscar todos os agendamentos sem filtro de data para evitar erro de índice
-      console.log('Buscando todos os agendamentos (sem filtro de data - temporário)')
-      q = query(q, orderBy('dataHora', 'asc'))
+      // TEMPORÁRIO: Buscar todos os agendamentos sem filtro de data e sem orderBy para evitar erro de índice
+      console.log('Buscando todos os agendamentos (sem filtro de data e sem orderBy - temporário)')
+      // q = query(q, orderBy('dataHora', 'asc')) // Removido para evitar erro de índice
       
       // TODO: Implementar filtro de data após criar índice no Firebase
       // if (dataInicio && dataFim) {
