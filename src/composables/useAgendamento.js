@@ -67,6 +67,7 @@ export function useAgendamento() {
         id: a.id, 
         cliente: a.clienteNome, 
         procedimento: a.procedimento,
+        pacienteFoto: a.pacienteFoto,
         dataHora: a.dataHora, 
         clinicaId: a.clinicaId 
       })))

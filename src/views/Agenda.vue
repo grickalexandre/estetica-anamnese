@@ -565,12 +565,26 @@ const agendamentosPorDia = (data) => {
 }
 
 const agendamentosPorDiaHora = (data, hora) => {
-  return agendamentos.value.filter(a => {
+  const filtrados = agendamentos.value.filter(a => {
     const agendData = a.dataHora?.toDate ? a.dataHora.toDate() : new Date(a.dataHora)
     const agendHora = agendData.toTimeString().slice(0, 5)
     const dia = agendData.toISOString().split('T')[0]
     return dia === data && agendHora === hora
   })
+  
+  if (filtrados.length > 0) {
+    console.log(`📅 ${filtrados.length} agendamentos para ${data} às ${hora}`)
+    filtrados.forEach(agend => {
+      console.log('🔍 Agendamento:', {
+        paciente: agend.pacienteNome,
+        foto: agend.pacienteFoto,
+        temFoto: !!agend.pacienteFoto,
+        urlFoto: agend.pacienteFoto
+      })
+    })
+  }
+  
+  return filtrados
 }
 
 const abrirModalNovo = () => {
@@ -581,6 +595,7 @@ const abrirModalNovo = () => {
     pacienteNome: '',
     pacienteTelefone: '',
     pacienteEmail: '',
+    pacienteFoto: '',
     data: dataAtual.value,
     hora: '09:00',
     profissionalId: '',
@@ -803,12 +818,21 @@ const formatarHora = (dataHora) => {
 
 // Função para lidar com erro de carregamento de imagem
 const handleImageError = (event) => {
-  console.log('Erro ao carregar imagem do paciente:', event.target.src)
+  console.log('❌ Erro ao carregar imagem do paciente:', event.target.src)
+  console.log('Elemento da imagem:', event.target)
+  console.log('Parent element:', event.target.parentElement)
+  
+  // Esconder a imagem
   event.target.style.display = 'none'
+  
+  // Mostrar o ícone de fallback
   const avatar = event.target.parentElement
   const icon = avatar.querySelector('.avatar-icon, .avatar-icon-mes')
   if (icon) {
     icon.style.display = 'flex'
+    console.log('✅ Ícone de fallback ativado')
+  } else {
+    console.log('❌ Ícone de fallback não encontrado')
   }
 }
 </script>
@@ -936,6 +960,8 @@ const handleImageError = (event) => {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  display: block;
+  border-radius: 50%;
 }
 
 .avatar-icon {
@@ -984,6 +1010,8 @@ const handleImageError = (event) => {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  display: block;
+  border-radius: 50%;
 }
 
 .avatar-icon-mes {
