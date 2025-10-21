@@ -3,10 +3,6 @@
     <div class="page-header">
       <h1><i class="fas fa-calendar-alt"></i> Agenda</h1>
       <div class="header-actions">
-        <router-link to="/registrar-atendimento" class="btn btn-success">
-          <i class="fas fa-user-md"></i>
-          Registrar Atendimento
-        </router-link>
         <button @click="abrirModalNovo" class="btn btn-primary">
           <i class="fas fa-plus"></i>
           Novo Agendamento
