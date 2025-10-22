@@ -1,9 +1,19 @@
 <template>
   <div id="app" :class="{ 'no-menu-layout': isClientPage }">
+    <!-- Top Navbar -->
+    <TopNavbar 
+      v-if="!isClientPage" 
+      :pending-count="pendingCount"
+      @logout="handleLogout"
+      @menu-change="handleMenuChange"
+      class="top-navbar"
+    />
+    
     <!-- Sidebar Desktop -->
     <Sidebar 
       v-if="!isClientPage" 
       :pending-count="pendingCount"
+      :active-menu="activeMenu"
       @logout="handleLogout"
       @toggle="handleSidebarToggle"
       class="desktop-sidebar"
@@ -19,6 +29,7 @@
     
     <!-- Main Content -->
     <main class="main-content" :class="{ 
+      'with-navbar': !isClientPage,
       'with-sidebar': !isClientPage && !sidebarCollapsed,
       'with-sidebar-collapsed': !isClientPage && sidebarCollapsed
     }">
@@ -79,6 +90,7 @@ import { useConfiguracoes } from './composables/useConfiguracoes'
 import { useClinica } from './composables/useClinica.js'
 import { useAuth } from './composables/useAuth.js'
 import { useNotifications } from './composables/useNotifications.js'
+import TopNavbar from './components/TopNavbar.vue'
 import Sidebar from './components/Sidebar.vue'
 import MobileMenu from './components/MobileMenu.vue'
 import Toast from './components/Toast.vue'
@@ -89,6 +101,7 @@ const route = useRoute()
 const router = useRouter()
 const pendingCount = ref(0)
 const sidebarCollapsed = ref(false)
+const activeMenu = ref('dashboard')
 
 const { clinicaId, inicializarClinica } = useClinica()
 const { isAuthenticated, isFree, isPaid, logout, initAuth } = useAuth()
@@ -109,6 +122,10 @@ const isClientPage = computed(() => {
 
 const handleSidebarToggle = (collapsed) => {
   sidebarCollapsed.value = collapsed
+}
+
+const handleMenuChange = (menu) => {
+  activeMenu.value = menu
 }
 
 const updatePendingCount = async () => {
@@ -184,7 +201,12 @@ watch(isClientPage, (newValue) => {
 /* Layout principal */
 .main-content {
   min-height: 100vh;
-  transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  background: #f8f9fa;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.main-content.with-navbar {
+  padding-top: 70px;
 }
 
 .main-content.with-sidebar {
@@ -206,6 +228,16 @@ watch(isClientPage, (newValue) => {
 }
 
 /* Responsive */
+@media (max-width: 1024px) {
+  .main-content.with-sidebar {
+    margin-left: 0;
+  }
+  
+  .main-content.with-sidebar-collapsed {
+    margin-left: 0;
+  }
+}
+
 @media (max-width: 768px) {
   .desktop-sidebar {
     display: none;
@@ -215,9 +247,8 @@ watch(isClientPage, (newValue) => {
     display: block;
   }
   
-  .main-content.with-sidebar {
-    margin-left: 0;
-    padding-top: 80px;
+  .main-content.with-navbar {
+    padding-top: 60px;
   }
 }
 

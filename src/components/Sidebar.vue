@@ -2,206 +2,205 @@
   <div class="sidebar" :class="{ 'collapsed': collapsed }">
     <!-- Header do Sidebar -->
     <div class="sidebar-header">
-      <div class="sidebar-brand" @click="irParaHome">
-        <div class="brand-icon">
-          <i class="fas fa-spa"></i>
-        </div>
-        <div v-if="!collapsed" class="brand-text">
-          <h3 class="brand-title">{{ configuracoes.nomeClinica || 'Clínica Estética' }}</h3>
-          <span v-if="configuracoes.nomeProprietario" class="proprietario">
-            <i class="fas fa-user-md"></i>
-            {{ configuracoes.nomeProprietario }}
-          </span>
-        </div>
+      <div class="sidebar-title">
+        <h3>{{ getMenuTitle() }}</h3>
+        <p>{{ getMenuDescription() }}</p>
       </div>
       <button @click="toggleCollapse" class="collapse-btn" :class="{ 'collapsed': collapsed }">
         <i :class="collapsed ? 'fas fa-chevron-right' : 'fas fa-chevron-left'"></i>
       </button>
     </div>
 
-    <!-- Menu Principal -->
+    <!-- Menu Dinâmico -->
     <nav class="sidebar-nav">
       <!-- Dashboard -->
-      <router-link to="/dashboard" class="nav-item" :class="{ 'collapsed': collapsed }">
-        <div class="nav-icon">
+      <div v-if="activeMenu === 'dashboard'" class="menu-section">
+        <div class="section-title">
           <i class="fas fa-chart-pie"></i>
+          <span>Visão Geral</span>
         </div>
-        <span v-if="!collapsed" class="nav-text">Dashboard</span>
-      </router-link>
+        <router-link to="/dashboard" class="nav-item" :class="{ 'collapsed': collapsed }">
+          <div class="nav-icon">
+            <i class="fas fa-chart-pie"></i>
+          </div>
+          <span v-if="!collapsed" class="nav-text">Dashboard Principal</span>
+        </router-link>
+      </div>
 
       <!-- Agenda -->
-      <router-link to="/agenda" class="nav-item" :class="{ 'collapsed': collapsed }">
-        <div class="nav-icon">
+      <div v-if="activeMenu === 'agenda'" class="menu-section">
+        <div class="section-title">
           <i class="fas fa-calendar-alt"></i>
+          <span>Agendamentos</span>
         </div>
-        <span v-if="!collapsed" class="nav-text">Agenda</span>
-      </router-link>
-
-      <!-- Atendimento Agendado -->
-      <router-link to="/registrar-atendimento-agendado" class="nav-item" :class="{ 'collapsed': collapsed }">
-        <div class="nav-icon">
-          <i class="fas fa-user-check"></i>
-        </div>
-        <span v-if="!collapsed" class="nav-text">Atendimento Agendado</span>
-      </router-link>
+        <router-link to="/agenda" class="nav-item" :class="{ 'collapsed': collapsed }">
+          <div class="nav-icon">
+            <i class="fas fa-calendar-alt"></i>
+          </div>
+          <span v-if="!collapsed" class="nav-text">Agenda</span>
+        </router-link>
+        <router-link to="/registrar-atendimento-agendado" class="nav-item" :class="{ 'collapsed': collapsed }">
+          <div class="nav-icon">
+            <i class="fas fa-user-check"></i>
+          </div>
+          <span v-if="!collapsed" class="nav-text">Atendimento Agendado</span>
+        </router-link>
+      </div>
 
       <!-- Pacientes -->
-      <router-link to="/lista" class="nav-item notification-badge" :class="{ 'collapsed': collapsed }">
-        <div class="nav-icon">
+      <div v-if="activeMenu === 'pacientes'" class="menu-section">
+        <div class="section-title">
           <i class="fas fa-users"></i>
-          <span v-if="pendingCount > 0" class="notification-count">{{ pendingCount }}</span>
+          <span>Gestão de Pacientes</span>
         </div>
-        <span v-if="!collapsed" class="nav-text">Pacientes</span>
-      </router-link>
-
-      <!-- Cadastros -->
-      <div class="nav-group" :class="{ 'collapsed': collapsed }">
-        <div class="nav-group-header" @click="toggleCadastros">
+        <router-link to="/lista" class="nav-item notification-badge" :class="{ 'collapsed': collapsed }">
           <div class="nav-icon">
-            <i class="fas fa-database"></i>
+            <i class="fas fa-users"></i>
+            <span v-if="pendingCount > 0" class="notification-count">{{ pendingCount }}</span>
           </div>
-          <span v-if="!collapsed" class="nav-text">Cadastros</span>
-          <i v-if="!collapsed" class="fas fa-chevron-down group-arrow" :class="{ 'rotated': showCadastros }"></i>
-        </div>
-        <div v-if="!collapsed && showCadastros" class="nav-group-content">
-          <router-link to="/fornecedores" class="nav-subitem">
-            <i class="fas fa-truck"></i>
-            <span>Fornecedores</span>
-          </router-link>
-          <router-link to="/produtos" class="nav-subitem">
-            <i class="fas fa-box"></i>
-            <span>Produtos</span>
-          </router-link>
-          <router-link to="/entrada-produtos" class="nav-subitem">
-            <i class="fas fa-truck-loading"></i>
-            <span>Entrada de Produtos</span>
-          </router-link>
-          <router-link to="/procedimentos" class="nav-subitem">
-            <i class="fas fa-spa"></i>
-            <span>Procedimentos</span>
-          </router-link>
-          <router-link to="/profissionais" class="nav-subitem">
-            <i class="fas fa-user-md"></i>
-            <span>Profissionais</span>
-          </router-link>
-        </div>
+          <span v-if="!collapsed" class="nav-text">Lista de Pacientes</span>
+        </router-link>
       </div>
 
       <!-- Financeiro -->
-      <div class="nav-group" :class="{ 'collapsed': collapsed }">
-        <div class="nav-group-header" @click="toggleFinanceiro">
+      <div v-if="activeMenu === 'financeiro'" class="menu-section">
+        <div class="section-title">
+          <i class="fas fa-dollar-sign"></i>
+          <span>Gestão Financeira</span>
+        </div>
+        <router-link to="/financeiro" class="nav-item" :class="{ 'collapsed': collapsed }">
           <div class="nav-icon">
-            <i class="fas fa-dollar-sign"></i>
-          </div>
-          <span v-if="!collapsed" class="nav-text">Financeiro</span>
-          <i v-if="!collapsed" class="fas fa-chevron-down group-arrow" :class="{ 'rotated': showFinanceiro }"></i>
-        </div>
-        <div v-if="!collapsed && showFinanceiro" class="nav-group-content">
-          <router-link to="/financeiro" class="nav-subitem">
             <i class="fas fa-chart-line"></i>
-            <span>Visão Geral</span>
-          </router-link>
-          <router-link to="/financeiro/contas-pagar" class="nav-subitem">
+          </div>
+          <span v-if="!collapsed" class="nav-text">Visão Geral</span>
+        </router-link>
+        <router-link to="/financeiro/contas-pagar" class="nav-item" :class="{ 'collapsed': collapsed }">
+          <div class="nav-icon">
             <i class="fas fa-credit-card"></i>
-            <span>Contas a Pagar</span>
-          </router-link>
-          <router-link to="/financeiro/contas-receber" class="nav-subitem">
+          </div>
+          <span v-if="!collapsed" class="nav-text">Contas a Pagar</span>
+        </router-link>
+        <router-link to="/financeiro/contas-receber" class="nav-item" :class="{ 'collapsed': collapsed }">
+          <div class="nav-icon">
             <i class="fas fa-money-bill-wave"></i>
-            <span>Contas a Receber</span>
-          </router-link>
-          <router-link to="/financeiro/fluxo-caixa" class="nav-subitem">
+          </div>
+          <span v-if="!collapsed" class="nav-text">Contas a Receber</span>
+        </router-link>
+        <router-link to="/financeiro/fluxo-caixa" class="nav-item" :class="{ 'collapsed': collapsed }">
+          <div class="nav-icon">
             <i class="fas fa-exchange-alt"></i>
-            <span>Fluxo de Caixa</span>
-          </router-link>
-          <router-link to="/financeiro/plano-contas" class="nav-subitem">
+          </div>
+          <span v-if="!collapsed" class="nav-text">Fluxo de Caixa</span>
+        </router-link>
+        <router-link to="/financeiro/plano-contas" class="nav-item" :class="{ 'collapsed': collapsed }">
+          <div class="nav-icon">
             <i class="fas fa-sitemap"></i>
-            <span>Plano de Contas</span>
-          </router-link>
-          <router-link to="/financeiro/relatorio-dre" class="nav-subitem">
+          </div>
+          <span v-if="!collapsed" class="nav-text">Plano de Contas</span>
+        </router-link>
+        <router-link to="/financeiro/relatorio-dre" class="nav-item" :class="{ 'collapsed': collapsed }">
+          <div class="nav-icon">
             <i class="fas fa-file-invoice"></i>
-            <span>Relatório DRE</span>
-          </router-link>
-          <router-link to="/financeiro/analise-tendencias" class="nav-subitem">
+          </div>
+          <span v-if="!collapsed" class="nav-text">Relatório DRE</span>
+        </router-link>
+        <router-link to="/financeiro/analise-tendencias" class="nav-item" :class="{ 'collapsed': collapsed }">
+          <div class="nav-icon">
             <i class="fas fa-chart-area"></i>
-            <span>Análise de Tendências</span>
-          </router-link>
-          <router-link to="/financeiro/despesas-recorrentes" class="nav-subitem">
+          </div>
+          <span v-if="!collapsed" class="nav-text">Análise de Tendências</span>
+        </router-link>
+        <router-link to="/financeiro/despesas-recorrentes" class="nav-item" :class="{ 'collapsed': collapsed }">
+          <div class="nav-icon">
             <i class="fas fa-sync-alt"></i>
-            <span>Despesas Recorrentes</span>
-          </router-link>
-          <router-link to="/comissoes" class="nav-subitem">
+          </div>
+          <span v-if="!collapsed" class="nav-text">Despesas Recorrentes</span>
+        </router-link>
+        <router-link to="/comissoes" class="nav-item" :class="{ 'collapsed': collapsed }">
+          <div class="nav-icon">
             <i class="fas fa-money-bill-wave"></i>
-            <span>Comissões</span>
-          </router-link>
-          <router-link to="/pagamentos" class="nav-subitem">
+          </div>
+          <span v-if="!collapsed" class="nav-text">Comissões</span>
+        </router-link>
+        <router-link to="/pagamentos" class="nav-item" :class="{ 'collapsed': collapsed }">
+          <div class="nav-icon">
             <i class="fas fa-exchange-alt"></i>
-            <span>Pagamentos</span>
-          </router-link>
-        </div>
+          </div>
+          <span v-if="!collapsed" class="nav-text">Pagamentos</span>
+        </router-link>
       </div>
 
       <!-- Relatórios -->
-      <div class="nav-group" :class="{ 'collapsed': collapsed }">
-        <div class="nav-group-header" @click="toggleRelatorios">
+      <div v-if="activeMenu === 'relatorios'" class="menu-section">
+        <div class="section-title">
+          <i class="fas fa-chart-bar"></i>
+          <span>Relatórios e Análises</span>
+        </div>
+        <router-link to="/relatorios" class="nav-item" :class="{ 'collapsed': collapsed }">
           <div class="nav-icon">
-            <i class="fas fa-chart-bar"></i>
-          </div>
-          <span v-if="!collapsed" class="nav-text">Relatórios</span>
-          <i v-if="!collapsed" class="fas fa-chevron-down group-arrow" :class="{ 'rotated': showRelatorios }"></i>
-        </div>
-        <div v-if="!collapsed && showRelatorios" class="nav-group-content">
-          <router-link to="/relatorios" class="nav-subitem">
             <i class="fas fa-file-alt"></i>
-            <span>Relatórios Gerais</span>
-          </router-link>
-          <router-link to="/relatorio-atendimentos" class="nav-subitem">
+          </div>
+          <span v-if="!collapsed" class="nav-text">Relatórios Gerais</span>
+        </router-link>
+        <router-link to="/relatorio-atendimentos" class="nav-item" :class="{ 'collapsed': collapsed }">
+          <div class="nav-icon">
             <i class="fas fa-user-md"></i>
-            <span>Atendimentos</span>
-          </router-link>
-          <router-link to="/avaliacoes" class="nav-subitem">
+          </div>
+          <span v-if="!collapsed" class="nav-text">Relatório de Atendimentos</span>
+        </router-link>
+        <router-link to="/avaliacoes" class="nav-item" :class="{ 'collapsed': collapsed }">
+          <div class="nav-icon">
             <i class="fas fa-star"></i>
-            <span>Avaliações</span>
-          </router-link>
-          <router-link to="/auditoria" class="nav-subitem">
+          </div>
+          <span v-if="!collapsed" class="nav-text">Avaliações</span>
+        </router-link>
+        <router-link to="/auditoria" class="nav-item" :class="{ 'collapsed': collapsed }">
+          <div class="nav-icon">
             <i class="fas fa-shield-alt"></i>
-            <span>Auditoria</span>
-          </router-link>
-        </div>
+          </div>
+          <span v-if="!collapsed" class="nav-text">Auditoria</span>
+        </router-link>
       </div>
 
       <!-- Gestão -->
-      <div class="nav-group" :class="{ 'collapsed': collapsed }">
-        <div class="nav-group-header" @click="toggleGestao">
+      <div v-if="activeMenu === 'gestao'" class="menu-section">
+        <div class="section-title">
+          <i class="fas fa-users-cog"></i>
+          <span>Gestão da Clínica</span>
+        </div>
+        <router-link to="/equipe-clinica" class="nav-item" :class="{ 'collapsed': collapsed }">
           <div class="nav-icon">
-            <i class="fas fa-users-cog"></i>
-          </div>
-          <span v-if="!collapsed" class="nav-text">Gestão</span>
-          <i v-if="!collapsed" class="fas fa-chevron-down group-arrow" :class="{ 'rotated': showGestao }"></i>
-        </div>
-        <div v-if="!collapsed && showGestao" class="nav-group-content">
-          <router-link to="/equipe-clinica" class="nav-subitem">
             <i class="fas fa-users"></i>
-            <span>Equipe da Clínica</span>
-          </router-link>
-          <router-link to="/minha-assinatura" class="nav-subitem">
+          </div>
+          <span v-if="!collapsed" class="nav-text">Equipe da Clínica</span>
+        </router-link>
+        <router-link to="/minha-assinatura" class="nav-item" :class="{ 'collapsed': collapsed }">
+          <div class="nav-icon">
             <i class="fas fa-credit-card"></i>
-            <span>Minha Assinatura</span>
-          </router-link>
-          <router-link to="/planos" class="nav-subitem">
+          </div>
+          <span v-if="!collapsed" class="nav-text">Minha Assinatura</span>
+        </router-link>
+        <router-link to="/planos" class="nav-item" :class="{ 'collapsed': collapsed }">
+          <div class="nav-icon">
             <i class="fas fa-crown"></i>
-            <span>Planos</span>
-          </router-link>
-        </div>
+          </div>
+          <span v-if="!collapsed" class="nav-text">Planos</span>
+        </router-link>
       </div>
 
       <!-- Configurações -->
-      <router-link to="/configuracoes" class="nav-item" :class="{ 'collapsed': collapsed }">
-        <div class="nav-icon">
+      <div v-if="activeMenu === 'configuracoes'" class="menu-section">
+        <div class="section-title">
           <i class="fas fa-cog"></i>
+          <span>Configurações do Sistema</span>
         </div>
-        <span v-if="!collapsed" class="nav-text">Configurações</span>
-      </router-link>
-
+        <router-link to="/configuracoes" class="nav-item" :class="{ 'collapsed': collapsed }">
+          <div class="nav-icon">
+            <i class="fas fa-cog"></i>
+          </div>
+          <span v-if="!collapsed" class="nav-text">Configurações Gerais</span>
+        </router-link>
+      </div>
     </nav>
 
     <!-- Footer do Sidebar -->
@@ -231,6 +230,10 @@ const props = defineProps({
   pendingCount: {
     type: Number,
     default: 0
+  },
+  activeMenu: {
+    type: String,
+    default: 'dashboard'
   }
 })
 
@@ -239,47 +242,12 @@ const emit = defineEmits(['logout', 'toggle'])
 
 // Estado do sidebar
 const collapsed = ref(false)
-const showCadastros = ref(false)
-const showFinanceiro = ref(false)
-const showRelatorios = ref(false)
-const showGestao = ref(false)
 
 // Métodos
 const toggleCollapse = () => {
   collapsed.value = !collapsed.value
-  // Fechar grupos quando colapsar
-  if (collapsed.value) {
-    showCadastros.value = false
-    showFinanceiro.value = false
-    showRelatorios.value = false
-    showGestao.value = false
-  }
   // Emitir evento para o componente pai
   emit('toggle', collapsed.value)
-}
-
-const toggleCadastros = () => {
-  if (!collapsed.value) {
-    showCadastros.value = !showCadastros.value
-  }
-}
-
-const toggleFinanceiro = () => {
-  if (!collapsed.value) {
-    showFinanceiro.value = !showFinanceiro.value
-  }
-}
-
-const toggleRelatorios = () => {
-  if (!collapsed.value) {
-    showRelatorios.value = !showRelatorios.value
-  }
-}
-
-const toggleGestao = () => {
-  if (!collapsed.value) {
-    showGestao.value = !showGestao.value
-  }
 }
 
 const handleLogout = async () => {
@@ -292,8 +260,30 @@ const handleLogout = async () => {
   }
 }
 
-const irParaHome = () => {
-  router.push('/')
+const getMenuTitle = () => {
+  const titles = {
+    dashboard: 'Dashboard',
+    agenda: 'Agenda',
+    pacientes: 'Pacientes',
+    financeiro: 'Financeiro',
+    relatorios: 'Relatórios',
+    gestao: 'Gestão',
+    configuracoes: 'Configurações'
+  }
+  return titles[props.activeMenu] || 'Dashboard'
+}
+
+const getMenuDescription = () => {
+  const descriptions = {
+    dashboard: 'Visão geral do sistema',
+    agenda: 'Gestão de agendamentos',
+    pacientes: 'Cadastro e histórico de pacientes',
+    financeiro: 'Controle financeiro completo',
+    relatorios: 'Relatórios e análises',
+    gestao: 'Gestão da clínica e equipe',
+    configuracoes: 'Configurações do sistema'
+  }
+  return descriptions[props.activeMenu] || 'Visão geral do sistema'
 }
 </script>
 
@@ -329,44 +319,14 @@ const irParaHome = () => {
   position: relative;
 }
 
-.sidebar-brand {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex: 1;
-  min-width: 0;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  border-radius: 8px;
-  padding: 8px;
-}
-
-.sidebar-brand:hover {
-  background: rgba(29, 29, 31, 0.05);
-  transform: translateY(-1px);
-}
-
-.brand-icon {
-  width: 40px;
-  height: 40px;
-  background: linear-gradient(135deg, #1d1d1f 0%, #424245 100%);
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  font-size: 18px;
-  flex-shrink: 0;
-}
-
-.brand-text {
+.sidebar-title {
   flex: 1;
   min-width: 0;
 }
 
-.brand-text h3 {
+.sidebar-title h3 {
   margin: 0;
-  font-size: 16px;
+  font-size: 18px;
   font-weight: 700;
   color: #1d1d1f;
   line-height: 1.2;
@@ -375,25 +335,14 @@ const irParaHome = () => {
   text-overflow: ellipsis;
 }
 
-.brand-title {
-  transition: color 0.2s ease;
-}
-
-.sidebar-brand:hover .brand-title {
-  color: #007AFF;
-}
-
-.proprietario {
-  display: flex;
-  align-items: center;
-  gap: 6px;
+.sidebar-title p {
+  margin: 4px 0 0 0;
   font-size: 12px;
   color: #8e8e93;
-  margin-top: 2px;
-}
-
-.proprietario i {
-  font-size: 10px;
+  line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .collapse-btn {
@@ -507,79 +456,33 @@ const irParaHome = () => {
   line-height: 1;
 }
 
-/* Navigation Groups */
-.nav-group {
-  margin-bottom: 4px;
+/* Menu Sections */
+.menu-section {
+  margin-bottom: 24px;
 }
 
-.nav-group.collapsed .nav-group-header {
-  justify-content: center;
-  padding: 12px 16px;
-}
-
-.nav-group-header {
+.section-title {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 12px 20px;
-  color: #6b7280;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  font-weight: 500;
-  font-size: 14px;
-}
-
-.nav-group-header:hover {
-  background: rgba(29, 29, 31, 0.05);
-  color: #1d1d1f;
-}
-
-.group-arrow {
-  margin-left: auto;
-  transition: transform 0.2s ease;
-  font-size: 12px;
-}
-
-.group-arrow.rotated {
-  transform: rotate(180deg);
-}
-
-.nav-group-content {
-  background: rgba(29, 29, 31, 0.02);
-  border-left: 2px solid rgba(29, 29, 31, 0.1);
-  margin-left: 20px;
-  margin-right: 8px;
-  border-radius: 0 8px 8px 0;
-  overflow: hidden;
-}
-
-.nav-subitem {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 16px 10px 24px;
-  color: #6b7280;
-  text-decoration: none;
-  transition: all 0.2s ease;
-  font-size: 13px;
-  font-weight: 500;
-}
-
-.nav-subitem:hover {
-  background: rgba(29, 29, 31, 0.05);
-  color: #1d1d1f;
-}
-
-.nav-subitem.router-link-active {
-  background: rgba(29, 29, 31, 0.1);
+  padding: 16px 20px 8px 20px;
   color: #1d1d1f;
   font-weight: 600;
+  font-size: 14px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  margin-bottom: 8px;
 }
 
-.nav-subitem i {
-  width: 16px;
-  font-size: 12px;
-  color: #8e8e93;
+.section-title i {
+  font-size: 16px;
+  color: #007AFF;
+}
+
+.section-title span {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* Plan Link */
