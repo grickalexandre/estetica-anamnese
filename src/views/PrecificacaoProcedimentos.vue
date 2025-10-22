@@ -354,7 +354,7 @@ const carregarProcedimentosCadastrados = async () => {
     if (!clinicaId.value) return
 
     const q = query(
-      collection(db, 'procedimentos'),
+      collection(db, 'catalogo_procedimentos'),
       where('clinicaId', '==', clinicaId.value),
       orderBy('nome')
     )
