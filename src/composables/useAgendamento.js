@@ -136,6 +136,7 @@ export function useAgendamento() {
         profissional: dados.profissional || '',
         procedimentoId: dados.procedimentoId || null,
         procedimento: dados.procedimento || '',
+        origem: dados.origem || 'presencial', // 'online', 'presencial', 'telefone', 'whatsapp'
         clinicaId: clinicaId.value || 'demo',
         dataHora: Timestamp.fromDate(new Date(dados.dataHora)),
         status: dados.status || 'confirmado',
