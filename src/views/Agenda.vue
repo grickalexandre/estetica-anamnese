@@ -702,7 +702,7 @@ const salvarAgendamento = async () => {
     let fotoURL = formulario.value.pacienteFoto
     if (fotoPreview.value) {
       console.log('📤 Fazendo upload da nova foto na agenda...')
-      const file = fileInput.value.files[0]
+      const file = fileInput.value?.files?.[0]
       if (file) {
         try {
           console.log('📁 Arquivo para upload:', {
