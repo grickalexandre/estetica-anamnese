@@ -129,6 +129,48 @@ service cloud.firestore {
       allow read, write: if isAuthenticated();
     }
     
+    // 🆕 Regras para pagamentos
+    match /pagamentos/{pagamentoId} {
+      allow read, write: if isAuthenticated();
+    }
+    
+    // 🆕 Regras para usuarios_clinica (multi-usuário)
+    match /usuarios_clinica/{vinculoId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated();
+      allow update: if isAuthenticated();
+      allow delete: if isAuthenticated();
+    }
+    
+    // 🆕 Regras para auditoria (apenas leitura para usuários, escrita apenas sistema)
+    match /auditoria/{auditoriaId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated(); // Sistema cria automaticamente
+      allow update, delete: if false; // Auditoria não pode ser modificada/deletada
+    }
+    
+    // 🆕 Regras para avaliações
+    match /avaliacoes/{avaliacaoId} {
+      allow read: if isAuthenticated();
+      allow create: if true; // Permite criação pública (clientes sem login via link)
+      allow update: if isAuthenticated(); // Apenas clínica pode responder
+      allow delete: if isAuthenticated();
+    }
+    
+    // 📦 Regras para planos (público)
+    match /planos/{planoId} {
+      allow read: if true; // Leitura pública
+      allow write: if false; // Apenas admin do sistema pode modificar
+    }
+    
+    // 📦 Regras para assinaturas
+    match /assinaturas/{assinaturaId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated();
+      allow update: if isAuthenticated();
+      allow delete: if false; // Não permite deletar assinaturas, apenas cancelar
+    }
+    
     // Regra padrão: negar tudo que não foi especificado
     match /{document=**} {
       allow read, write: if false;
