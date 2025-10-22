@@ -80,6 +80,9 @@ export function useProcedimentos() {
       // 1. Registrar o atendimento
       const atendimento = {
         ...dados,
+        agendamentoId: dados.agendamentoId || null, // 🆕 FK para agendamentos
+        pagamentoStatus: dados.pagamentoStatus || 'pendente', // 🆕 'pendente', 'pago', 'parcial'
+        contaReceberId: dados.contaReceberId || null, // 🆕 FK para contas_receber (será preenchido após criar a conta)
         clinicaId: clinicaId.value || 'demo',
         data: Timestamp.fromDate(new Date(dados.data)),
         dataCriacao: serverTimestamp()
@@ -178,20 +181,36 @@ export function useProcedimentos() {
 
         // Se parcelado, usar função de parcelamento
         if (dados.numeroParcelas && dados.numeroParcelas > 1) {
-          await adicionarContaReceberParcelada({
+          const resultadoConta = await adicionarContaReceberParcelada({
             ...dadosFinanceiros,
             valorTotal: dados.valorCobrado,
             numeroParcelas: dados.numeroParcelas,
             dataVencimentoInicial: dados.dataVencimento || new Date().toISOString().split('T')[0]
           })
+          
+          // 🆕 Atualizar atendimento com ID da primeira parcela
+          if (resultadoConta.success && resultadoConta.parcelas && resultadoConta.parcelas.length > 0) {
+            await updateDoc(doc(db, 'atendimentos', docRef.id), {
+              contaReceberId: resultadoConta.parcelas[0], // Primeira parcela
+              pagamentoStatus: 'parcial'
+            })
+          }
         } else {
           // Pagamento único
-          await adicionarContaReceber({
+          const resultadoConta = await adicionarContaReceber({
             ...dadosFinanceiros,
             valor: dados.valorCobrado,
             dataVencimento: dados.dataVencimento || new Date().toISOString().split('T')[0],
             status: dados.pago ? 'recebido' : 'pendente'
           })
+          
+          // 🆕 Atualizar atendimento com ID da conta a receber criada
+          if (resultadoConta.success && resultadoConta.id) {
+            await updateDoc(doc(db, 'atendimentos', docRef.id), {
+              contaReceberId: resultadoConta.id,
+              pagamentoStatus: dados.pago ? 'pago' : 'pendente'
+            })
+          }
         }
       }
 
