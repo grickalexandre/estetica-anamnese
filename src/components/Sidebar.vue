@@ -192,6 +192,12 @@
           </div>
           <span v-if="!collapsed" class="nav-text">Planos</span>
         </router-link>
+        <router-link to="/procedimentos" class="nav-item" :class="{ 'collapsed': collapsed }">
+          <div class="nav-icon">
+            <i class="fas fa-spa"></i>
+          </div>
+          <span v-if="!collapsed" class="nav-text">Procedimentos</span>
+        </router-link>
       </div>
 
       <!-- Configurações -->
