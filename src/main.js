@@ -30,6 +30,13 @@ import DespesasRecorrentes from './views/DespesasRecorrentes.vue'
 import Profissionais from './views/Profissionais.vue'
 import Comissoes from './views/Comissoes.vue'
 import LimpezaDados from './views/LimpezaDados.vue'
+import Pagamentos from './views/Pagamentos.vue'
+import EquipeClinica from './views/EquipeClinica.vue'
+import Auditoria from './views/Auditoria.vue'
+import Avaliacoes from './views/Avaliacoes.vue'
+import AvaliacaoCliente from './views/AvaliacaoCliente.vue'
+import Planos from './views/Planos.vue'
+import MinhaAssinatura from './views/MinhaAssinatura.vue'
 import { auth } from './firebase.js'
 import './style.css'
 
@@ -77,7 +84,24 @@ const routes = [
   { path: '/relatorio-atendimentos', component: RelatorioAtendimentos, meta: { requiresAuth: true } },
   
   // Rotas de administração
-  { path: '/limpeza-dados', component: LimpezaDados, meta: { requiresAuth: true } }
+  { path: '/limpeza-dados', component: LimpezaDados, meta: { requiresAuth: true } },
+  
+  // Rotas de pagamentos
+  { path: '/pagamentos', component: Pagamentos, meta: { requiresAuth: true } },
+  
+  // Rotas de equipe
+  { path: '/equipe-clinica', component: EquipeClinica, meta: { requiresAuth: true } },
+  
+  // Rotas de auditoria
+  { path: '/auditoria', component: Auditoria, meta: { requiresAuth: true } },
+  
+  // Rotas de avaliações
+  { path: '/avaliacoes', component: Avaliacoes, meta: { requiresAuth: true } },
+  { path: '/avaliacao-cliente', component: AvaliacaoCliente, meta: { public: true } },
+  
+  // Rotas de planos e assinaturas
+  { path: '/planos', component: Planos, meta: { requiresAuth: true } },
+  { path: '/minha-assinatura', component: MinhaAssinatura, meta: { requiresAuth: true } }
 ]
 
 const router = createRouter({
