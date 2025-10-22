@@ -287,9 +287,10 @@ watch(() => route.path, detectActiveMenu, { immediate: true })
 }
 
 .navbar-item.active {
-  background: linear-gradient(135deg, #1d1d1f 0%, #424245 100%);
-  color: white;
-  box-shadow: 0 4px 12px rgba(29, 29, 31, 0.2);
+  background: rgba(0, 122, 255, 0.1);
+  color: #007AFF;
+  border: 1px solid rgba(0, 122, 255, 0.2);
+  box-shadow: 0 2px 8px rgba(0, 122, 255, 0.1);
 }
 
 .navbar-item.active::after {
@@ -298,10 +299,10 @@ watch(() => route.path, detectActiveMenu, { immediate: true })
   bottom: -1px;
   left: 50%;
   transform: translateX(-50%);
-  width: 20px;
-  height: 3px;
-  background: #1d1d1f;
-  border-radius: 2px;
+  width: 30px;
+  height: 2px;
+  background: #007AFF;
+  border-radius: 1px;
 }
 
 .navbar-item i {
