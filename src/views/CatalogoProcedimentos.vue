@@ -449,19 +449,32 @@ const desativar = async (id) => {
 }
 
 const reativar = async (id) => {
-  if (confirm('Reativar este procedimento?')) {
-    try {
-      const docRef = doc(db, 'catalogo_procedimentos', id)
-      await updateDoc(docRef, {
-        ativo: true
-      })
-      
-      await buscarProcedimentos()
-      atualizarTotalItens(procedimentosFiltrados.value.length)
-      alert('Procedimento reativado com sucesso!')
-    } catch (error) {
+  try {
+    const confirmado = await showConfirm(
+      'Este procedimento voltará a aparecer nas opções de atendimento.',
+      {
+        title: 'Reativar Procedimento?',
+        type: 'success',
+        confirmText: 'Sim, Reativar',
+        cancelText: 'Cancelar',
+        confirmIcon: 'fas fa-check-circle'
+      }
+    )
+    
+    if (!confirmado) return
+    
+    const docRef = doc(db, 'catalogo_procedimentos', id)
+    await updateDoc(docRef, {
+      ativo: true
+    })
+    
+    await buscarProcedimentos()
+    atualizarTotalItens(procedimentosFiltrados.value.length)
+    showSuccess('Procedimento reativado com sucesso!')
+  } catch (error) {
+    if (error) {
       console.error('Erro ao reativar procedimento:', error)
-      alert('Erro ao reativar procedimento: ' + error.message)
+      showError('Erro ao reativar procedimento: ' + error.message)
     }
   }
 }
@@ -470,34 +483,43 @@ const excluir = async (id) => {
   console.log('=== INÍCIO DA EXCLUSÃO ===')
   console.log('ID do procedimento a ser excluído:', id)
   
-  const confirmacao = confirm(
-    '⚠️ ATENÇÃO: Excluir permanentemente este procedimento?\n\n' +
-    'Esta ação NÃO pode ser desfeita!\n' +
-    'Todos os históricos de atendimento com este procedimento serão afetados.\n\n' +
-    'Deseja realmente EXCLUIR?'
-  )
-  
-  if (confirmacao) {
-    try {
-      console.log('--- Excluindo procedimento ---')
-      const docRef = doc(db, 'catalogo_procedimentos', id)
-      await deleteDoc(docRef)
-      console.log('✅ Procedimento excluído com sucesso')
-      
-      console.log('--- Recarregando lista ---')
-      await buscarProcedimentos()
-      atualizarTotalItens(procedimentosFiltrados.value.length)
-      console.log('=== EXCLUSÃO CONCLUÍDA ===')
-      alert('Procedimento excluído permanentemente!')
-    } catch (error) {
+  try {
+    const confirmacao = await showConfirm(
+      'Esta ação NÃO pode ser desfeita!\n\nTodos os históricos de atendimento com este procedimento serão afetados.\n\nDeseja realmente EXCLUIR permanentemente?',
+      {
+        title: '⚠️ ATENÇÃO: Exclusão Permanente',
+        type: 'danger',
+        confirmText: 'Sim, Excluir Permanentemente',
+        cancelText: 'Cancelar',
+        confirmIcon: 'fas fa-trash-alt'
+      }
+    )
+    
+    if (!confirmacao) {
+      console.log('Exclusão cancelada pelo usuário')
+      return
+    }
+    
+    console.log('--- Excluindo procedimento ---')
+    const docRef = doc(db, 'catalogo_procedimentos', id)
+    await deleteDoc(docRef)
+    console.log('✅ Procedimento excluído com sucesso')
+    
+    console.log('--- Recarregando lista ---')
+    await buscarProcedimentos()
+    atualizarTotalItens(procedimentosFiltrados.value.length)
+    console.log('=== EXCLUSÃO CONCLUÍDA ===')
+    showSuccess('Procedimento excluído permanentemente!')
+  } catch (error) {
+    if (error) {
       console.error('❌ ERRO AO EXCLUIR PROCEDIMENTO:', error)
       console.error('Tipo do erro:', error.name)
       console.error('Mensagem:', error.message)
       console.error('Stack:', error.stack)
-      alert('Erro ao excluir procedimento: ' + error.message)
+      showError('Erro ao excluir procedimento: ' + error.message)
+    } else {
+      console.log('Exclusão cancelada pelo usuário')
     }
-  } else {
-    console.log('Exclusão cancelada pelo usuário')
   }
 }
 

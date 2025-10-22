@@ -132,11 +132,13 @@ import { ref, onMounted, computed } from 'vue'
 import { useFornecedores } from '../composables/useFornecedores.js'
 import { usePaginacao } from '../composables/usePaginacao.js'
 import { useFiltros } from '../composables/useFiltros.js'
+import { useNotifications } from '../composables/useNotifications.js'
 import VoltarHome from '../components/VoltarHome.vue'
 import Filtros from '../components/Filtros.vue'
 import Paginacao from '../components/Paginacao.vue'
 
 const { fornecedores, carregando, buscarFornecedores, adicionarFornecedor, atualizarFornecedor, desativarFornecedor, excluirFornecedor } = useFornecedores()
+const { showSuccess, showError, showWarning, showConfirm } = useNotifications()
 
 // Paginação
 const {
@@ -220,12 +222,12 @@ const salvar = async () => {
     
     // Validações
     if (!form.value.nome || form.value.nome.trim() === '') {
-      alert('Por favor, preencha o nome do fornecedor')
+      showWarning('Por favor, preencha o nome do fornecedor', 'Campo Obrigatório')
       return
     }
     
     if (!form.value.telefone || form.value.telefone.trim() === '') {
-      alert('Por favor, preencha o telefone do fornecedor')
+      showWarning('Por favor, preencha o telefone do fornecedor', 'Campo Obrigatório')
       return
     }
     
@@ -239,55 +241,74 @@ const salvar = async () => {
       await buscarFornecedores()
       atualizarTotalItens(fornecedoresFiltrados.value.length)
       fecharModal()
-      alert('Fornecedor salvo com sucesso!')
+      showSuccess('Fornecedor salvo com sucesso!')
     } else {
-      alert('Erro ao salvar fornecedor: ' + resultado.error)
+      showError('Erro ao salvar fornecedor: ' + resultado.error)
     }
   } catch (error) {
     console.error('Erro ao salvar fornecedor:', error)
-    alert('Erro ao salvar fornecedor: ' + error.message)
+    showError('Erro ao salvar fornecedor: ' + error.message)
   }
 }
 
 const desativar = async (id) => {
-  if (confirm('Desativar este fornecedor? Ele não aparecerá mais nas listagens ativas, mas os dados serão mantidos.')) {
-    try {
-      const resultado = await desativarFornecedor(id)
-      if (resultado.success) {
-        await buscarFornecedores()
-        atualizarTotalItens(fornecedoresFiltrados.value.length)
-        alert('Fornecedor desativado com sucesso!')
-      } else {
-        alert('Erro ao desativar: ' + resultado.error)
+  try {
+    const confirmado = await showConfirm(
+      'Ele não aparecerá mais nas listagens ativas, mas os dados serão mantidos.',
+      {
+        title: 'Desativar Fornecedor?',
+        type: 'warning',
+        confirmText: 'Sim, Desativar',
+        cancelText: 'Cancelar',
+        confirmIcon: 'fas fa-eye-slash'
       }
-    } catch (error) {
+    )
+    
+    if (!confirmado) return
+    
+    const resultado = await desativarFornecedor(id)
+    if (resultado.success) {
+      await buscarFornecedores()
+      atualizarTotalItens(fornecedoresFiltrados.value.length)
+      showSuccess('Fornecedor desativado com sucesso!')
+    } else {
+      showError('Erro ao desativar: ' + resultado.error)
+    }
+  } catch (error) {
+    if (error) {
       console.error('Erro ao desativar fornecedor:', error)
-      alert('Erro ao desativar fornecedor: ' + error.message)
+      showError('Erro ao desativar fornecedor: ' + error.message)
     }
   }
 }
 
 const excluir = async (id) => {
-  const confirmacao = confirm(
-    '⚠️ ATENÇÃO: Excluir permanentemente este fornecedor?\n\n' +
-    'Esta ação NÃO pode ser desfeita!\n' +
-    'Todos os dados e históricos de compras serão perdidos.\n\n' +
-    'Deseja realmente EXCLUIR?'
-  )
-  
-  if (confirmacao) {
-    try {
-      const resultado = await excluirFornecedor(id)
-      if (resultado.success) {
-        await buscarFornecedores()
-        atualizarTotalItens(fornecedoresFiltrados.value.length)
-        alert('Fornecedor excluído permanentemente!')
-      } else {
-        alert('Erro ao excluir: ' + resultado.error)
+  try {
+    const confirmacao = await showConfirm(
+      'Esta ação NÃO pode ser desfeita!\n\nTodos os dados e históricos de compras serão perdidos.\n\nDeseja realmente EXCLUIR permanentemente?',
+      {
+        title: '⚠️ ATENÇÃO: Exclusão Permanente',
+        type: 'danger',
+        confirmText: 'Sim, Excluir Permanentemente',
+        cancelText: 'Cancelar',
+        confirmIcon: 'fas fa-trash-alt'
       }
-    } catch (error) {
+    )
+    
+    if (!confirmacao) return
+    
+    const resultado = await excluirFornecedor(id)
+    if (resultado.success) {
+      await buscarFornecedores()
+      atualizarTotalItens(fornecedoresFiltrados.value.length)
+      showSuccess('Fornecedor excluído permanentemente!')
+    } else {
+      showError('Erro ao excluir: ' + resultado.error)
+    }
+  } catch (error) {
+    if (error) {
       console.error('Erro ao excluir fornecedor:', error)
-      alert('Erro ao excluir fornecedor: ' + error.message)
+      showError('Erro ao excluir fornecedor: ' + error.message)
     }
   }
 }

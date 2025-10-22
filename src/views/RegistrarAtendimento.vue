@@ -291,12 +291,14 @@ import { usePacientes } from '../composables/usePacientes.js'
 import { useProdutos } from '../composables/useProdutos.js'
 import { useProfissionais } from '../composables/useProfissionais.js'
 import { useClinica } from '../composables/useClinica.js'
+import { useNotifications } from '../composables/useNotifications.js'
 import VoltarHome from '../components/VoltarHome.vue'
 
 const router = useRouter()
 const { clinicaId, inicializarClinica } = useClinica()
 const { procedimentos, registrarAtendimento } = useProcedimentos()
 const { clientes, buscarClientes } = usePacientes()
+const { showSuccess, showError, showWarning, showConfirm } = useNotifications()
 const { produtos, buscarProdutos } = useProdutos()
 const { profissionais, buscarProfissionais } = useProfissionais()
 
@@ -520,12 +522,23 @@ const verificarEstoque = () => {
 const salvar = async () => {
   try {
     if (form.value.procedimentos.length === 0) {
-      alert('Adicione pelo menos um procedimento!')
+      showWarning('Adicione pelo menos um procedimento!', 'Procedimento Obrigatório')
       return
     }
 
     if (verificarEstoque()) {
-      if (!confirm('ATENÇÃO: Alguns produtos têm quantidade maior que o estoque disponível. Deseja continuar mesmo assim?')) {
+      const confirmado = await showConfirm(
+        'Alguns produtos têm quantidade maior que o estoque disponível.\n\nDeseja continuar mesmo assim?',
+        {
+          title: 'ATENÇÃO: Estoque Insuficiente',
+          type: 'warning',
+          confirmText: 'Sim, Continuar',
+          cancelText: 'Não, Revisar',
+          confirmIcon: 'fas fa-exclamation-triangle'
+        }
+      )
+      
+      if (!confirmado) {
         return
       }
     }
@@ -541,13 +554,13 @@ const salvar = async () => {
     const resultado = await registrarAtendimento(dadosAtendimento)
     
     if (resultado.success) {
-      alert('Atendimento registrado com sucesso! Estoque atualizado automaticamente.')
+      showSuccess('Atendimento registrado com sucesso! Estoque atualizado automaticamente.', 'Sucesso!')
       router.push('/agenda')
     } else {
-      alert('Erro ao registrar atendimento: ' + resultado.error)
+      showError('Erro ao registrar atendimento: ' + resultado.error)
     }
   } catch (err) {
-    alert('Erro ao salvar')
+    showError('Erro ao salvar atendimento. Tente novamente.')
   } finally {
     salvando.value = false
   }
