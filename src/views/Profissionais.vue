@@ -211,6 +211,7 @@ import { useRouter } from 'vue-router'
 import { useProfissionais } from '../composables/useProfissionais.js'
 import { usePaginacao } from '../composables/usePaginacao.js'
 import { useFiltros } from '../composables/useFiltros.js'
+import { useNotifications } from '../composables/useNotifications.js'
 import VoltarHome from '../components/VoltarHome.vue'
 import Filtros from '../components/Filtros.vue'
 import Paginacao from '../components/Paginacao.vue'
@@ -218,6 +219,7 @@ import { db } from '../firebase.js'
 import { doc, deleteDoc } from 'firebase/firestore'
 
 const router = useRouter()
+const { showSuccess, showError, showWarning, showConfirm } = useNotifications()
 const { 
   profissionais, 
   carregando, 
@@ -335,19 +337,19 @@ const salvar = async () => {
   try {
     // Validações
     if (!form.value.nome || form.value.nome.trim() === '') {
-      alert('Por favor, preencha o nome do profissional')
+      showWarning('Por favor, preencha o nome do profissional', 'Campo Obrigatório')
       return
     }
     
     if (!form.value.telefone || form.value.telefone.trim() === '') {
-      alert('Por favor, preencha o telefone do profissional')
+      showWarning('Por favor, preencha o telefone do profissional', 'Campo Obrigatório')
       return
     }
     
     // Validar percentual de comissão
     const percentual = parseFloat(form.value.percentualComissao)
     if (isNaN(percentual) || percentual < 0 || percentual > 100) {
-      alert('Percentual de comissão deve estar entre 0 e 100')
+      showWarning('Percentual de comissão deve estar entre 0 e 100', 'Valor Inválido')
       return
     }
     
@@ -375,77 +377,105 @@ const salvar = async () => {
       await buscarProfissionais(true)
       atualizarTotalItens(profissionaisFiltrados.value.length)
       fecharModal()
-      alert('Profissional salvo com sucesso!')
+      showSuccess('Profissional salvo com sucesso!')
     } else {
       console.error('Erro ao salvar:', resultado.error)
-      alert('Erro ao salvar profissional: ' + resultado.error)
+      showError('Erro ao salvar profissional: ' + resultado.error)
     }
   } catch (error) {
     console.error('Erro inesperado ao salvar profissional:', error)
-    alert('Erro inesperado ao salvar profissional: ' + error.message)
+    showError('Erro inesperado ao salvar profissional: ' + error.message)
   }
 }
 
 const desativar = async (id) => {
-  if (confirm('Desativar este profissional? Ele não aparecerá mais nas listagens ativas, mas os dados serão mantidos.')) {
-    try {
-      const resultado = await desativarProfissional(id)
-      if (resultado.success) {
-        await buscarProfissionais(true)
-        atualizarTotalItens(profissionaisFiltrados.value.length)
-        alert('Profissional desativado com sucesso!')
-      } else {
-        alert('Erro ao desativar: ' + resultado.error)
+  try {
+    const confirmado = await showConfirm(
+      'Ele não aparecerá mais nas listagens ativas, mas os dados serão mantidos.',
+      {
+        title: 'Desativar Profissional?',
+        type: 'warning',
+        confirmText: 'Sim, Desativar',
+        cancelText: 'Cancelar',
+        confirmIcon: 'fas fa-eye-slash'
       }
-    } catch (error) {
+    )
+    
+    if (!confirmado) return
+    
+    const resultado = await desativarProfissional(id)
+    if (resultado.success) {
+      await buscarProfissionais(true)
+      atualizarTotalItens(profissionaisFiltrados.value.length)
+      showSuccess('Profissional desativado com sucesso!')
+    } else {
+      showError('Erro ao desativar: ' + resultado.error)
+    }
+  } catch (error) {
+    if (error) {
       console.error('Erro ao desativar profissional:', error)
-      alert('Erro ao desativar profissional: ' + error.message)
+      showError('Erro ao desativar profissional: ' + error.message)
     }
   }
 }
 
 const reativar = async (id) => {
-  if (confirm('Reativar este profissional?')) {
-    try {
-      const resultado = await atualizarProfissional(id, { ativo: true })
-      if (resultado.success) {
-        await buscarProfissionais(true)
-        atualizarTotalItens(profissionaisFiltrados.value.length)
-        alert('Profissional reativado com sucesso!')
-      } else {
-        alert('Erro ao reativar: ' + resultado.error)
+  try {
+    const confirmado = await showConfirm(
+      'Este profissional voltará a aparecer nas listagens ativas.',
+      {
+        title: 'Reativar Profissional?',
+        type: 'success',
+        confirmText: 'Sim, Reativar',
+        cancelText: 'Cancelar',
+        confirmIcon: 'fas fa-check-circle'
       }
-    } catch (error) {
+    )
+    
+    if (!confirmado) return
+    
+    const resultado = await atualizarProfissional(id, { ativo: true })
+    if (resultado.success) {
+      await buscarProfissionais(true)
+      atualizarTotalItens(profissionaisFiltrados.value.length)
+      showSuccess('Profissional reativado com sucesso!')
+    } else {
+      showError('Erro ao reativar: ' + resultado.error)
+    }
+  } catch (error) {
+    if (error) {
       console.error('Erro ao reativar profissional:', error)
-      alert('Erro ao reativar profissional: ' + error.message)
+      showError('Erro ao reativar profissional: ' + error.message)
     }
   }
 }
 
 const excluir = async (id) => {
-  const confirmacao = confirm(
-    '⚠️ ATENÇÃO: Excluir permanentemente este profissional?\n\n' +
-    'Esta ação NÃO pode ser desfeita!\n' +
-    'Todos os dados, comissões e históricos serão perdidos.\n\n' +
-    'Recomendamos usar "Desativar" ao invés de excluir.\n\n' +
-    'Deseja realmente EXCLUIR?'
-  )
-  
-  if (confirmacao) {
-    const confirmaExclusao = confirm('Tem certeza absoluta? Digite OK para confirmar.')
-    if (confirmaExclusao) {
-      try {
-        // Usar a função de exclusão do composable (precisamos adicionar)
-        const docRef = doc(db, 'profissionais', id)
-        await deleteDoc(docRef)
-        
-        await buscarProfissionais(true)
-        atualizarTotalItens(profissionaisFiltrados.value.length)
-        alert('Profissional excluído permanentemente!')
-      } catch (error) {
-        console.error('Erro ao excluir profissional:', error)
-        alert('Erro ao excluir profissional: ' + error.message)
+  try {
+    const confirmacao = await showConfirm(
+      'Esta ação NÃO pode ser desfeita!\n\nTodos os dados, comissões e históricos serão perdidos.\n\nRecomendamos usar "Desativar" ao invés de excluir.\n\nDeseja realmente EXCLUIR permanentemente?',
+      {
+        title: '⚠️ ATENÇÃO: Exclusão Permanente',
+        type: 'danger',
+        confirmText: 'Sim, Excluir Permanentemente',
+        cancelText: 'Cancelar',
+        confirmIcon: 'fas fa-trash-alt'
       }
+    )
+    
+    if (!confirmacao) return
+    
+    // Usar a função de exclusão do composable (precisamos adicionar)
+    const docRef = doc(db, 'profissionais', id)
+    await deleteDoc(docRef)
+    
+    await buscarProfissionais(true)
+    atualizarTotalItens(profissionaisFiltrados.value.length)
+    showSuccess('Profissional excluído permanentemente!')
+  } catch (error) {
+    if (error) {
+      console.error('Erro ao excluir profissional:', error)
+      showError('Erro ao excluir profissional: ' + error.message)
     }
   }
 }
