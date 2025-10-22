@@ -228,12 +228,14 @@ import { useProdutos } from '../composables/useProdutos.js'
 import { useEstoque } from '../composables/useEstoque.js'
 import { usePaginacao } from '../composables/usePaginacao.js'
 import { useFiltros } from '../composables/useFiltros.js'
+import { useNotifications } from '../composables/useNotifications.js'
 import VoltarHome from '../components/VoltarHome.vue'
 import Filtros from '../components/Filtros.vue'
 import Paginacao from '../components/Paginacao.vue'
 
 const { produtos, carregando, buscarProdutos, adicionarProduto, atualizarProduto, atualizarEstoque, desativarProduto, calcularStatusValidade, obterEstatisticasValidade } = useProdutos()
 const { entrada, saida } = useEstoque()
+const { showSuccess, showError, showWarning, showConfirm } = useNotifications()
 
 // Paginação
 const {
@@ -325,17 +327,17 @@ const salvar = async () => {
     
     // Validações
     if (!form.value.nome || form.value.nome.trim() === '') {
-      alert('Por favor, preencha o nome do produto')
+      showWarning('Por favor, preencha o nome do produto', 'Campo Obrigatório')
       return
     }
     
     if (form.value.estoqueInicial < 0 || form.value.estoqueMinimo < 0 || form.value.estoqueMaximo < 0) {
-      alert('Os valores de estoque não podem ser negativos')
+      showWarning('Os valores de estoque não podem ser negativos', 'Valores Inválidos')
       return
     }
     
     if (form.value.precoCusto < 0 || form.value.precoVenda < 0) {
-      alert('Os preços não podem ser negativos')
+      showWarning('Os preços não podem ser negativos', 'Valores Inválidos')
       return
     }
     
@@ -350,13 +352,13 @@ const salvar = async () => {
       atualizarTotalItens(produtosFiltrados.value.length)
       calcularAlertasValidade()
       fecharModal()
-      alert('Produto salvo com sucesso!')
+      showSuccess('Produto salvo com sucesso!')
     } else {
-      alert('Erro ao salvar produto: ' + resultado.error)
+      showError('Erro ao salvar produto: ' + resultado.error)
     }
   } catch (error) {
     console.error('Erro ao salvar produto:', error)
-    alert('Erro ao salvar produto: ' + error.message)
+    showError('Erro ao salvar produto: ' + error.message)
   }
 }
 
@@ -377,27 +379,40 @@ const salvarMovimentacao = async () => {
     }
     await buscarProdutos()
     modalEstoque.value = false
-    alert('Estoque atualizado!')
+    showSuccess('Estoque atualizado!')
   } else {
-    alert('Erro: ' + resultado.error)
+    showError('Erro: ' + resultado.error)
   }
 }
 
 const desativar = async (id) => {
-  if (confirm('Desativar este produto? Ele não aparecerá mais nas listagens ativas, mas os dados serão mantidos.')) {
-    try {
-      const resultado = await desativarProduto(id)
-      if (resultado.success) {
-        await buscarProdutos()
-        atualizarTotalItens(produtosFiltrados.value.length)
-        calcularAlertasValidade()
-        alert('Produto desativado com sucesso!')
-      } else {
-        alert('Erro ao desativar: ' + resultado.error)
+  try {
+    const confirmado = await showConfirm(
+      'Ele não aparecerá mais nas listagens ativas, mas os dados serão mantidos.',
+      {
+        title: 'Desativar Produto?',
+        type: 'warning',
+        confirmText: 'Sim, Desativar',
+        cancelText: 'Cancelar',
+        confirmIcon: 'fas fa-eye-slash'
       }
-    } catch (error) {
+    )
+    
+    if (!confirmado) return
+    
+    const resultado = await desativarProduto(id)
+    if (resultado.success) {
+      await buscarProdutos()
+      atualizarTotalItens(produtosFiltrados.value.length)
+      calcularAlertasValidade()
+      showSuccess('Produto desativado com sucesso!')
+    } else {
+      showError('Erro ao desativar: ' + resultado.error)
+    }
+  } catch (error) {
+    if (error) {
       console.error('Erro ao desativar produto:', error)
-      alert('Erro ao desativar produto: ' + error.message)
+      showError('Erro ao desativar produto: ' + error.message)
     }
   }
 }
