@@ -355,15 +355,19 @@ const carregarProcedimentosCadastrados = async () => {
 
     const q = query(
       collection(db, 'catalogo_procedimentos'),
-      where('clinicaId', '==', clinicaId.value),
-      orderBy('nome')
+      where('clinicaId', '==', clinicaId.value)
     )
 
     const querySnapshot = await getDocs(q)
-    procedimentosCadastrados.value = querySnapshot.docs.map(doc => ({
+    const procedimentos = querySnapshot.docs.map(doc => ({
       id: doc.id,
       ...doc.data()
     }))
+    
+    // Ordenar localmente por nome
+    procedimentosCadastrados.value = procedimentos.sort((a, b) => 
+      a.nome.localeCompare(b.nome)
+    )
   } catch (error) {
     console.error('Erro ao carregar procedimentos cadastrados:', error)
   }
