@@ -128,6 +128,12 @@
           </div>
           <span v-if="!collapsed" class="nav-text">Pagamentos</span>
         </router-link>
+        <router-link to="/precificacao-procedimentos" class="nav-item" :class="{ 'collapsed': collapsed }">
+          <div class="nav-icon">
+            <i class="fas fa-calculator"></i>
+          </div>
+          <span v-if="!collapsed" class="nav-text">Precificação</span>
+        </router-link>
       </div>
 
       <!-- Relatórios -->

@@ -37,6 +37,7 @@ import Avaliacoes from './views/Avaliacoes.vue'
 import AvaliacaoCliente from './views/AvaliacaoCliente.vue'
 import Planos from './views/Planos.vue'
 import MinhaAssinatura from './views/MinhaAssinatura.vue'
+import PrecificacaoProcedimentos from './views/PrecificacaoProcedimentos.vue'
 import { auth } from './firebase.js'
 import './style.css'
 
@@ -101,7 +102,10 @@ const routes = [
   
   // Rotas de planos e assinaturas
   { path: '/planos', component: Planos, meta: { requiresAuth: true } },
-  { path: '/minha-assinatura', component: MinhaAssinatura, meta: { requiresAuth: true } }
+  { path: '/minha-assinatura', component: MinhaAssinatura, meta: { requiresAuth: true } },
+  
+  // Rotas de precificação
+  { path: '/precificacao-procedimentos', component: PrecificacaoProcedimentos, meta: { requiresAuth: true } }
 ]
 
 const router = createRouter({
