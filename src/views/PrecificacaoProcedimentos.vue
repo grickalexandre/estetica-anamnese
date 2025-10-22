@@ -7,10 +7,17 @@
           <h1>Precificação de Procedimentos</h1>
           <p>Calcule custos, margem de lucro e preços sugeridos para seus procedimentos</p>
         </div>
-        <button @click="adicionarProcedimento" class="btn-primary">
-          <i class="fas fa-plus"></i>
-          Novo Procedimento
-        </button>
+        <div class="header-actions">
+          <div class="procedimento-selector">
+            <label>Selecionar Procedimento:</label>
+            <select v-model="procedimentoSelecionado" @change="carregarProcedimentoSelecionado" class="procedimento-select">
+              <option value="">Escolha um procedimento...</option>
+              <option v-for="proc in procedimentosCadastrados" :key="proc.id" :value="proc.id">
+                {{ proc.nome }} - {{ proc.categoria }}
+              </option>
+            </select>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -236,6 +243,8 @@ const { clinicaId } = useClinica()
 
 // Estado
 const procedimentos = ref([])
+const procedimentosCadastrados = ref([])
+const procedimentoSelecionado = ref('')
 const loading = ref(false)
 const showModal = ref(false)
 const modoEdicao = ref(false)
@@ -337,6 +346,71 @@ const carregarProcedimentos = async () => {
     console.error('Erro ao carregar procedimentos:', error)
   } finally {
     loading.value = false
+  }
+}
+
+const carregarProcedimentosCadastrados = async () => {
+  try {
+    if (!clinicaId.value) return
+
+    const q = query(
+      collection(db, 'procedimentos'),
+      where('clinicaId', '==', clinicaId.value),
+      orderBy('nome')
+    )
+
+    const querySnapshot = await getDocs(q)
+    procedimentosCadastrados.value = querySnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }))
+  } catch (error) {
+    console.error('Erro ao carregar procedimentos cadastrados:', error)
+  }
+}
+
+const carregarProcedimentoSelecionado = async () => {
+  if (!procedimentoSelecionado.value) {
+    form.value = {
+      id: null,
+      nome: '',
+      categoria: 'Estética Facial',
+      produto: 0,
+      imposto: 0,
+      comissao: 0,
+      descartaveis: 0,
+      cac: 0,
+      taxaMaquina: 0,
+      operacaoHora: 0,
+      precoCobrado: 0,
+      margemDesejada: 50
+    }
+    return
+  }
+
+  try {
+    const procedimento = procedimentosCadastrados.value.find(p => p.id === procedimentoSelecionado.value)
+    if (procedimento) {
+      modoEdicao.value = true
+      form.value = {
+        id: null, // Novo registro de precificação
+        nome: procedimento.nome,
+        categoria: procedimento.categoria,
+        produto: 0,
+        imposto: 0,
+        comissao: 0,
+        descartaveis: 0,
+        cac: 0,
+        taxaMaquina: 0,
+        operacaoHora: 0,
+        precoCobrado: procedimento.valor || 0,
+        margemDesejada: 50,
+        procedimentoId: procedimento.id // Referência ao procedimento original
+      }
+      showModal.value = true
+    }
+  } catch (error) {
+    console.error('Erro ao carregar procedimento selecionado:', error)
   }
 }
 
@@ -444,6 +518,7 @@ const exportarExcel = () => {
 onMounted(() => {
   if (isAuthenticated.value) {
     carregarProcedimentos()
+    carregarProcedimentosCadastrados()
   }
 })
 </script>
@@ -477,6 +552,45 @@ onMounted(() => {
   margin: 0;
   color: #6b7280;
   font-size: 16px;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.procedimento-selector {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 300px;
+}
+
+.procedimento-selector label {
+  font-weight: 500;
+  color: #374151;
+  font-size: 14px;
+}
+
+.procedimento-select {
+  padding: 12px 16px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 14px;
+  background: white;
+  transition: border-color 0.2s;
+  cursor: pointer;
+}
+
+.procedimento-select:focus {
+  outline: none;
+  border-color: #007AFF;
+  box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.1);
+}
+
+.procedimento-select:hover {
+  border-color: #9ca3af;
 }
 
 .filters-section {
@@ -880,6 +994,14 @@ onMounted(() => {
   .header-content {
     flex-direction: column;
     align-items: stretch;
+  }
+  
+  .header-actions {
+    margin-top: 16px;
+  }
+  
+  .procedimento-selector {
+    min-width: auto;
   }
   
   .filters-row {
