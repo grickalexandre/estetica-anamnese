@@ -133,6 +133,10 @@
             <i class="fas fa-money-bill-wave"></i>
             <span>Comissões</span>
           </router-link>
+          <router-link to="/pagamentos" class="nav-subitem">
+            <i class="fas fa-exchange-alt"></i>
+            <span>Pagamentos</span>
+          </router-link>
         </div>
       </div>
 
@@ -153,6 +157,39 @@
           <router-link to="/relatorio-atendimentos" class="nav-subitem">
             <i class="fas fa-user-md"></i>
             <span>Atendimentos</span>
+          </router-link>
+          <router-link to="/avaliacoes" class="nav-subitem">
+            <i class="fas fa-star"></i>
+            <span>Avaliações</span>
+          </router-link>
+          <router-link to="/auditoria" class="nav-subitem">
+            <i class="fas fa-shield-alt"></i>
+            <span>Auditoria</span>
+          </router-link>
+        </div>
+      </div>
+
+      <!-- Gestão -->
+      <div class="nav-group" :class="{ 'collapsed': collapsed }">
+        <div class="nav-group-header" @click="toggleGestao">
+          <div class="nav-icon">
+            <i class="fas fa-users-cog"></i>
+          </div>
+          <span v-if="!collapsed" class="nav-text">Gestão</span>
+          <i v-if="!collapsed" class="fas fa-chevron-down group-arrow" :class="{ 'rotated': showGestao }"></i>
+        </div>
+        <div v-if="!collapsed && showGestao" class="nav-group-content">
+          <router-link to="/equipe-clinica" class="nav-subitem">
+            <i class="fas fa-users"></i>
+            <span>Equipe da Clínica</span>
+          </router-link>
+          <router-link to="/minha-assinatura" class="nav-subitem">
+            <i class="fas fa-credit-card"></i>
+            <span>Minha Assinatura</span>
+          </router-link>
+          <router-link to="/planos" class="nav-subitem">
+            <i class="fas fa-crown"></i>
+            <span>Planos</span>
           </router-link>
         </div>
       </div>
@@ -205,6 +242,7 @@ const collapsed = ref(false)
 const showCadastros = ref(false)
 const showFinanceiro = ref(false)
 const showRelatorios = ref(false)
+const showGestao = ref(false)
 
 // Métodos
 const toggleCollapse = () => {
@@ -214,6 +252,7 @@ const toggleCollapse = () => {
     showCadastros.value = false
     showFinanceiro.value = false
     showRelatorios.value = false
+    showGestao.value = false
   }
   // Emitir evento para o componente pai
   emit('toggle', collapsed.value)
@@ -234,6 +273,12 @@ const toggleFinanceiro = () => {
 const toggleRelatorios = () => {
   if (!collapsed.value) {
     showRelatorios.value = !showRelatorios.value
+  }
+}
+
+const toggleGestao = () => {
+  if (!collapsed.value) {
+    showGestao.value = !showGestao.value
   }
 }
 

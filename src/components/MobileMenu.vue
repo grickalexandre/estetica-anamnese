@@ -108,6 +108,14 @@
                 <i class="fas fa-sync-alt"></i>
                 <span>Despesas Recorrentes</span>
               </router-link>
+              <router-link to="/comissoes" class="mobile-nav-subitem" @click="closeMenu">
+                <i class="fas fa-money-bill-wave"></i>
+                <span>Comissões</span>
+              </router-link>
+              <router-link to="/pagamentos" class="mobile-nav-subitem" @click="closeMenu">
+                <i class="fas fa-exchange-alt"></i>
+                <span>Pagamentos</span>
+              </router-link>
             </div>
           </div>
 
@@ -125,6 +133,37 @@
               <router-link to="/relatorio-atendimentos" class="mobile-nav-subitem" @click="closeMenu">
                 <i class="fas fa-user-md"></i>
                 <span>Atendimentos</span>
+              </router-link>
+              <router-link to="/avaliacoes" class="mobile-nav-subitem" @click="closeMenu">
+                <i class="fas fa-star"></i>
+                <span>Avaliações</span>
+              </router-link>
+              <router-link to="/auditoria" class="mobile-nav-subitem" @click="closeMenu">
+                <i class="fas fa-shield-alt"></i>
+                <span>Auditoria</span>
+              </router-link>
+            </div>
+          </div>
+
+          <!-- Gestão -->
+          <div class="mobile-nav-group">
+            <div class="mobile-nav-group-header" @click="toggleGestao">
+              <i class="fas fa-users-cog"></i>
+              <span>Gestão</span>
+              <i class="fas fa-chevron-down" :class="{ 'rotated': showGestao }"></i>
+            </div>
+            <div v-if="showGestao" class="mobile-nav-group-content">
+              <router-link to="/equipe-clinica" class="mobile-nav-subitem" @click="closeMenu">
+                <i class="fas fa-users"></i>
+                <span>Equipe da Clínica</span>
+              </router-link>
+              <router-link to="/minha-assinatura" class="mobile-nav-subitem" @click="closeMenu">
+                <i class="fas fa-credit-card"></i>
+                <span>Minha Assinatura</span>
+              </router-link>
+              <router-link to="/planos" class="mobile-nav-subitem" @click="closeMenu">
+                <i class="fas fa-crown"></i>
+                <span>Planos</span>
               </router-link>
             </div>
           </div>
@@ -174,6 +213,7 @@ const menuOpen = ref(false)
 const showCadastros = ref(false)
 const showFinanceiro = ref(false)
 const showRelatorios = ref(false)
+const showGestao = ref(false)
 
 // Métodos
 const toggleMenu = () => {
@@ -194,6 +234,10 @@ const toggleFinanceiro = () => {
 
 const toggleRelatorios = () => {
   showRelatorios.value = !showRelatorios.value
+}
+
+const toggleGestao = () => {
+  showGestao.value = !showGestao.value
 }
 
 const handleLogout = async () => {
