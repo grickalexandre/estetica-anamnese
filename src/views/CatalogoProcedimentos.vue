@@ -44,13 +44,6 @@
           
           <div class="procedimento-detalhes">
             <div class="detalhe-item">
-              <i class="fas fa-dollar-sign"></i>
-              <div>
-                <span class="detalhe-label">Valor</span>
-                <span class="detalhe-valor">R$ {{ formatarMoeda(proc.valor) }}</span>
-              </div>
-            </div>
-            <div class="detalhe-item">
               <i class="fas fa-clock"></i>
               <div>
                 <span class="detalhe-label">Duração</span>
@@ -130,10 +123,6 @@
                   <option value="estetica-avancada">Estética Avançada</option>
                   <option value="outros">Outros</option>
                 </select>
-              </div>
-              <div class="form-group">
-                <label>Valor (R$) *</label>
-                <input v-model.number="form.valor" type="number" step="0.01" min="0" required placeholder="0,00">
               </div>
             </div>
 
@@ -226,7 +215,6 @@ const opcoesFiltros = {
   ordenacao: [
     { value: 'nome', label: 'Nome' },
     { value: 'categoria', label: 'Categoria' },
-    { value: 'valor', label: 'Valor' },
     { value: 'totalRealizados', label: 'Mais Realizados' },
     { value: 'dataCriacao', label: 'Data de Criação' }
   ]
@@ -242,7 +230,6 @@ const mostrarInativos = ref(false)
 const form = ref({
   nome: '',
   categoria: 'facial',
-  valor: 0,
   duracao: 60,
   sessoesRecomendadas: 1,
   descricao: '',
@@ -308,7 +295,6 @@ const abrirModal = () => {
   form.value = {
     nome: '',
     categoria: 'facial',
-    valor: 0,
     duracao: 60,
     sessoesRecomendadas: 1,
     descricao: '',
@@ -324,7 +310,6 @@ const fecharModal = () => {
   form.value = {
     nome: '',
     categoria: 'facial',
-    valor: 0,
     duracao: 60,
     sessoesRecomendadas: 1,
     descricao: '',
@@ -353,10 +338,6 @@ const salvar = async () => {
       return
     }
     
-    if (form.value.valor < 0) {
-      showWarning('O valor não pode ser negativo')
-      return
-    }
     
     if (form.value.duracao <= 0) {
       showWarning('A duração deve ser maior que zero')
@@ -366,7 +347,6 @@ const salvar = async () => {
     const dadosParaSalvar = {
       nome: form.value.nome.trim(),
       categoria: form.value.categoria,
-      valor: parseFloat(form.value.valor),
       duracao: parseInt(form.value.duracao),
       sessoesRecomendadas: parseInt(form.value.sessoesRecomendadas) || 1,
       descricao: form.value.descricao?.trim() || '',
@@ -535,9 +515,6 @@ const getCategoriaIcon = (categoria) => {
   return icons[categoria] || 'fas fa-th-list'
 }
 
-const formatarMoeda = (valor) => {
-  return new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 2 }).format(valor || 0)
-}
 
 onMounted(async () => {
   await buscarProcedimentos()

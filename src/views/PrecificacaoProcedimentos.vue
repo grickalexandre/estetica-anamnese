@@ -403,7 +403,7 @@ const carregarProcedimentoSelecionado = async () => {
         cac: 0,
         taxaMaquina: 0,
         operacaoHora: 0,
-        precoCobrado: procedimento.valor || 0,
+        precoCobrado: 0,
         margemDesejada: 50,
         procedimentoId: procedimento.id // Referência ao procedimento original
       }
