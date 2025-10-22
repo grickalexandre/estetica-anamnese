@@ -182,11 +182,13 @@ import { collection, addDoc, updateDoc, deleteDoc, doc, getDocs, query, where, s
 import { useClinica } from '../composables/useClinica.js'
 import { usePaginacao } from '../composables/usePaginacao.js'
 import { useFiltros } from '../composables/useFiltros.js'
+import { useNotifications } from '../composables/useNotifications.js'
 import VoltarHome from '../components/VoltarHome.vue'
 import Filtros from '../components/Filtros.vue'
 import Paginacao from '../components/Paginacao.vue'
 
 const { clinicaId } = useClinica()
+const { showSuccess, showError, showWarning, showConfirm } = useNotifications()
 
 // Paginação
 const {
@@ -292,7 +294,7 @@ const buscarProcedimentos = async () => {
     return procedimentos.value
   } catch (err) {
     console.error('Erro ao buscar procedimentos:', err)
-    alert('Erro ao carregar procedimentos: ' + err.message)
+    showError('Erro ao carregar procedimentos: ' + err.message)
     return []
   } finally {
     carregando.value = false
@@ -347,17 +349,17 @@ const salvar = async () => {
     
     // Validações
     if (!form.value.nome || form.value.nome.trim() === '') {
-      alert('Por favor, preencha o nome do procedimento')
+      showWarning('Por favor, preencha o nome do procedimento')
       return
     }
     
     if (form.value.valor < 0) {
-      alert('O valor não pode ser negativo')
+      showWarning('O valor não pode ser negativo')
       return
     }
     
     if (form.value.duracao <= 0) {
-      alert('A duração deve ser maior que zero')
+      showWarning('A duração deve ser maior que zero')
       return
     }
     
@@ -401,34 +403,47 @@ const salvar = async () => {
     atualizarTotalItens(procedimentosFiltrados.value.length)
     fecharModal()
     console.log('=== SALVAMENTO CONCLUÍDO ===')
-    alert('Procedimento salvo com sucesso!')
+    showSuccess('Procedimento salvo com sucesso!')
     
   } catch (error) {
     console.error('❌ ERRO AO SALVAR PROCEDIMENTO:', error)
     console.error('Tipo do erro:', error.name)
     console.error('Mensagem:', error.message)
     console.error('Stack:', error.stack)
-    alert('Erro ao salvar procedimento: ' + error.message)
+    showError('Erro ao salvar procedimento: ' + error.message)
   } finally {
     salvando.value = false
   }
 }
 
 const desativar = async (id) => {
-  if (confirm('Desativar este procedimento? Ele não aparecerá mais nas opções de atendimento, mas os dados serão mantidos.')) {
-    try {
-      const docRef = doc(db, 'catalogo_procedimentos', id)
-      await updateDoc(docRef, {
-        ativo: false,
-        dataDesativacao: serverTimestamp()
-      })
-      
-      await buscarProcedimentos()
-      atualizarTotalItens(procedimentosFiltrados.value.length)
-      alert('Procedimento desativado com sucesso!')
-    } catch (error) {
+  try {
+    const confirmado = await showConfirm(
+      'Ele não aparecerá mais nas opções de atendimento, mas os dados serão mantidos.',
+      {
+        title: 'Desativar Procedimento?',
+        type: 'warning',
+        confirmText: 'Sim, Desativar',
+        cancelText: 'Cancelar',
+        confirmIcon: 'fas fa-eye-slash'
+      }
+    )
+    
+    if (!confirmado) return
+    
+    const docRef = doc(db, 'catalogo_procedimentos', id)
+    await updateDoc(docRef, {
+      ativo: false,
+      dataDesativacao: serverTimestamp()
+    })
+    
+    await buscarProcedimentos()
+    atualizarTotalItens(procedimentosFiltrados.value.length)
+    showSuccess('Procedimento desativado com sucesso!')
+  } catch (error) {
+    if (error) {
       console.error('Erro ao desativar procedimento:', error)
-      alert('Erro ao desativar procedimento: ' + error.message)
+      showError('Erro ao desativar procedimento: ' + error.message)
     }
   }
 }

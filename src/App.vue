@@ -25,22 +25,48 @@
       <router-view></router-view>
     </main>
     
-    <!-- Notificações -->
-    <div v-if="notification.show" :class="['notification', notification.type]">
-      <div style="display: flex; align-items: center; gap: 12px;">
-        <i v-if="notification.type === 'success'" class="fas fa-check-circle"></i>
-        <i v-else-if="notification.type === 'warning'" class="fas fa-exclamation-triangle"></i>
-        <i v-else-if="notification.type === 'error'" class="fas fa-times-circle"></i>
-        <i v-else class="fas fa-info-circle"></i>
-        <div>
-          <div style="font-weight: 600; margin-bottom: 4px;">{{ notification.title }}</div>
-          <div style="font-size: 14px; color: #8e8e93;">{{ notification.message }}</div>
-        </div>
-        <button @click="hideNotification" style="margin-left: auto; background: none; border: none; font-size: 18px; cursor: pointer; color: #8e8e93;">
-          <i class="fas fa-times"></i>
-        </button>
-      </div>
-    </div>
+    <!-- Toast Global -->
+    <Toast 
+      :show="toastState.show"
+      :message="toastState.message"
+      :title="toastState.title"
+      :type="toastState.type"
+      :duration="toastState.duration"
+      @close="closeToast"
+    />
+
+    <!-- Confirm Modal Global -->
+    <ConfirmModal
+      :show="confirmState.show"
+      :title="confirmState.title"
+      :message="confirmState.message"
+      :type="confirmState.type"
+      :confirm-text="confirmState.confirmText"
+      :cancel-text="confirmState.cancelText"
+      :confirm-icon="confirmState.confirmIcon"
+      :loading="confirmState.loading"
+      @confirm="handleConfirmOk"
+      @cancel="handleConfirmCancel"
+      @close="handleConfirmCancel"
+    />
+
+    <!-- Prompt Modal Global -->
+    <PromptModal
+      :show="promptState.show"
+      :title="promptState.title"
+      :message="promptState.message"
+      :label="promptState.label"
+      :placeholder="promptState.placeholder"
+      :default-value="promptState.defaultValue"
+      :input-type="promptState.inputType"
+      :required="promptState.required"
+      :confirm-text="promptState.confirmText"
+      :cancel-text="promptState.cancelText"
+      :loading="promptState.loading"
+      @confirm="handlePromptOk"
+      @cancel="handlePromptCancel"
+      @close="handlePromptCancel"
+    />
   </div>
 </template>
 
@@ -52,22 +78,30 @@ import { collection, getDocs, query, where, orderBy, onSnapshot } from 'firebase
 import { useConfiguracoes } from './composables/useConfiguracoes'
 import { useClinica } from './composables/useClinica.js'
 import { useAuth } from './composables/useAuth.js'
+import { useNotifications } from './composables/useNotifications.js'
 import Sidebar from './components/Sidebar.vue'
 import MobileMenu from './components/MobileMenu.vue'
+import Toast from './components/Toast.vue'
+import ConfirmModal from './components/ConfirmModal.vue'
+import PromptModal from './components/PromptModal.vue'
 
 const route = useRoute()
 const router = useRouter()
 const pendingCount = ref(0)
 const sidebarCollapsed = ref(false)
-const notification = ref({
-  show: false,
-  type: 'info',
-  title: '',
-  message: ''
-})
 
 const { clinicaId, inicializarClinica } = useClinica()
 const { isAuthenticated, isFree, isPaid, logout, initAuth } = useAuth()
+const {
+  toastState,
+  confirmState,
+  promptState,
+  closeToast,
+  handleConfirmOk,
+  handleConfirmCancel,
+  handlePromptOk,
+  handlePromptCancel
+} = useNotifications()
 
 const isClientPage = computed(() => {
   return route.path === '/anamnese-cliente'
@@ -75,24 +109,6 @@ const isClientPage = computed(() => {
 
 const handleSidebarToggle = (collapsed) => {
   sidebarCollapsed.value = collapsed
-}
-
-
-const showNotification = (type, title, message) => {
-  notification.value = {
-    show: true,
-    type,
-    title,
-    message
-  }
-  
-  setTimeout(() => {
-    hideNotification()
-  }, 5000)
-}
-
-const hideNotification = () => {
-  notification.value.show = false
 }
 
 const updatePendingCount = async () => {

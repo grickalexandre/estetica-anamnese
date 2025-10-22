@@ -422,6 +422,7 @@ import { useClinica } from '../composables/useClinica.js'
 import { useProfissionais } from '../composables/useProfissionais.js'
 import { useProcedimentos } from '../composables/useProcedimentos.js'
 import { usePacientes } from '../composables/usePacientes.js'
+import { useNotifications } from '../composables/useNotifications.js'
 
 const { clinicaId, inicializarClinica } = useClinica()
 const { 
@@ -433,6 +434,7 @@ const {
   atualizarAgendamento,
   cancelarAgendamento 
 } = useAgendamento()
+const { showSuccess, showError, showConfirm, showPrompt } = useNotifications()
 const { clientes, buscarClientes } = usePacientes()
 const { profissionais, buscarProfissionais } = useProfissionais()
 const { procedimentos, buscarCatalogo } = useProcedimentos()
@@ -783,21 +785,48 @@ const salvarAgendamento = async () => {
     fim.setDate(fim.getDate() + 365)
     await buscarAgendamentos(inicio.toISOString().split('T')[0], fim.toISOString().split('T')[0])
     fecharModal()
-    alert('Agendamento salvo com sucesso!')
+    showSuccess('Agendamento salvo com sucesso!')
   } catch (err) {
-    alert('Erro ao salvar agendamento')
+    showError('Erro ao salvar agendamento')
   } finally {
     salvando.value = false
   }
 }
 
 const cancelarAgendamentoAtual = async () => {
-  if (!confirm('Deseja cancelar este agendamento?')) return
-  
-  const motivo = prompt('Motivo do cancelamento (opcional):')
-  await cancelarAgendamento(agendamentoEditando.value.id, motivo)
-  await buscarAgendamentos(dataAtual.value, dataAtual.value)
-  fecharModal()
+  try {
+    const confirmado = await showConfirm(
+      'Deseja realmente cancelar este agendamento?',
+      {
+        title: 'Cancelar Agendamento',
+        type: 'danger',
+        confirmText: 'Sim, Cancelar',
+        cancelText: 'Não',
+        confirmIcon: 'fas fa-ban'
+      }
+    )
+    
+    if (!confirmado) return
+    
+    const motivo = await showPrompt(
+      'Informe o motivo do cancelamento para registro',
+      {
+        title: 'Motivo do Cancelamento',
+        label: 'Motivo (opcional)',
+        placeholder: 'Ex: Cliente não compareceu, reagendado, etc.',
+        inputType: 'textarea',
+        required: false
+      }
+    )
+    
+    await cancelarAgendamento(agendamentoEditando.value.id, motivo || 'Não informado')
+    await buscarAgendamentos(dataAtual.value, dataAtual.value)
+    fecharModal()
+    showSuccess('Agendamento cancelado com sucesso!')
+  } catch (err) {
+    // Usuário cancelou a ação
+    console.log('Cancelamento abortado pelo usuário')
+  }
 }
 
 const fecharModal = () => {
@@ -1049,10 +1078,15 @@ const removerFoto = () => {
   console.log('🗑️ Foto removida do formulário')
 }
 
-// Função para mostrar toast (simplificada)
+// Função para mostrar toast (usando o sistema global)
 const mostrarToast = (message, type = 'error') => {
-  // Por enquanto, usar alert. Pode ser melhorado depois
-  alert(message)
+  if (type === 'error') {
+    showError(message)
+  } else if (type === 'success') {
+    showSuccess(message)
+  } else {
+    showError(message)
+  }
 }
 </script>
 
