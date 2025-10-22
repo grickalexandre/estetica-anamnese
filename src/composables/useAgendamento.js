@@ -7,6 +7,7 @@ import {
   deleteDoc, 
   doc, 
   getDocs, 
+  getDoc,
   query, 
   where,
   orderBy,
@@ -57,10 +58,36 @@ export function useAgendamento() {
 
       console.log('Executando query...')
       const snapshot = await getDocs(q)
-      agendamentos.value = snapshot.docs.map(doc => ({
+      const agendamentosTemp = snapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
       }))
+
+      // Atualizar fotos dos pacientes buscando dados mais recentes
+      console.log('Atualizando fotos dos pacientes...')
+      for (const agendamento of agendamentosTemp) {
+        if (agendamento.clienteId) {
+          try {
+            // Buscar cliente para pegar foto atualizada
+            const clienteRef = doc(db, 'clientes', agendamento.clienteId)
+            const clienteDoc = await getDoc(clienteRef)
+            
+            if (clienteDoc.exists()) {
+              const clienteData = clienteDoc.data()
+              // Atualizar foto se existir no documento do cliente
+              if (clienteData.fotoURL) {
+                agendamento.pacienteFoto = clienteData.fotoURL
+                console.log(`Foto atualizada para ${agendamento.clienteNome}:`, clienteData.fotoURL)
+              }
+            }
+          } catch (clienteErr) {
+            console.warn(`Erro ao buscar foto do cliente ${agendamento.clienteId}:`, clienteErr)
+            // Continua sem a foto atualizada
+          }
+        }
+      }
+
+      agendamentos.value = agendamentosTemp
 
       console.log('Total de agendamentos encontrados:', agendamentos.value.length)
       console.log('Lista de agendamentos:', agendamentos.value.map(a => ({ 
