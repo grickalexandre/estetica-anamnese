@@ -1,6 +1,6 @@
 import { ref } from 'vue'
 import { db } from '../firebase.js'
-import { collection, addDoc, updateDoc, deleteDoc, doc, getDocs, query, where, serverTimestamp } from 'firebase/firestore'
+import { collection, addDoc, updateDoc, deleteDoc, doc, getDocs, query, where, serverTimestamp, Timestamp } from 'firebase/firestore'
 import { useClinica } from './useClinica.js'
 
 export function useDespesasRecorrentes() {
@@ -99,7 +99,6 @@ export function useDespesasRecorrentes() {
     try {
       carregando.value = true
       const despesasAtivas = await buscarDespesasRecorrentes(true)
-      const { adicionarContaPagar } = await import('./useFinanceiro.js')
       
       const contasGeradas = []
       const hoje = new Date()
@@ -117,7 +116,7 @@ export function useDespesasRecorrentes() {
           const diaVencimento = despesa.diaVencimento || 10
           const dataVencimento = new Date(ano, mes - 1, diaVencimento)
           
-          // Criar conta a pagar
+          // Criar conta a pagar diretamente
           const conta = {
             descricao: `${despesa.descricao} - ${mes}/${ano}`,
             valor: despesa.valor,
@@ -128,12 +127,19 @@ export function useDespesasRecorrentes() {
             fornecedorNome: despesa.fornecedorNome || 'Fixo',
             despesaRecorrenteId: despesa.id,
             observacoes: `Despesa recorrente gerada automaticamente`,
-            status: 'pendente'
+            status: 'pendente',
+            clinicaId: clinicaId.value || 'demo',
+            tipo: 'despesa',
+            dataCriacao: serverTimestamp()
           }
 
-          const resultado = await adicionarContaPagar(conta)
+          // Adicionar conta a pagar diretamente
+          const docRef = await addDoc(collection(db, 'contas_pagar'), {
+            ...conta,
+            dataVencimento: Timestamp.fromDate(new Date(conta.dataVencimento))
+          })
           
-          if (resultado.success) {
+          if (docRef.id) {
             // Atualizar data da última geração
             await updateDoc(doc(db, 'despesas_recorrentes', despesa.id), {
               ultimaGeracao: new Date().toISOString()
