@@ -723,12 +723,6 @@ const salvarPrecificacao = async () => {
   }
 }
 
-const formatarMoeda = (valor) => {
-  return new Intl.NumberFormat('pt-BR', { 
-    minimumFractionDigits: 2, 
-    maximumFractionDigits: 2 
-  }).format(valor || 0)
-}
 
 const exportarExcel = () => {
   // Implementar exportação para Excel
