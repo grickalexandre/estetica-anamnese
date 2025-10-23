@@ -38,7 +38,6 @@ import AvaliacaoCliente from './views/AvaliacaoCliente.vue'
 import Planos from './views/Planos.vue'
 import MinhaAssinatura from './views/MinhaAssinatura.vue'
 import PrecificacaoProcedimentos from './views/PrecificacaoProcedimentos.vue'
-import FluxoCaixa from './views/FluxoCaixa.vue'
 import AgendamentoOnline from './views/AgendamentoOnline.vue'
 import { auth } from './firebase.js'
 import './style.css'
@@ -109,8 +108,6 @@ const routes = [
   // Rotas de precificação
   { path: '/precificacao-procedimentos', component: PrecificacaoProcedimentos, meta: { requiresAuth: true } },
   
-  // Rotas de fluxo de caixa
-  { path: '/fluxo-caixa', component: FluxoCaixa, meta: { requiresAuth: true } },
   
   // Rotas de agendamento
   { path: '/agendamento-online', component: AgendamentoOnline, meta: { requiresAuth: true } }
