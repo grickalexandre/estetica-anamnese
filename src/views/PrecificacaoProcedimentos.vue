@@ -1369,47 +1369,126 @@ const toggleAnaliseConcorrencia = () => {
 
 const carregarConcorrentes = async () => {
   try {
-    // Dados de exemplo - em produção viria do Firebase
-    concorrentes.value = [
-      { id: 1, nome: 'Clínica A', preco: 1200, diferenca: -20, ativo: true },
-      { id: 2, nome: 'Clínica B', preco: 1500, diferenca: 0, ativo: true },
-      { id: 3, nome: 'Clínica C', preco: 1800, diferenca: 20, ativo: true },
-      { id: 4, nome: 'Clínica D', preco: 1400, diferenca: -6.7, ativo: false }
-    ]
+    console.log('🔍 Carregando concorrentes...')
+    
+    // Tentar carregar do Firebase primeiro
+    if (clinicaId.value) {
+      try {
+        const q = query(
+          collection(db, 'concorrentes'),
+          where('clinicaId', '==', clinicaId.value),
+          where('ativo', '==', true)
+        )
+        
+        const querySnapshot = await getDocs(q)
+        const concorrentesFirebase = querySnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }))
+        
+        if (concorrentesFirebase.length > 0) {
+          console.log('📊 Concorrentes carregados do Firebase:', concorrentesFirebase.length)
+          concorrentes.value = concorrentesFirebase
+        } else {
+          console.log('⚠️ Nenhum concorrente no Firebase, usando dados de exemplo')
+          carregarConcorrentesExemplo()
+        }
+      } catch (firebaseError) {
+        console.log('⚠️ Erro ao carregar do Firebase, usando dados de exemplo:', firebaseError.message)
+        carregarConcorrentesExemplo()
+      }
+    } else {
+      console.log('⚠️ ClinicaId não disponível, usando dados de exemplo')
+      carregarConcorrentesExemplo()
+    }
     
     // Calcular diferenças em relação ao nosso preço
-    concorrentes.value.forEach(concorrente => {
-      const nossoPreco = form.value.precoCobrado
-      if (nossoPreco > 0) {
-        concorrente.diferenca = ((concorrente.preco - nossoPreco) / nossoPreco * 100).toFixed(1)
-      }
-    })
+    calcularDiferencasConcorrentes()
+    
   } catch (error) {
     console.error('Erro ao carregar concorrentes:', error)
+    carregarConcorrentesExemplo()
   }
 }
 
-const adicionarConcorrente = () => {
+const carregarConcorrentesExemplo = () => {
+  console.log('📋 Carregando dados de exemplo...')
+  concorrentes.value = [
+    { id: 1, nome: 'Clínica A', preco: 1200, diferenca: -20, ativo: true },
+    { id: 2, nome: 'Clínica B', preco: 1500, diferenca: 0, ativo: true },
+    { id: 3, nome: 'Clínica C', preco: 1800, diferenca: 20, ativo: true },
+    { id: 4, nome: 'Clínica D', preco: 1400, diferenca: -6.7, ativo: false }
+  ]
+}
+
+const calcularDiferencasConcorrentes = () => {
+  concorrentes.value.forEach(concorrente => {
+    const nossoPreco = form.value.precoCobrado
+    if (nossoPreco > 0) {
+      concorrente.diferenca = ((concorrente.preco - nossoPreco) / nossoPreco * 100).toFixed(1)
+    }
+  })
+  console.log('📊 Diferenças calculadas para', concorrentes.value.length, 'concorrentes')
+}
+
+const adicionarConcorrente = async () => {
   const nome = prompt('Nome do concorrente:')
   const preco = parseFloat(prompt('Preço do concorrente (R$):'))
   
   if (nome && preco) {
-    const novoConcorrente = {
-      id: Date.now(),
-      nome: nome,
-      preco: preco,
-      diferenca: 0,
-      ativo: true
+    try {
+      console.log('➕ Adicionando concorrente:', nome, preco)
+      
+      // Salvar no Firebase
+      const dadosConcorrente = {
+        nome: nome,
+        preco: preco,
+        clinicaId: clinicaId.value,
+        ativo: true,
+        dataCriacao: new Date()
+      }
+      
+      const docRef = await addDoc(collection(db, 'concorrentes'), dadosConcorrente)
+      console.log('✅ Concorrente salvo no Firebase com ID:', docRef.id)
+      
+      // Adicionar à lista local
+      const novoConcorrente = {
+        id: docRef.id,
+        nome: nome,
+        preco: preco,
+        diferenca: 0,
+        ativo: true
+      }
+      
+      // Calcular diferença
+      const nossoPreco = form.value.precoCobrado
+      if (nossoPreco > 0) {
+        novoConcorrente.diferenca = ((preco - nossoPreco) / nossoPreco * 100).toFixed(1)
+      }
+      
+      concorrentes.value.push(novoConcorrente)
+      showSuccess('Concorrente adicionado e salvo no Firebase!')
+      
+    } catch (error) {
+      console.error('❌ Erro ao salvar concorrente no Firebase:', error)
+      
+      // Fallback: adicionar apenas localmente
+      const novoConcorrente = {
+        id: Date.now(),
+        nome: nome,
+        preco: preco,
+        diferenca: 0,
+        ativo: true
+      }
+      
+      const nossoPreco = form.value.precoCobrado
+      if (nossoPreco > 0) {
+        novoConcorrente.diferenca = ((preco - nossoPreco) / nossoPreco * 100).toFixed(1)
+      }
+      
+      concorrentes.value.push(novoConcorrente)
+      showSuccess('Concorrente adicionado (salvo localmente)')
     }
-    
-    // Calcular diferença
-    const nossoPreco = form.value.precoCobrado
-    if (nossoPreco > 0) {
-      novoConcorrente.diferenca = ((preco - nossoPreco) / nossoPreco * 100).toFixed(1)
-    }
-    
-    concorrentes.value.push(novoConcorrente)
-    showSuccess('Concorrente adicionado com sucesso!')
   }
 }
 
