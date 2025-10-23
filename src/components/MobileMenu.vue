@@ -556,4 +556,36 @@ const handleLogout = async () => {
     background: rgba(0, 0, 0, 0.2);
   }
 }
+
+/* PWA Safe Area Support */
+@supports (padding: max(0px)) {
+  .mobile-header {
+    padding-top: max(0px, env(safe-area-inset-top));
+    padding-left: max(0px, env(safe-area-inset-left));
+    padding-right: max(0px, env(safe-area-inset-right));
+  }
+  
+  .mobile-sidebar {
+    padding-left: max(0px, env(safe-area-inset-left));
+    padding-right: max(0px, env(safe-area-inset-right));
+    padding-bottom: max(0px, env(safe-area-inset-bottom));
+  }
+}
+
+/* Touch-friendly sizing for PWA */
+@media (display-mode: standalone) {
+  .mobile-nav-item {
+    min-height: 48px;
+    padding: 12px 16px;
+  }
+  
+  .mobile-nav-item i {
+    font-size: 18px;
+  }
+  
+  .menu-toggle {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
 </style>

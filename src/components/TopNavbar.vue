@@ -384,6 +384,31 @@ watch(() => route.path, detectActiveMenu, { immediate: true })
   }
 }
 
+/* PWA Safe Area Support */
+@supports (padding: max(0px)) {
+  .top-navbar {
+    padding-top: max(0px, env(safe-area-inset-top));
+  }
+}
+
+/* Touch-friendly sizing for PWA */
+@media (display-mode: standalone) {
+  .navbar-item {
+    min-height: 44px;
+    min-width: 44px;
+    padding: 12px 16px;
+  }
+  
+  .navbar-item i {
+    font-size: 18px;
+  }
+  
+  .logout-btn {
+    min-height: 44px;
+    padding: 12px 16px;
+  }
+}
+
 @media (max-width: 768px) {
   .navbar-container {
     padding: 0 16px;

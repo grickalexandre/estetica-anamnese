@@ -563,6 +563,30 @@ const getMenuDescription = () => {
   background: rgba(0, 0, 0, 0.2);
 }
 
+/* PWA Safe Area Support */
+@supports (padding: max(0px)) {
+  .sidebar {
+    padding-left: max(0px, env(safe-area-inset-left));
+  }
+}
+
+/* Touch-friendly sizing for PWA */
+@media (display-mode: standalone) {
+  .nav-item {
+    min-height: 48px;
+    padding: 12px 16px;
+  }
+  
+  .nav-item i {
+    font-size: 18px;
+  }
+  
+  .collapse-btn {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .sidebar {

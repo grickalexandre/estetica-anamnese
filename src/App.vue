@@ -303,6 +303,39 @@ watch(isClientPage, (newValue) => {
   margin-left: 0;
   padding-top: 0;
 }
+
+/* PWA Safe Area Support */
+@supports (padding: max(0px)) {
+  .main-content {
+    padding-left: max(0px, env(safe-area-inset-left));
+    padding-right: max(0px, env(safe-area-inset-right));
+    padding-bottom: max(0px, env(safe-area-inset-bottom));
+  }
+}
+
+/* PWA Standalone Mode */
+@media (display-mode: standalone) {
+  .main-content {
+    /* Ajustar para modo standalone */
+    min-height: 100vh;
+    min-height: 100dvh; /* Dynamic viewport height */
+  }
+  
+  .main-content.with-navbar {
+    padding-top: max(70px, env(safe-area-inset-top) + 70px);
+  }
+  
+  /* Melhorar touch targets */
+  button, .btn, .nav-item, .mobile-nav-item {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* Melhorar scroll em iOS */
+  .main-content {
+    -webkit-overflow-scrolling: touch;
+  }
+}
 </style>
 
 
