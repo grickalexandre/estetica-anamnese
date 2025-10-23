@@ -175,6 +175,91 @@
       </div>
     </div>
 
+    <!-- Histórico de Preços -->
+    <div v-if="procedimentoSelecionado && historicoPrecos.length > 0" class="historico-section">
+      <div class="historico-header">
+        <h3><i class="fas fa-history"></i> Histórico de Preços</h3>
+        <div class="historico-actions">
+          <button @click="exportarHistorico" class="btn-export-small">
+            <i class="fas fa-download"></i>
+            Exportar
+          </button>
+        </div>
+      </div>
+      
+      <div class="historico-content">
+        <div class="historico-stats">
+          <div class="stat-card">
+            <div class="stat-icon">
+              <i class="fas fa-chart-line"></i>
+            </div>
+            <div class="stat-info">
+              <span class="stat-label">Preço Atual</span>
+              <span class="stat-value">{{ formatarMoeda(precoAtual) }}</span>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">
+              <i class="fas fa-trending-up"></i>
+            </div>
+            <div class="stat-info">
+              <span class="stat-label">Variação</span>
+              <span class="stat-value" :class="variacaoClass">{{ variacaoPreco }}%</span>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">
+              <i class="fas fa-calendar"></i>
+            </div>
+            <div class="stat-info">
+              <span class="stat-label">Última Atualização</span>
+              <span class="stat-value">{{ ultimaAtualizacao }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="historico-table">
+          <table class="historico-table-content">
+            <thead>
+              <tr>
+                <th>Data</th>
+                <th>Preço</th>
+                <th>Margem</th>
+                <th>Lucro</th>
+                <th>Status</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="item in historicoPrecos" :key="item.id" class="historico-row">
+                <td>{{ formatarData(item.dataCriacao) }}</td>
+                <td class="currency-cell">{{ formatarMoeda(item.precoCobrado) }}</td>
+                <td class="margem-cell">
+                  <span class="margem-badge" :class="getMargemClass(item.margemLucro)">
+                    {{ item.margemLucro }}%
+                  </span>
+                </td>
+                <td class="currency-cell">{{ formatarMoeda(item.lucroFinal) }}</td>
+                <td>
+                  <span class="status-badge" :class="item.ativo ? 'ativo' : 'inativo'">
+                    {{ item.ativo ? 'Ativo' : 'Inativo' }}
+                  </span>
+                </td>
+                <td class="actions-cell">
+                  <button @click="restaurarPrecificacao(item)" class="btn-icon" title="Restaurar">
+                    <i class="fas fa-undo"></i>
+                  </button>
+                  <button @click="duplicarPrecificacao(item)" class="btn-icon" title="Duplicar">
+                    <i class="fas fa-copy"></i>
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
     <!-- Tabela de Procedimentos -->
     <div class="table-container">
       <div class="table-header">
@@ -398,6 +483,7 @@ const { clinicaId } = useClinica()
 const procedimentos = ref([])
 const procedimentosCadastrados = ref([])
 const procedimentoSelecionado = ref('')
+const historicoPrecos = ref([])
 const loading = ref(false)
 const showModal = ref(false)
 const modoEdicao = ref(false)
@@ -469,6 +555,34 @@ const mediaPrecos = computed(() => {
     minimumFractionDigits: 2, 
     maximumFractionDigits: 2 
   }).format(media)
+})
+
+// Computed para histórico
+const precoAtual = computed(() => {
+  if (historicoPrecos.value.length === 0) return 0
+  const ativo = historicoPrecos.value.find(h => h.ativo)
+  return ativo ? ativo.precoCobrado : historicoPrecos.value[0].precoCobrado
+})
+
+const variacaoPreco = computed(() => {
+  if (historicoPrecos.value.length < 2) return 0
+  const atual = precoAtual.value
+  const anterior = historicoPrecos.value[1]?.precoCobrado || 0
+  if (anterior === 0) return 0
+  return ((atual - anterior) / anterior * 100).toFixed(1)
+})
+
+const variacaoClass = computed(() => {
+  const variacao = parseFloat(variacaoPreco.value)
+  if (variacao > 0) return 'variacao-positiva'
+  if (variacao < 0) return 'variacao-negativa'
+  return 'variacao-neutra'
+})
+
+const ultimaAtualizacao = computed(() => {
+  if (historicoPrecos.value.length === 0) return 'N/A'
+  const ultimo = historicoPrecos.value[0]
+  return formatarData(ultimo.dataCriacao)
 })
 
 const custoTotal = computed(() => {
@@ -563,6 +677,7 @@ const carregarProcedimentoSelecionado = async () => {
       precoCobrado: 0,
       margemDesejada: 50
     }
+    historicoPrecos.value = []
     return
   }
 
@@ -585,10 +700,31 @@ const carregarProcedimentoSelecionado = async () => {
         margemDesejada: 50,
         procedimentoId: procedimento.id // Referência ao procedimento original
       }
-      // Não abrir modal, apenas carregar dados na interface
+      
+      // Carregar histórico de preços
+      await carregarHistoricoPrecos(procedimento.id)
     }
   } catch (error) {
     console.error('Erro ao carregar procedimento selecionado:', error)
+  }
+}
+
+const carregarHistoricoPrecos = async (procedimentoId) => {
+  try {
+    const q = query(
+      collection(db, 'precificacaoProcedimentos'),
+      where('procedimentoId', '==', procedimentoId),
+      where('clinicaId', '==', clinicaId.value),
+      orderBy('dataCriacao', 'desc')
+    )
+
+    const querySnapshot = await getDocs(q)
+    historicoPrecos.value = querySnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }))
+  } catch (error) {
+    console.error('Erro ao carregar histórico de preços:', error)
   }
 }
 
@@ -754,6 +890,62 @@ const salvarPrecificacao = async () => {
   }
 }
 
+
+const formatarData = (data) => {
+  if (!data) return 'N/A'
+  const date = data.toDate ? data.toDate() : new Date(data)
+  return new Intl.DateTimeFormat('pt-BR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  }).format(date)
+}
+
+const restaurarPrecificacao = (item) => {
+  form.value = {
+    id: item.id,
+    nome: item.nome,
+    categoria: item.categoria,
+    produto: item.produto,
+    imposto: item.imposto,
+    comissao: item.comissao,
+    descartaveis: item.descartaveis,
+    cac: item.cac,
+    taxaMaquina: item.taxaMaquina,
+    operacaoHora: item.operacaoHora,
+    precoCobrado: item.precoCobrado,
+    margemDesejada: item.margemDesejada,
+    procedimentoId: item.procedimentoId
+  }
+  showSuccess('Precificação restaurada! Você pode editar e salvar.')
+}
+
+const duplicarPrecificacao = (item) => {
+  form.value = {
+    id: null, // Novo registro
+    nome: item.nome,
+    categoria: item.categoria,
+    produto: item.produto,
+    imposto: item.imposto,
+    comissao: item.comissao,
+    descartaveis: item.descartaveis,
+    cac: item.cac,
+    taxaMaquina: item.taxaMaquina,
+    operacaoHora: item.operacaoHora,
+    precoCobrado: item.precoCobrado,
+    margemDesejada: item.margemDesejada,
+    procedimentoId: item.procedimentoId
+  }
+  showSuccess('Precificação duplicada! Você pode editar e salvar.')
+}
+
+const exportarHistorico = () => {
+  // Implementar exportação do histórico
+  console.log('Exportar histórico de preços')
+  showSuccess('Funcionalidade de exportação será implementada em breve!')
+}
 
 const exportarExcel = () => {
   // Implementar exportação para Excel
@@ -1036,6 +1228,169 @@ onMounted(() => {
   font-size: 18px;
   font-weight: 700;
   color: #1d1d1f;
+}
+
+/* Estilos para Histórico */
+.historico-section {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e5e7eb;
+}
+
+.historico-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.historico-header h3 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: #1d1d1f;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.historico-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.btn-export-small {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: #10b981;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-export-small:hover {
+  background: #059669;
+  transform: translateY(-1px);
+}
+
+.historico-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.stat-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: #f9fafb;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+}
+
+.stat-icon {
+  width: 40px;
+  height: 40px;
+  background: #007AFF;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 16px;
+}
+
+.stat-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.stat-label {
+  font-size: 12px;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.stat-value {
+  font-size: 16px;
+  font-weight: 700;
+  color: #1d1d1f;
+}
+
+.variacao-positiva {
+  color: #10b981;
+}
+
+.variacao-negativa {
+  color: #ef4444;
+}
+
+.variacao-neutra {
+  color: #6b7280;
+}
+
+.historico-table {
+  overflow-x: auto;
+}
+
+.historico-table-content {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.historico-table-content th {
+  background: #f9fafb;
+  padding: 12px;
+  text-align: left;
+  font-weight: 600;
+  color: #374151;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.historico-table-content td {
+  padding: 12px;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.historico-row:hover {
+  background: #f9fafb;
+}
+
+.status-badge {
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.status-badge.ativo {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.status-badge.inativo {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.actions-cell {
+  display: flex;
+  gap: 8px;
 }
 
 .filters-row {
