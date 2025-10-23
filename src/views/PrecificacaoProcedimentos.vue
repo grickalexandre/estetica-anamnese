@@ -26,6 +26,11 @@
       <div class="filters-header">
         <h3><i class="fas fa-filter"></i> Filtros e Busca</h3>
         <div class="filters-actions">
+          <button @click="toggleAlertasMargem" class="btn-alerts" :class="{ 'active': alertasAtivos.length > 0 }">
+            <i class="fas fa-bell"></i>
+            Alertas de Margem
+            <span v-if="alertasAtivos.length > 0" class="alert-badge">{{ alertasAtivos.length }}</span>
+          </button>
           <button @click="toggleRelatoriosMargem" class="btn-reports">
             <i class="fas fa-chart-pie"></i>
             Relatórios de Margem
@@ -350,6 +355,100 @@
               </tr>
             </tbody>
           </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Alertas de Margem em Tempo Real -->
+    <div v-if="showAlertasMargem" class="alertas-tempo-real-section">
+      <div class="alertas-header">
+        <h3><i class="fas fa-bell"></i> Alertas de Margem em Tempo Real</h3>
+        <div class="alertas-actions">
+          <button @click="configurarAlertas" class="btn-config">
+            <i class="fas fa-cog"></i>
+            Configurar
+          </button>
+          <button @click="toggleAlertasMargem" class="btn-close">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+      </div>
+      
+      <div class="alertas-content">
+        <!-- Configurações de Alertas -->
+        <div class="configuracoes-alertas">
+          <h4><i class="fas fa-sliders-h"></i> Configurações de Alertas</h4>
+          <div class="config-grid">
+            <div class="config-item">
+              <label>Margem Mínima Aceitável (%)</label>
+              <input v-model.number="configAlertas.margemMinima" type="number" min="0" max="100" class="config-input">
+            </div>
+            <div class="config-item">
+              <label>Ativar Notificações</label>
+              <label class="switch">
+                <input v-model="configAlertas.notificacoesAtivas" type="checkbox">
+                <span class="slider"></span>
+              </label>
+            </div>
+            <div class="config-item">
+              <label>Verificar a cada (minutos)</label>
+              <select v-model="configAlertas.intervaloVerificacao" class="config-select">
+                <option value="5">5 minutos</option>
+                <option value="15">15 minutos</option>
+                <option value="30">30 minutos</option>
+                <option value="60">1 hora</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Lista de Alertas Ativos -->
+        <div class="alertas-ativos">
+          <h4><i class="fas fa-exclamation-triangle"></i> Alertas Ativos ({{ alertasAtivos.length }})</h4>
+          <div class="alertas-list">
+            <div v-for="alerta in alertasAtivos" :key="alerta.id" class="alerta-item" :class="alerta.severidade">
+              <div class="alerta-icon">
+                <i :class="alerta.icone"></i>
+              </div>
+              <div class="alerta-content">
+                <div class="alerta-title">{{ alerta.titulo }}</div>
+                <div class="alerta-description">{{ alerta.descricao }}</div>
+                <div class="alerta-time">{{ formatarTempoAlerta(alerta.timestamp) }}</div>
+              </div>
+              <div class="alerta-actions">
+                <button @click="resolverAlerta(alerta)" class="btn-resolver">
+                  <i class="fas fa-check"></i>
+                  Resolver
+                </button>
+                <button @click="ignorarAlerta(alerta)" class="btn-ignorar">
+                  <i class="fas fa-times"></i>
+                  Ignorar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Histórico de Alertas -->
+        <div class="historico-alertas">
+          <h4><i class="fas fa-history"></i> Histórico de Alertas</h4>
+          <div class="historico-list">
+            <div v-for="alerta in historicoAlertas" :key="alerta.id" class="historico-item" :class="alerta.status">
+              <div class="historico-icon">
+                <i :class="alerta.icone"></i>
+              </div>
+              <div class="historico-content">
+                <div class="historico-title">{{ alerta.titulo }}</div>
+                <div class="historico-description">{{ alerta.descricao }}</div>
+                <div class="historico-time">{{ formatarTempoAlerta(alerta.timestamp) }}</div>
+              </div>
+              <div class="historico-status">
+                <span class="status-badge" :class="alerta.status">
+                  {{ getStatusText(alerta.status) }}
+                </span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -693,8 +792,16 @@ const procedimentoSelecionado = ref('')
 const historicoPrecos = ref([])
 const showAnaliseConcorrencia = ref(false)
 const showRelatoriosMargem = ref(false)
+const showAlertasMargem = ref(false)
 const concorrentes = ref([])
 const alertasMargem = ref([])
+const alertasAtivos = ref([])
+const historicoAlertas = ref([])
+const configAlertas = ref({
+  margemMinima: 20,
+  notificacoesAtivas: true,
+  intervaloVerificacao: 15
+})
 const loading = ref(false)
 const showModal = ref(false)
 const modoEdicao = ref(false)
@@ -1392,6 +1499,106 @@ const verDetalhesAlerta = (alerta) => {
   } else if (alerta.categoria) {
     showWarning(`Detalhes da categoria: ${alerta.categoria.nome}\nMargem Média: ${alerta.categoria.margemMedia}%\nTotal de Procedimentos: ${alerta.categoria.total}`)
   }
+}
+
+const toggleAlertasMargem = () => {
+  showAlertasMargem.value = !showAlertasMargem.value
+  if (showAlertasMargem.value) {
+    verificarAlertas()
+  }
+}
+
+const verificarAlertas = () => {
+  alertasAtivos.value = []
+  
+  procedimentosFiltrados.value.forEach(proc => {
+    if (proc.margemLucro < configAlertas.value.margemMinima) {
+      const alerta = {
+        id: `alerta-${proc.id}`,
+        titulo: 'Margem Baixa Detectada',
+        descricao: `${proc.nome} tem margem de ${proc.margemLucro}% (mínimo: ${configAlertas.value.margemMinima}%)`,
+        severidade: proc.margemLucro < 10 ? 'critico' : 'baixo',
+        icone: proc.margemLucro < 10 ? 'fas fa-exclamation-circle' : 'fas fa-exclamation-triangle',
+        timestamp: new Date(),
+        procedimento: proc
+      }
+      
+      alertasAtivos.value.push(alerta)
+      
+      // Adicionar ao histórico
+      historicoAlertas.value.unshift({
+        ...alerta,
+        status: 'ativo'
+      })
+    }
+  })
+  
+  // Limitar histórico a 50 itens
+  if (historicoAlertas.value.length > 50) {
+    historicoAlertas.value = historicoAlertas.value.slice(0, 50)
+  }
+}
+
+const resolverAlerta = (alerta) => {
+  // Marcar como resolvido
+  const index = alertasAtivos.value.findIndex(a => a.id === alerta.id)
+  if (index > -1) {
+    alertasAtivos.value.splice(index, 1)
+  }
+  
+  // Atualizar histórico
+  const historicoIndex = historicoAlertas.value.findIndex(h => h.id === alerta.id)
+  if (historicoIndex > -1) {
+    historicoAlertas.value[historicoIndex].status = 'resolvido'
+    historicoAlertas.value[historicoIndex].timestamp = new Date()
+  }
+  
+  showSuccess('Alerta resolvido com sucesso!')
+}
+
+const ignorarAlerta = (alerta) => {
+  // Marcar como ignorado
+  const index = alertasAtivos.value.findIndex(a => a.id === alerta.id)
+  if (index > -1) {
+    alertasAtivos.value.splice(index, 1)
+  }
+  
+  // Atualizar histórico
+  const historicoIndex = historicoAlertas.value.findIndex(h => h.id === alerta.id)
+  if (historicoIndex > -1) {
+    historicoAlertas.value[historicoIndex].status = 'ignorado'
+    historicoAlertas.value[historicoIndex].timestamp = new Date()
+  }
+  
+  showSuccess('Alerta ignorado')
+}
+
+const configurarAlertas = () => {
+  showSuccess('Configurações salvas! Os alertas serão atualizados automaticamente.')
+}
+
+const formatarTempoAlerta = (timestamp) => {
+  const agora = new Date()
+  const diferenca = agora - timestamp
+  const minutos = Math.floor(diferenca / 60000)
+  
+  if (minutos < 1) return 'Agora mesmo'
+  if (minutos < 60) return `${minutos} min atrás`
+  
+  const horas = Math.floor(minutos / 60)
+  if (horas < 24) return `${horas}h atrás`
+  
+  const dias = Math.floor(horas / 24)
+  return `${dias} dias atrás`
+}
+
+const getStatusText = (status) => {
+  const statusMap = {
+    'ativo': 'Ativo',
+    'resolvido': 'Resolvido',
+    'ignorado': 'Ignorado'
+  }
+  return statusMap[status] || status
 }
 
 const exportarRelatorioMargem = () => {
@@ -2300,6 +2507,345 @@ onMounted(() => {
 .btn-alerta:hover {
   background: #4b5563;
   transform: translateY(-1px);
+}
+
+/* Estilos para Alertas de Margem */
+.alertas-tempo-real-section {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e5e7eb;
+}
+
+.alertas-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.alertas-header h3 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: #1d1d1f;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.alertas-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.btn-alerts {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: #f59e0b;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+}
+
+.btn-alerts:hover {
+  background: #d97706;
+  transform: translateY(-1px);
+}
+
+.btn-alerts.active {
+  background: #dc2626;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+.alert-badge {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background: #dc2626;
+  color: white;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 600;
+  animation: bounce 1s infinite;
+}
+
+@keyframes bounce {
+  0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+  40% { transform: translateY(-3px); }
+  60% { transform: translateY(-2px); }
+}
+
+.btn-config {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: #6b7280;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-config:hover {
+  background: #4b5563;
+  transform: translateY(-1px);
+}
+
+.alertas-content {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.configuracoes-alertas h4,
+.alertas-ativos h4,
+.historico-alertas h4 {
+  margin: 0 0 16px 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #1d1d1f;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.config-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+}
+
+.config-item {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.config-item label {
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+}
+
+.config-input,
+.config-select {
+  padding: 8px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 14px;
+  transition: all 0.2s;
+}
+
+.config-input:focus,
+.config-select:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 50px;
+  height: 24px;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  transition: .4s;
+  border-radius: 24px;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: .4s;
+  border-radius: 50%;
+}
+
+input:checked + .slider {
+  background-color: #10b981;
+}
+
+input:checked + .slider:before {
+  transform: translateX(26px);
+}
+
+.alertas-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.alerta-item.critico {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-left: 4px solid #dc2626;
+}
+
+.alerta-item.baixo {
+  background: #fffbeb;
+  border: 1px solid #fed7aa;
+  border-left: 4px solid #f59e0b;
+}
+
+.alerta-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.btn-resolver {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  background: #10b981;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-resolver:hover {
+  background: #059669;
+  transform: translateY(-1px);
+}
+
+.btn-ignorar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  background: #6b7280;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-ignorar:hover {
+  background: #4b5563;
+  transform: translateY(-1px);
+}
+
+.alerta-time,
+.historico-time {
+  font-size: 12px;
+  color: #6b7280;
+  margin-top: 4px;
+}
+
+.historico-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.historico-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  transition: all 0.2s;
+}
+
+.historico-item.resolvido {
+  background: #f0fdf4;
+  border-color: #bbf7d0;
+}
+
+.historico-item.ignorado {
+  background: #f9fafb;
+  border-color: #d1d5db;
+}
+
+.historico-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  background: #6b7280;
+  color: white;
+}
+
+.historico-content {
+  flex: 1;
+}
+
+.historico-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1d1d1f;
+  margin-bottom: 2px;
+}
+
+.historico-description {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.status-badge.resolvido {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.status-badge.ignorado {
+  background: #f3f4f6;
+  color: #374151;
 }
 
 .filters-row {
