@@ -64,6 +64,117 @@
       </div>
     </div>
 
+    <!-- Formulário de Precificação -->
+    <div v-if="procedimentoSelecionado" class="precificacao-form-section">
+      <div class="form-header">
+        <h3><i class="fas fa-calculator"></i> Precificar Procedimento</h3>
+        <div class="form-actions">
+          <button @click="limparSelecao" class="btn-clear">
+            <i class="fas fa-times"></i>
+            Limpar
+          </button>
+        </div>
+      </div>
+      
+      <div class="form-content">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Procedimento:</label>
+            <input v-model="form.nome" type="text" readonly class="form-input readonly">
+          </div>
+          <div class="form-group">
+            <label>Categoria:</label>
+            <input v-model="form.categoria" type="text" readonly class="form-input readonly">
+          </div>
+        </div>
+
+        <div class="form-section">
+          <h4><i class="fas fa-coins"></i> Custos Diretos</h4>
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Produto (R$):</label>
+              <input v-model.number="form.produto" type="number" step="0.01" min="0" class="form-input">
+            </div>
+            <div class="form-group">
+              <label>Imposto (R$):</label>
+              <input v-model.number="form.imposto" type="number" step="0.01" min="0" class="form-input">
+            </div>
+            <div class="form-group">
+              <label>Comissão (R$):</label>
+              <input v-model.number="form.comissao" type="number" step="0.01" min="0" class="form-input">
+            </div>
+            <div class="form-group">
+              <label>Descartáveis (R$):</label>
+              <input v-model.number="form.descartaveis" type="number" step="0.01" min="0" class="form-input">
+            </div>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <h4><i class="fas fa-chart-line"></i> Custos Operacionais</h4>
+          <div class="form-grid">
+            <div class="form-group">
+              <label>CAC (R$):</label>
+              <input v-model.number="form.cac" type="number" step="0.01" min="0" class="form-input">
+            </div>
+            <div class="form-group">
+              <label>Taxa Máquina (R$):</label>
+              <input v-model.number="form.taxaMaquina" type="number" step="0.01" min="0" class="form-input">
+            </div>
+            <div class="form-group">
+              <label>Op. / Hora Clínica (R$):</label>
+              <input v-model.number="form.operacaoHora" type="number" step="0.01" min="0" class="form-input">
+            </div>
+            <div class="form-group">
+              <label>Margem Desejada (%):</label>
+              <input v-model.number="form.margemDesejada" type="number" step="0.1" min="0" max="100" class="form-input">
+            </div>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <h4><i class="fas fa-calculator"></i> Cálculos</h4>
+          <div class="calculos-grid">
+            <div class="calculo-item">
+              <label>Custo Total:</label>
+              <span class="calculo-valor">R$ {{ formatarMoeda(custoTotal) }}</span>
+            </div>
+            <div class="calculo-item">
+              <label>Preço Sugerido:</label>
+              <span class="calculo-valor">R$ {{ formatarMoeda(precoSugerido) }}</span>
+            </div>
+            <div class="calculo-item">
+              <label>Lucro Final:</label>
+              <span class="calculo-valor">R$ {{ formatarMoeda(lucroFinal) }}</span>
+            </div>
+            <div class="calculo-item">
+              <label>Margem Real:</label>
+              <span class="calculo-valor">{{ margemReal }}%</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <h4><i class="fas fa-dollar-sign"></i> Preço Final</h4>
+          <div class="form-group">
+            <label>Preço Cobrado (R$):</label>
+            <input v-model.number="form.precoCobrado" type="number" step="0.01" min="0" class="form-input">
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button @click="salvarPrecificacao" class="btn-primary">
+            <i class="fas fa-save"></i>
+            Salvar Precificação
+          </button>
+          <button @click="limparSelecao" class="btn-secondary">
+            <i class="fas fa-times"></i>
+            Cancelar
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- Tabela de Procedimentos -->
     <div class="table-container">
       <div class="table-header">
@@ -455,7 +566,7 @@ const carregarProcedimentoSelecionado = async () => {
         margemDesejada: 50,
         procedimentoId: procedimento.id // Referência ao procedimento original
       }
-      showModal.value = true
+      // Não abrir modal, apenas carregar dados na interface
     }
   } catch (error) {
     console.error('Erro ao carregar procedimento selecionado:', error)
@@ -555,6 +666,68 @@ const getMargemClass = (margem) => {
   if (margem >= 50) return 'margem-alta'
   if (margem >= 30) return 'margem-media'
   return 'margem-baixa'
+}
+
+const limparSelecao = () => {
+  procedimentoSelecionado.value = ''
+  form.value = {
+    id: null,
+    nome: '',
+    categoria: 'Estética Facial',
+    produto: 0,
+    imposto: 0,
+    comissao: 0,
+    descartaveis: 0,
+    cac: 0,
+    taxaMaquina: 0,
+    operacaoHora: 0,
+    precoCobrado: 0,
+    margemDesejada: 50
+  }
+}
+
+const salvarPrecificacao = async () => {
+  try {
+    if (!form.value.nome || form.value.nome.trim() === '') {
+      showWarning('Por favor, selecione um procedimento')
+      return
+    }
+
+    if (form.value.precoCobrado <= 0) {
+      showWarning('Por favor, informe o preço cobrado')
+      return
+    }
+
+    const dadosParaSalvar = {
+      ...form.value,
+      clinicaId: clinicaId.value,
+      dataCriacao: new Date(),
+      ativo: true
+    }
+
+    if (form.value.id) {
+      // Editar existente
+      await updateDoc(doc(db, 'precificacaoProcedimentos', form.value.id), dadosParaSalvar)
+      showSuccess('Precificação atualizada com sucesso!')
+    } else {
+      // Criar novo
+      await addDoc(collection(db, 'precificacaoProcedimentos'), dadosParaSalvar)
+      showSuccess('Precificação salva com sucesso!')
+    }
+
+    await carregarProcedimentos()
+    limparSelecao()
+  } catch (error) {
+    console.error('Erro ao salvar precificação:', error)
+    showError('Erro ao salvar precificação: ' + error.message)
+  }
+}
+
+const formatarMoeda = (valor) => {
+  return new Intl.NumberFormat('pt-BR', { 
+    minimumFractionDigits: 2, 
+    maximumFractionDigits: 2 
+  }).format(valor || 0)
 }
 
 const exportarExcel = () => {
@@ -691,6 +864,153 @@ onMounted(() => {
 .btn-export:hover {
   background: #059669;
   transform: translateY(-1px);
+}
+
+.precificacao-form-section {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e5e7eb;
+}
+
+.form-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.form-header h3 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: #1d1d1f;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.form-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.btn-clear {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: #ef4444;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-clear:hover {
+  background: #dc2626;
+  transform: translateY(-1px);
+}
+
+.form-content {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.form-section {
+  background: #f9fafb;
+  border-radius: 8px;
+  padding: 20px;
+  border: 1px solid #e5e7eb;
+}
+
+.form-section h4 {
+  margin: 0 0 16px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #1d1d1f;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.form-row {
+  display: flex;
+  gap: 16px;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.form-group label {
+  font-weight: 500;
+  color: #374151;
+  font-size: 14px;
+}
+
+.form-input {
+  padding: 10px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 14px;
+  transition: border-color 0.2s;
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: #007AFF;
+  box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.1);
+}
+
+.form-input.readonly {
+  background: #f3f4f6;
+  color: #6b7280;
+  cursor: not-allowed;
+}
+
+.calculos-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+.calculo-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 16px;
+  background: white;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+}
+
+.calculo-item label {
+  font-weight: 500;
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.calculo-valor {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1d1d1f;
 }
 
 .filters-row {
