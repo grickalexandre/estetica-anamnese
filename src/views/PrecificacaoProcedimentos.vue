@@ -827,6 +827,11 @@ const form = ref({
 
 // Computed
 const procedimentosFiltrados = computed(() => {
+  console.log('🔍 Computed procedimentosFiltrados executado')
+  console.log('📊 Total procedimentos:', procedimentos.value.length)
+  console.log('🔍 Filtro busca:', filtroBusca.value)
+  console.log('🔍 Filtro status:', filtroStatus.value)
+  
   let filtrados = procedimentos.value
 
   // Filtro por busca
@@ -862,6 +867,7 @@ const procedimentosFiltrados = computed(() => {
     }
   })
 
+  console.log('📊 Procedimentos filtrados:', filtrados.length)
   return filtrados
 })
 
@@ -1021,15 +1027,21 @@ const carregarProcedimentos = async () => {
 
     const q = query(
       collection(db, 'precificacaoProcedimentos'),
-      where('clinicaId', '==', clinicaId.value),
-      orderBy('nome')
+      where('clinicaId', '==', clinicaId.value)
     )
 
     const querySnapshot = await getDocs(q)
-    procedimentos.value = querySnapshot.docs.map(doc => ({
+    const procedimentosData = querySnapshot.docs.map(doc => ({
       id: doc.id,
       ...doc.data()
     }))
+    
+    // Ordenar localmente por nome
+    procedimentos.value = procedimentosData.sort((a, b) => 
+      a.nome.localeCompare(b.nome)
+    )
+    
+    console.log('📊 Procedimentos carregados:', procedimentos.value.length)
   } catch (error) {
     console.error('Erro ao carregar procedimentos:', error)
   } finally {
@@ -1281,6 +1293,7 @@ const salvarPrecificacao = async () => {
 
     console.log('🔄 Recarregando procedimentos...')
     await carregarProcedimentos()
+    console.log('📊 Total de procedimentos após recarregar:', procedimentos.value.length)
     console.log('🧹 Limpando seleção...')
     limparSelecao()
     console.log('✅ Processo concluído!')
