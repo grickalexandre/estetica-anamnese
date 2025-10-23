@@ -1,191 +1,244 @@
 <template>
-  <div class="container">
+  <div class="fluxo-caixa-container">
+    <!-- Header -->
     <div class="page-header">
-      <h1><i class="fas fa-chart-line"></i> Fluxo de Caixa</h1>
-      <button @click="abrirModalMovimentacao" class="btn btn-primary">
-        <i class="fas fa-plus"></i>
-        Nova Movimentação
-      </button>
-    </div>
-
-    <!-- Filtros de Período -->
-    <div class="card filters-card">
-      <div class="periodo-selector">
-        <button 
-          v-for="periodo in periodos" 
-          :key="periodo.value"
-          @click="selecionarPeriodo(periodo.value)"
-          :class="['periodo-btn', { active: periodoSelecionado === periodo.value }]"
-        >
-          {{ periodo.label }}
-        </button>
-        <div class="custom-period">
-          <input type="date" v-model="dataInicio" @change="aplicarPeriodoCustom">
-          <span>até</span>
-          <input type="date" v-model="dataFim" @change="aplicarPeriodoCustom">
+      <div class="header-content">
+        <div class="header-title">
+          <h1><i class="fas fa-chart-line"></i> Fluxo de Caixa</h1>
+          <p>Controle de entradas e saídas financeiras da clínica</p>
         </div>
-      </div>
-
-      <div class="saldo-periodo">
-        <div class="saldo-item entrada">
-          <i class="fas fa-arrow-up"></i>
-          <div>
-            <span class="saldo-label">Entradas</span>
-            <span class="saldo-valor">R$ {{ formatarMoeda(totalEntradas) }}</span>
-          </div>
-        </div>
-        <div class="saldo-item saida">
-          <i class="fas fa-arrow-down"></i>
-          <div>
-            <span class="saldo-label">Saídas</span>
-            <span class="saldo-valor">R$ {{ formatarMoeda(totalSaidas) }}</span>
-          </div>
-        </div>
-        <div class="saldo-item saldo" :class="saldoPeriodo >= 0 ? 'positivo' : 'negativo'">
-          <i :class="saldoPeriodo >= 0 ? 'fas fa-wallet' : 'fas fa-exclamation-triangle'"></i>
-          <div>
-            <span class="saldo-label">Saldo do Período</span>
-            <span class="saldo-valor">R$ {{ formatarMoeda(saldoPeriodo) }}</span>
-          </div>
+        <div class="header-actions">
+          <button @click="adicionarMovimentacao" class="btn-primary">
+            <i class="fas fa-plus"></i>
+            Nova Movimentação
+          </button>
+          <button @click="exportarRelatorio" class="btn-export">
+            <i class="fas fa-file-excel"></i>
+            Exportar
+          </button>
         </div>
       </div>
     </div>
 
-    <!-- Lista de Movimentações -->
-    <div class="card">
-      <div v-if="carregando" class="loading">
-        <i class="fas fa-spinner fa-spin"></i> Carregando movimentações...
-      </div>
-
-      <div v-else-if="movimentacoesAgrupadas.length === 0" class="empty-state">
-        <i class="fas fa-inbox"></i>
-        <p>Nenhuma movimentação encontrada neste período</p>
-        <button @click="abrirModalMovimentacao" class="btn btn-primary">
-          <i class="fas fa-plus"></i>
-          Adicionar Primeira Movimentação
-        </button>
-      </div>
-
-      <div v-else class="movimentacoes-list">
-        <div v-for="grupo in movimentacoesAgrupadas" :key="grupo.data" class="data-grupo">
-          <div class="data-header">
-            <h3>{{ grupo.dataFormatada }}</h3>
-            <div class="data-saldo">
-              <span class="entrada">+R$ {{ formatarMoeda(grupo.totalEntradas) }}</span>
-              <span class="saida">-R$ {{ formatarMoeda(grupo.totalSaidas) }}</span>
-              <span 
-                class="saldo" 
-                :class="grupo.saldo >= 0 ? 'positivo' : 'negativo'"
-              >
-                = R$ {{ formatarMoeda(grupo.saldo) }}
-              </span>
-            </div>
+    <!-- Resumo Financeiro -->
+    <div class="resumo-financeiro">
+      <div class="resumo-cards">
+        <div class="resumo-card entrada">
+          <div class="card-icon">
+            <i class="fas fa-arrow-up"></i>
           </div>
-
-          <div class="movimentacoes-dia">
-            <div 
-              v-for="mov in grupo.movimentacoes" 
-              :key="mov.id"
-              :class="['movimentacao-item', mov.tipo]"
-            >
-              <div class="mov-icon">
-                <i :class="mov.tipo === 'entrada' ? 'fas fa-arrow-up' : 'fas fa-arrow-down'"></i>
-              </div>
-              <div class="mov-info">
-                <strong>{{ mov.descricao }}</strong>
-                <span class="mov-categoria">{{ formatarCategoria(mov.categoria) }}</span>
-              </div>
-              <div class="mov-valor">
-                R$ {{ formatarMoeda(mov.valor) }}
-              </div>
-            </div>
+          <div class="card-content">
+            <h3>Entradas</h3>
+            <span class="card-value">{{ formatarMoeda(totalEntradas) }}</span>
+            <p class="card-periodo">Este mês</p>
+          </div>
+        </div>
+        
+        <div class="resumo-card saida">
+          <div class="card-icon">
+            <i class="fas fa-arrow-down"></i>
+          </div>
+          <div class="card-content">
+            <h3>Saídas</h3>
+            <span class="card-value">{{ formatarMoeda(totalSaidas) }}</span>
+            <p class="card-periodo">Este mês</p>
+          </div>
+        </div>
+        
+        <div class="resumo-card saldo" :class="saldoAtual >= 0 ? 'positivo' : 'negativo'">
+          <div class="card-icon">
+            <i class="fas fa-balance-scale"></i>
+          </div>
+          <div class="card-content">
+            <h3>Saldo Atual</h3>
+            <span class="card-value">{{ formatarMoeda(saldoAtual) }}</span>
+            <p class="card-periodo">Disponível</p>
+          </div>
+        </div>
+        
+        <div class="resumo-card projecao">
+          <div class="card-icon">
+            <i class="fas fa-chart-line"></i>
+          </div>
+          <div class="card-content">
+            <h3>Projeção</h3>
+            <span class="card-value">{{ formatarMoeda(projecaoMes) }}</span>
+            <p class="card-periodo">Fim do mês</p>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Modal Nova Movimentação -->
-    <div v-if="modalMovimentacao" class="modal-overlay" @click.self="fecharModalMovimentacao">
-      <div class="modal-content">
+    <!-- Filtros -->
+    <div class="filters-section">
+      <div class="filters-header">
+        <h3><i class="fas fa-filter"></i> Filtros</h3>
+      </div>
+      <div class="filters-row">
+        <div class="filter-group">
+          <label>Período:</label>
+          <select v-model="filtroPeriodo" @change="aplicarFiltros" class="filter-select">
+            <option value="hoje">Hoje</option>
+            <option value="semana">Esta Semana</option>
+            <option value="mes">Este Mês</option>
+            <option value="trimestre">Este Trimestre</option>
+            <option value="ano">Este Ano</option>
+            <option value="personalizado">Personalizado</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label>Tipo:</label>
+          <select v-model="filtroTipo" @change="aplicarFiltros" class="filter-select">
+            <option value="">Todos</option>
+            <option value="entrada">Entradas</option>
+            <option value="saida">Saídas</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label>Categoria:</label>
+          <select v-model="filtroCategoria" @change="aplicarFiltros" class="filter-select">
+            <option value="">Todas</option>
+            <option value="procedimentos">Procedimentos</option>
+            <option value="produtos">Produtos</option>
+            <option value="despesas">Despesas</option>
+            <option value="investimentos">Investimentos</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label>Buscar:</label>
+          <input v-model="filtroBusca" @input="aplicarFiltros" type="text" placeholder="Descrição..." class="filter-input">
+        </div>
+      </div>
+    </div>
+
+    <!-- Gráfico de Fluxo -->
+    <div class="grafico-section">
+      <div class="grafico-header">
+        <h3><i class="fas fa-chart-area"></i> Evolução do Fluxo de Caixa</h3>
+        <div class="grafico-actions">
+          <button @click="alternarVisualizacao" class="btn-toggle">
+            <i :class="visualizacaoGrafico === 'linha' ? 'fas fa-chart-bar' : 'fas fa-chart-line'"></i>
+            {{ visualizacaoGrafico === 'linha' ? 'Barras' : 'Linha' }}
+          </button>
+        </div>
+      </div>
+      <div class="grafico-content">
+        <canvas ref="graficoCanvas" width="800" height="300"></canvas>
+      </div>
+    </div>
+
+    <!-- Tabela de Movimentações -->
+    <div class="table-container">
+      <div class="table-header">
+        <h3><i class="fas fa-list"></i> Movimentações</h3>
+        <div class="table-stats">
+          <span class="stat-item">
+            <i class="fas fa-list"></i>
+            {{ movimentacoesFiltradas.length }} movimentações
+          </span>
+        </div>
+      </div>
+      
+      <div class="table-content">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Data</th>
+              <th>Descrição</th>
+              <th>Categoria</th>
+              <th>Tipo</th>
+              <th>Valor</th>
+              <th>Saldo</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="movimentacao in movimentacoesFiltradas" :key="movimentacao.id" class="table-row">
+              <td>{{ formatarData(movimentacao.data) }}</td>
+              <td>{{ movimentacao.descricao }}</td>
+              <td>
+                <span class="categoria-badge" :class="movimentacao.categoria">
+                  {{ getCategoriaLabel(movimentacao.categoria) }}
+                </span>
+              </td>
+              <td>
+                <span class="tipo-badge" :class="movimentacao.tipo">
+                  <i :class="movimentacao.tipo === 'entrada' ? 'fas fa-arrow-up' : 'fas fa-arrow-down'"></i>
+                  {{ movimentacao.tipo === 'entrada' ? 'Entrada' : 'Saída' }}
+                </span>
+              </td>
+              <td class="currency-cell" :class="movimentacao.tipo">
+                {{ movimentacao.tipo === 'entrada' ? '+' : '-' }}{{ formatarMoeda(movimentacao.valor) }}
+              </td>
+              <td class="currency-cell">{{ formatarMoeda(movimentacao.saldoAcumulado) }}</td>
+              <td class="actions-cell">
+                <button @click="editarMovimentacao(movimentacao)" class="btn-icon" title="Editar">
+                  <i class="fas fa-edit"></i>
+                </button>
+                <button @click="excluirMovimentacao(movimentacao)" class="btn-icon btn-danger" title="Excluir">
+                  <i class="fas fa-trash"></i>
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Modal de Movimentação -->
+    <div v-if="showModal" class="modal-overlay" @click="fecharModal">
+      <div class="modal-content" @click.stop>
         <div class="modal-header">
-          <h2><i class="fas fa-plus-circle"></i> Nova Movimentação</h2>
-          <button @click="fecharModalMovimentacao" class="btn-close">
+          <h3>{{ modoEdicao ? 'Editar' : 'Nova' }} Movimentação</h3>
+          <button @click="fecharModal" class="btn-close">
             <i class="fas fa-times"></i>
           </button>
         </div>
 
-        <form @submit.prevent="salvarMovimentacao">
-          <div class="form-group">
-            <label>Tipo *</label>
-            <div class="tipo-selector">
-              <label class="tipo-option entrada" :class="{ active: formulario.tipo === 'entrada' }">
-                <input type="radio" v-model="formulario.tipo" value="entrada" required>
-                <i class="fas fa-arrow-up"></i>
-                <span>Entrada</span>
-              </label>
-              <label class="tipo-option saida" :class="{ active: formulario.tipo === 'saida' }">
-                <input type="radio" v-model="formulario.tipo" value="saida" required>
-                <i class="fas fa-arrow-down"></i>
-                <span>Saída</span>
-              </label>
+        <form @submit.prevent="salvarMovimentacao" class="modal-form">
+          <div class="form-row">
+            <div class="form-group">
+              <label>Data *</label>
+              <input v-model="form.data" type="date" required class="form-input">
+            </div>
+            <div class="form-group">
+              <label>Tipo *</label>
+              <select v-model="form.tipo" required class="form-select">
+                <option value="entrada">Entrada</option>
+                <option value="saida">Saída</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Valor (R$) *</label>
+              <input v-model.number="form.valor" type="number" step="0.01" min="0" required class="form-input">
+            </div>
+            <div class="form-group">
+              <label>Categoria *</label>
+              <select v-model="form.categoria" required class="form-select">
+                <option value="procedimentos">Procedimentos</option>
+                <option value="produtos">Produtos</option>
+                <option value="despesas">Despesas</option>
+                <option value="investimentos">Investimentos</option>
+              </select>
             </div>
           </div>
 
           <div class="form-group">
             <label>Descrição *</label>
-            <input v-model="formulario.descricao" type="text" required placeholder="Ex: Pagamento de cliente">
+            <textarea v-model="form.descricao" required class="form-textarea" rows="3" placeholder="Descreva a movimentação..."></textarea>
           </div>
 
-          <div class="form-row">
-            <div class="form-group">
-              <label>Categoria *</label>
-              <select v-model="formulario.categoria" required>
-                <option value="">Selecione...</option>
-                <optgroup v-if="formulario.tipo === 'entrada'" label="Receitas">
-                  <option value="consultas">Consultas</option>
-                  <option value="procedimentos">Procedimentos</option>
-                  <option value="produtos">Produtos</option>
-                  <option value="pacotes">Pacotes</option>
-                  <option value="outros">Outros</option>
-                </optgroup>
-                <optgroup v-if="formulario.tipo === 'saida'" label="Despesas">
-                  <option value="aluguel">Aluguel</option>
-                  <option value="salarios">Salários</option>
-                  <option value="fornecedores">Fornecedores</option>
-                  <option value="impostos">Impostos</option>
-                  <option value="energia">Energia</option>
-                  <option value="agua">Água</option>
-                  <option value="internet">Internet</option>
-                  <option value="marketing">Marketing</option>
-                  <option value="manutencao">Manutenção</option>
-                  <option value="outros">Outros</option>
-                </optgroup>
-              </select>
-            </div>
-
-            <div class="form-group">
-              <label>Valor *</label>
-              <input v-model.number="formulario.valor" type="number" step="0.01" required placeholder="0,00">
-            </div>
-          </div>
-
-          <div class="form-group">
-            <label>Data *</label>
-            <input v-model="formulario.data" type="date" required>
-          </div>
-
-          <div class="form-group">
-            <label>Observações</label>
-            <textarea v-model="formulario.observacoes" rows="3" placeholder="Informações adicionais..."></textarea>
-          </div>
-
-          <div class="modal-actions">
-            <button type="button" @click="fecharModalMovimentacao" class="btn btn-secondary">
+          <div class="form-actions">
+            <button type="button" @click="fecharModal" class="btn-secondary">
+              <i class="fas fa-times"></i>
               Cancelar
             </button>
-            <button type="submit" class="btn btn-primary" :disabled="salvando">
+            <button type="submit" class="btn-primary" :disabled="loading">
               <i class="fas fa-save"></i>
-              {{ salvando ? 'Salvando...' : 'Salvar' }}
+              {{ loading ? 'Salvando...' : 'Salvar' }}
             </button>
           </div>
         </form>
@@ -195,523 +248,774 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
-import { useFinanceiro } from '../composables/useFinanceiro.js'
+import { ref, computed, onMounted, nextTick } from 'vue'
+import { useAuth } from '../composables/useAuth'
+import { useClinica } from '../composables/useClinica'
+import { db } from '../firebase.js'
+import { collection, addDoc, updateDoc, deleteDoc, getDocs, query, where, orderBy, doc } from 'firebase/firestore'
 
-const {
-  movimentacoes,
-  carregando,
-  buscarMovimentacoes,
-  registrarMovimentacao
-} = useFinanceiro()
+const { isAuthenticated } = useAuth()
+const { clinicaId } = useClinica()
 
-const modalMovimentacao = ref(false)
-const salvando = ref(false)
-const periodoSelecionado = ref('mes')
+// Estado
+const movimentacoes = ref([])
+const loading = ref(false)
+const showModal = ref(false)
+const modoEdicao = ref(false)
+const filtroPeriodo = ref('mes')
+const filtroTipo = ref('')
+const filtroCategoria = ref('')
+const filtroBusca = ref('')
+const visualizacaoGrafico = ref('linha')
+const graficoCanvas = ref(null)
 
-const hoje = new Date()
-const dataInicio = ref(new Date(hoje.getFullYear(), hoje.getMonth(), 1).toISOString().split('T')[0])
-const dataFim = ref(new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0).toISOString().split('T')[0])
-
-const periodos = [
-  { label: 'Hoje', value: 'hoje' },
-  { label: 'Esta Semana', value: 'semana' },
-  { label: 'Este Mês', value: 'mes' },
-  { label: 'Este Ano', value: 'ano' }
-]
-
-const formulario = ref({
-  tipo: 'entrada',
-  descricao: '',
-  categoria: '',
-  valor: 0,
+// Formulário
+const form = ref({
+  id: null,
   data: new Date().toISOString().split('T')[0],
-  observacoes: ''
+  tipo: 'entrada',
+  valor: 0,
+  categoria: 'procedimentos',
+  descricao: ''
 })
 
-onMounted(async () => {
-  await carregarMovimentacoes()
-})
+// Computed
+const movimentacoesFiltradas = computed(() => {
+  let filtradas = movimentacoes.value
 
-const carregarMovimentacoes = async () => {
-  await buscarMovimentacoes(dataInicio.value, dataFim.value)
-}
-
-const selecionarPeriodo = (periodo) => {
-  periodoSelecionado.value = periodo
-  const hoje = new Date()
-
-  switch (periodo) {
-    case 'hoje':
-      dataInicio.value = hoje.toISOString().split('T')[0]
-      dataFim.value = hoje.toISOString().split('T')[0]
-      break
-    case 'semana':
-      const primeiroDiaSemana = new Date(hoje)
-      primeiroDiaSemana.setDate(hoje.getDate() - hoje.getDay())
-      const ultimoDiaSemana = new Date(primeiroDiaSemana)
-      ultimoDiaSemana.setDate(primeiroDiaSemana.getDate() + 6)
-      dataInicio.value = primeiroDiaSemana.toISOString().split('T')[0]
-      dataFim.value = ultimoDiaSemana.toISOString().split('T')[0]
-      break
-    case 'mes':
-      dataInicio.value = new Date(hoje.getFullYear(), hoje.getMonth(), 1).toISOString().split('T')[0]
-      dataFim.value = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0).toISOString().split('T')[0]
-      break
-    case 'ano':
-      dataInicio.value = new Date(hoje.getFullYear(), 0, 1).toISOString().split('T')[0]
-      dataFim.value = new Date(hoje.getFullYear(), 11, 31).toISOString().split('T')[0]
-      break
+  // Filtro por período
+  if (filtroPeriodo.value !== 'personalizado') {
+    const agora = new Date()
+    const inicio = new Date()
+    
+    switch (filtroPeriodo.value) {
+      case 'hoje':
+        inicio.setHours(0, 0, 0, 0)
+        break
+      case 'semana':
+        inicio.setDate(agora.getDate() - 7)
+        break
+      case 'mes':
+        inicio.setMonth(agora.getMonth() - 1)
+        break
+      case 'trimestre':
+        inicio.setMonth(agora.getMonth() - 3)
+        break
+      case 'ano':
+        inicio.setFullYear(agora.getFullYear() - 1)
+        break
+    }
+    
+    filtradas = filtradas.filter(m => {
+      const dataMov = new Date(m.data)
+      return dataMov >= inicio
+    })
   }
 
-  carregarMovimentacoes()
-}
+  // Filtro por tipo
+  if (filtroTipo.value) {
+    filtradas = filtradas.filter(m => m.tipo === filtroTipo.value)
+  }
 
-const aplicarPeriodoCustom = () => {
-  periodoSelecionado.value = 'custom'
-  carregarMovimentacoes()
-}
+  // Filtro por categoria
+  if (filtroCategoria.value) {
+    filtradas = filtradas.filter(m => m.categoria === filtroCategoria.value)
+  }
 
-const movimentacoesAgrupadas = computed(() => {
-  const grupos = {}
+  // Filtro por busca
+  if (filtroBusca.value) {
+    filtradas = filtradas.filter(m => 
+      m.descricao.toLowerCase().includes(filtroBusca.value.toLowerCase())
+    )
+  }
 
-  movimentacoes.value.forEach(mov => {
-    const data = mov.data?.toDate ? mov.data.toDate() : new Date(mov.data)
-    const dataKey = data.toISOString().split('T')[0]
-
-    if (!grupos[dataKey]) {
-      grupos[dataKey] = {
-        data: dataKey,
-        dataFormatada: formatarDataCompleta(data),
-        movimentacoes: [],
-        totalEntradas: 0,
-        totalSaidas: 0,
-        saldo: 0
-      }
-    }
-
-    grupos[dataKey].movimentacoes.push(mov)
-    
-    if (mov.tipo === 'entrada') {
-      grupos[dataKey].totalEntradas += mov.valor || 0
-    } else {
-      grupos[dataKey].totalSaidas += mov.valor || 0
-    }
-  })
-
-  // Calcular saldo de cada dia
-  Object.values(grupos).forEach(grupo => {
-    grupo.saldo = grupo.totalEntradas - grupo.totalSaidas
-  })
-
-  // Ordenar por data (mais recente primeiro)
-  return Object.values(grupos).sort((a, b) => b.data.localeCompare(a.data))
+  return filtradas.sort((a, b) => new Date(b.data) - new Date(a.data))
 })
 
 const totalEntradas = computed(() => {
-  return movimentacoes.value
+  return movimentacoesFiltradas.value
     .filter(m => m.tipo === 'entrada')
-    .reduce((sum, m) => sum + (m.valor || 0), 0)
+    .reduce((sum, m) => sum + m.valor, 0)
 })
 
 const totalSaidas = computed(() => {
-  return movimentacoes.value
+  return movimentacoesFiltradas.value
     .filter(m => m.tipo === 'saida')
-    .reduce((sum, m) => sum + (m.valor || 0), 0)
+    .reduce((sum, m) => sum + m.valor, 0)
 })
 
-const saldoPeriodo = computed(() => {
+const saldoAtual = computed(() => {
   return totalEntradas.value - totalSaidas.value
 })
 
-const abrirModalMovimentacao = () => {
-  modalMovimentacao.value = true
-  formulario.value = {
-    tipo: 'entrada',
-    descricao: '',
-    categoria: '',
-    valor: 0,
-    data: new Date().toISOString().split('T')[0],
-    observacoes: ''
+const projecaoMes = computed(() => {
+  const hoje = new Date()
+  const diasRestantes = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0).getDate() - hoje.getDate()
+  const mediaDiaria = saldoAtual.value / (hoje.getDate())
+  return saldoAtual.value + (mediaDiaria * diasRestantes)
+})
+
+// Métodos
+const carregarMovimentacoes = async () => {
+  try {
+    loading.value = true
+    if (!clinicaId.value) return
+
+    const q = query(
+      collection(db, 'fluxoCaixa'),
+      where('clinicaId', '==', clinicaId.value),
+      orderBy('data', 'desc')
+    )
+
+    const querySnapshot = await getDocs(q)
+    const movimentacoesData = querySnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }))
+    
+    // Calcular saldo acumulado
+    let saldoAcumulado = 0
+    movimentacoes.value = movimentacoesData.map(mov => {
+      saldoAcumulado += mov.tipo === 'entrada' ? mov.valor : -mov.valor
+      return {
+        ...mov,
+        saldoAcumulado
+      }
+    }).reverse() // Ordenar por data crescente para cálculo correto
+    
+    await nextTick()
+    renderizarGrafico()
+  } catch (error) {
+    console.error('Erro ao carregar movimentações:', error)
+  } finally {
+    loading.value = false
   }
 }
 
-const fecharModalMovimentacao = () => {
-  modalMovimentacao.value = false
+const adicionarMovimentacao = () => {
+  modoEdicao.value = false
+  form.value = {
+    id: null,
+    data: new Date().toISOString().split('T')[0],
+    tipo: 'entrada',
+    valor: 0,
+    categoria: 'procedimentos',
+    descricao: ''
+  }
+  showModal.value = true
+}
+
+const editarMovimentacao = (movimentacao) => {
+  modoEdicao.value = true
+  form.value = {
+    id: movimentacao.id,
+    data: movimentacao.data,
+    tipo: movimentacao.tipo,
+    valor: movimentacao.valor,
+    categoria: movimentacao.categoria,
+    descricao: movimentacao.descricao
+  }
+  showModal.value = true
 }
 
 const salvarMovimentacao = async () => {
   try {
-    salvando.value = true
+    loading.value = true
+    
+    const dadosParaSalvar = {
+      ...form.value,
+      clinicaId: clinicaId.value,
+      dataCriacao: new Date(),
+      ativo: true
+    }
 
-    await registrarMovimentacao({
-      tipo: formulario.value.tipo,
-      descricao: formulario.value.descricao,
-      categoria: formulario.value.categoria,
-      valor: formulario.value.valor,
-      data: formulario.value.data,
-      observacoes: formulario.value.observacoes
-    })
+    if (form.value.id) {
+      await updateDoc(doc(db, 'fluxoCaixa', form.value.id), dadosParaSalvar)
+      showSuccess('Movimentação atualizada com sucesso!')
+    } else {
+      await addDoc(collection(db, 'fluxoCaixa'), dadosParaSalvar)
+      showSuccess('Movimentação salva com sucesso!')
+    }
 
     await carregarMovimentacoes()
-    
-    fecharModalMovimentacao()
-    alert('Movimentação registrada com sucesso!')
-  } catch (err) {
-    console.error('Erro ao salvar:', err)
-    alert('Erro ao salvar movimentação. Tente novamente.')
+    fecharModal()
+  } catch (error) {
+    console.error('Erro ao salvar movimentação:', error)
+    showError('Erro ao salvar movimentação: ' + error.message)
   } finally {
-    salvando.value = false
+    loading.value = false
   }
+}
+
+const excluirMovimentacao = async (movimentacao) => {
+  if (confirm(`Tem certeza que deseja excluir esta movimentação?`)) {
+    try {
+      await deleteDoc(doc(db, 'fluxoCaixa', movimentacao.id))
+      showSuccess('Movimentação excluída com sucesso!')
+      await carregarMovimentacoes()
+    } catch (error) {
+      console.error('Erro ao excluir movimentação:', error)
+      showError('Erro ao excluir movimentação: ' + error.message)
+    }
+  }
+}
+
+const fecharModal = () => {
+  showModal.value = false
+  modoEdicao.value = false
+}
+
+const aplicarFiltros = () => {
+  // Os filtros são aplicados automaticamente via computed
+}
+
+const alternarVisualizacao = () => {
+  visualizacaoGrafico.value = visualizacaoGrafico.value === 'linha' ? 'barra' : 'linha'
+  renderizarGrafico()
+}
+
+const renderizarGrafico = () => {
+  if (!graficoCanvas.value) return
+  
+  const canvas = graficoCanvas.value
+  const ctx = canvas.getContext('2d')
+  
+  // Limpar canvas
+  ctx.clearRect(0, 0, canvas.width, canvas.height)
+  
+  // Dados para o gráfico (últimos 30 dias)
+  const dados = movimentacoesFiltradas.value.slice(-30)
+  if (dados.length === 0) return
+  
+  // Configurações do gráfico
+  const padding = 40
+  const width = canvas.width - (padding * 2)
+  const height = canvas.height - (padding * 2)
+  
+  // Encontrar valores mínimos e máximos
+  const valores = dados.map(d => d.saldoAcumulado)
+  const minValor = Math.min(...valores)
+  const maxValor = Math.max(...valores)
+  const range = maxValor - minValor
+  
+  // Desenhar eixos
+  ctx.strokeStyle = '#e5e7eb'
+  ctx.lineWidth = 1
+  
+  // Eixo Y
+  ctx.beginPath()
+  ctx.moveTo(padding, padding)
+  ctx.lineTo(padding, height + padding)
+  ctx.stroke()
+  
+  // Eixo X
+  ctx.beginPath()
+  ctx.moveTo(padding, height + padding)
+  ctx.lineTo(width + padding, height + padding)
+  ctx.stroke()
+  
+  // Desenhar linha do saldo
+  ctx.strokeStyle = '#3b82f6'
+  ctx.lineWidth = 2
+  ctx.beginPath()
+  
+  dados.forEach((dado, index) => {
+    const x = padding + (index / (dados.length - 1)) * width
+    const y = padding + height - ((dado.saldoAcumulado - minValor) / range) * height
+    
+    if (index === 0) {
+      ctx.moveTo(x, y)
+    } else {
+      ctx.lineTo(x, y)
+    }
+  })
+  
+  ctx.stroke()
+  
+  // Desenhar pontos
+  ctx.fillStyle = '#3b82f6'
+  dados.forEach((dado, index) => {
+    const x = padding + (index / (dados.length - 1)) * width
+    const y = padding + height - ((dado.saldoAcumulado - minValor) / range) * height
+    
+    ctx.beginPath()
+    ctx.arc(x, y, 4, 0, 2 * Math.PI)
+    ctx.fill()
+  })
+}
+
+const exportarRelatorio = () => {
+  showSuccess('Funcionalidade de exportação será implementada em breve!')
 }
 
 const formatarMoeda = (valor) => {
   return new Intl.NumberFormat('pt-BR', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2
-  }).format(Math.abs(valor || 0))
+    style: 'currency',
+    currency: 'BRL'
+  }).format(valor)
 }
 
-const formatarDataCompleta = (data) => {
-  return new Intl.DateTimeFormat('pt-BR', {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
-  }).format(data)
+const formatarData = (data) => {
+  return new Intl.DateTimeFormat('pt-BR').format(new Date(data))
 }
 
-const formatarCategoria = (categoria) => {
-  const categorias = {
-    // Receitas
-    consultas: 'Consultas',
+const getCategoriaLabel = (categoria) => {
+  const labels = {
     procedimentos: 'Procedimentos',
     produtos: 'Produtos',
-    pacotes: 'Pacotes',
-    // Despesas
-    aluguel: 'Aluguel',
-    salarios: 'Salários',
-    fornecedores: 'Fornecedores',
-    impostos: 'Impostos',
-    energia: 'Energia',
-    agua: 'Água',
-    internet: 'Internet',
-    marketing: 'Marketing',
-    manutencao: 'Manutenção',
-    outros: 'Outros'
+    despesas: 'Despesas',
+    investimentos: 'Investimentos'
   }
-  return categorias[categoria] || categoria
+  return labels[categoria] || categoria
 }
+
+const showSuccess = (message) => {
+  console.log('✅', message)
+  alert(message)
+}
+
+const showError = (message) => {
+  console.log('❌', message)
+  alert(message)
+}
+
+// Lifecycle
+onMounted(() => {
+  if (isAuthenticated.value) {
+    carregarMovimentacoes()
+  }
+})
 </script>
 
 <style scoped>
+.fluxo-caixa-container {
+  padding: 24px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
 .page-header {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e5e7eb;
+}
+
+.header-content {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 24px;
 }
 
-.page-header h1 {
+.header-title h1 {
+  margin: 0 0 8px 0;
   font-size: 28px;
+  font-weight: 700;
   color: #1d1d1f;
   display: flex;
   align-items: center;
   gap: 12px;
 }
 
-/* Filtros de Período */
-.filters-card {
-  margin-bottom: 24px;
+.header-title p {
+  margin: 0;
+  color: #6b7280;
+  font-size: 16px;
 }
 
-.periodo-selector {
+.header-actions {
   display: flex;
   gap: 12px;
-  margin-bottom: 20px;
-  flex-wrap: wrap;
-  align-items: center;
 }
 
-.periodo-btn {
-  padding: 10px 20px;
-  border: 1px solid #d2d2d7;
-  border-radius: 20px;
-  background: white;
-  color: #1d1d1f;
-  font-weight: 500;
+.btn-primary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
+  background: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 8px;
   font-size: 14px;
+  font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
 }
 
-.periodo-btn:hover {
-  background: #f5f5f7;
+.btn-primary:hover {
+  background: #2563eb;
+  transform: translateY(-1px);
 }
 
-.periodo-btn.active {
-  background: #1d1d1f;
-  color: white;
-  border-color: #1d1d1f;
-}
-
-.custom-period {
+.btn-export {
   display: flex;
-  gap: 8px;
   align-items: center;
-  margin-left: auto;
-}
-
-.custom-period input {
-  padding: 8px 12px;
-  border: 1px solid #d2d2d7;
+  gap: 8px;
+  padding: 12px 20px;
+  background: #10b981;
+  color: white;
+  border: none;
   border-radius: 8px;
   font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
 }
 
-.custom-period span {
-  color: #6e6e73;
-  font-size: 13px;
+.btn-export:hover {
+  background: #059669;
+  transform: translateY(-1px);
 }
 
-/* Saldo do Período */
-.saldo-periodo {
+.resumo-financeiro {
+  margin-bottom: 24px;
+}
+
+.resumo-cards {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 16px;
-  padding-top: 16px;
-  border-top: 1px solid #d2d2d7;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
 }
 
-.saldo-item {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 16px;
-  border-radius: 12px;
-}
-
-.saldo-item.entrada {
-  background: rgba(102, 126, 234, 0.1);
-}
-
-.saldo-item.saida {
-  background: rgba(255, 107, 107, 0.1);
-}
-
-.saldo-item.saldo.positivo {
-  background: rgba(52, 199, 89, 0.1);
-}
-
-.saldo-item.saldo.negativo {
-  background: rgba(255, 59, 48, 0.1);
-}
-
-.saldo-item i {
-  font-size: 24px;
-}
-
-.saldo-item.entrada i {
-  color: #667eea;
-}
-
-.saldo-item.saida i {
-  color: #ff6b6b;
-}
-
-.saldo-item.saldo.positivo i {
-  color: #34c759;
-}
-
-.saldo-item.saldo.negativo i {
-  color: #ff3b30;
-}
-
-.saldo-item > div {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.saldo-label {
-  font-size: 13px;
-  color: #6e6e73;
-  font-weight: 500;
-}
-
-.saldo-valor {
-  font-size: 20px;
-  font-weight: 700;
-  color: #1d1d1f;
-}
-
-/* Lista de Movimentações */
-.movimentacoes-list {
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-}
-
-.data-grupo {
-  border-radius: 12px;
-  overflow: hidden;
-  border: 1px solid #e5e5ea;
-}
-
-.data-header {
-  background: #f5f5f7;
-  padding: 16px 20px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.data-header h3 {
-  font-size: 16px;
-  color: #1d1d1f;
-  font-weight: 600;
-  text-transform: capitalize;
-}
-
-.data-saldo {
-  display: flex;
-  gap: 16px;
-  font-size: 14px;
-  font-weight: 600;
-}
-
-.data-saldo .entrada {
-  color: #667eea;
-}
-
-.data-saldo .saida {
-  color: #ff6b6b;
-}
-
-.data-saldo .saldo.positivo {
-  color: #34c759;
-}
-
-.data-saldo .saldo.negativo {
-  color: #ff3b30;
-}
-
-.movimentacoes-dia {
+.resumo-card {
   background: white;
-}
-
-.movimentacao-item {
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e5e7eb;
   display: flex;
   align-items: center;
   gap: 16px;
-  padding: 16px 20px;
-  border-bottom: 1px solid #e5e5ea;
-  transition: background 0.2s;
 }
 
-.movimentacao-item:last-child {
-  border-bottom: none;
+.resumo-card.entrada {
+  border-left: 4px solid #10b981;
 }
 
-.movimentacao-item:hover {
-  background: #f9f9f9;
+.resumo-card.saida {
+  border-left: 4px solid #ef4444;
 }
 
-.mov-icon {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
+.resumo-card.saldo.positivo {
+  border-left: 4px solid #10b981;
+}
+
+.resumo-card.saldo.negativo {
+  border-left: 4px solid #ef4444;
+}
+
+.resumo-card.projecao {
+  border-left: 4px solid #3b82f6;
+}
+
+.card-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 16px;
+  font-size: 20px;
+  color: white;
 }
 
-.movimentacao-item.entrada .mov-icon {
-  background: rgba(102, 126, 234, 0.1);
-  color: #667eea;
+.entrada .card-icon {
+  background: #10b981;
 }
 
-.movimentacao-item.saida .mov-icon {
-  background: rgba(255, 107, 107, 0.1);
-  color: #ff6b6b;
+.saida .card-icon {
+  background: #ef4444;
 }
 
-.mov-info {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
+.saldo .card-icon {
+  background: #6b7280;
 }
 
-.mov-info strong {
-  font-size: 15px;
-  color: #1d1d1f;
+.projecao .card-icon {
+  background: #3b82f6;
 }
 
-.mov-categoria {
-  font-size: 13px;
-  color: #6e6e73;
+.card-content h3 {
+  margin: 0 0 4px 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #6b7280;
 }
 
-.mov-valor {
-  font-size: 18px;
+.card-value {
+  font-size: 24px;
   font-weight: 700;
   color: #1d1d1f;
+  display: block;
+  margin-bottom: 4px;
 }
 
-/* Modal */
-.tipo-selector {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
+.card-periodo {
+  margin: 0;
+  font-size: 12px;
+  color: #9ca3af;
 }
 
-.tipo-option {
+.filters-section {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e5e7eb;
+}
+
+.filters-header h3 {
+  margin: 0 0 16px 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #1d1d1f;
   display: flex;
-  flex-direction: column;
   align-items: center;
   gap: 8px;
-  padding: 20px;
-  border: 2px solid #d2d2d7;
+}
+
+.filters-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.filter-group label {
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+}
+
+.filter-select,
+.filter-input {
+  padding: 8px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 14px;
+  transition: all 0.2s;
+}
+
+.filter-select:focus,
+.filter-input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.grafico-section {
+  background: white;
   border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e5e7eb;
+}
+
+.grafico-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.grafico-header h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #1d1d1f;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  background: #f3f4f6;
+  color: #374151;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
   cursor: pointer;
   transition: all 0.2s;
 }
 
-.tipo-option input[type="radio"] {
-  display: none;
+.btn-toggle:hover {
+  background: #e5e7eb;
 }
 
-.tipo-option i {
-  font-size: 32px;
+.grafico-content {
+  width: 100%;
+  height: 300px;
 }
 
-.tipo-option span {
+.table-container {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e5e7eb;
+  overflow: hidden;
+}
+
+.table-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.table-header h3 {
+  margin: 0;
+  font-size: 18px;
   font-weight: 600;
-  font-size: 15px;
+  color: #1d1d1f;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
-.tipo-option.entrada {
-  color: #667eea;
+.table-stats {
+  display: flex;
+  gap: 16px;
 }
 
-.tipo-option.saida {
-  color: #ff6b6b;
+.stat-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  color: #6b7280;
 }
 
-.tipo-option.active {
-  border-width: 3px;
+.table-content {
+  overflow-x: auto;
 }
 
-.tipo-option.entrada.active {
-  border-color: #667eea;
-  background: rgba(102, 126, 234, 0.05);
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
 }
 
-.tipo-option.saida.active {
-  border-color: #ff6b6b;
-  background: rgba(255, 107, 107, 0.05);
+.data-table th {
+  background: #f9fafb;
+  padding: 12px 16px;
+  text-align: left;
+  font-weight: 600;
+  color: #374151;
+  border-bottom: 1px solid #e5e7eb;
+  font-size: 14px;
+}
+
+.data-table td {
+  padding: 12px 16px;
+  border-bottom: 1px solid #f3f4f6;
+  font-size: 14px;
+}
+
+.table-row:hover {
+  background: #f9fafb;
+}
+
+.categoria-badge {
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.categoria-badge.procedimentos {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.categoria-badge.produtos {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.categoria-badge.despesas {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.categoria-badge.investimentos {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.tipo-badge {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.tipo-badge.entrada {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.tipo-badge.saida {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.currency-cell {
+  font-weight: 600;
+  text-align: right;
+}
+
+.currency-cell.entrada {
+  color: #10b981;
+}
+
+.currency-cell.saida {
+  color: #ef4444;
+}
+
+.actions-cell {
+  display: flex;
+  gap: 8px;
+}
+
+.btn-icon {
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: #f3f4f6;
+  color: #6b7280;
+}
+
+.btn-icon:hover {
+  background: #e5e7eb;
+  transform: translateY(-1px);
+}
+
+.btn-icon.btn-danger:hover {
+  background: #fee2e2;
+  color: #dc2626;
 }
 
 .modal-overlay {
@@ -725,42 +1029,39 @@ const formatarCategoria = (categoria) => {
   align-items: center;
   justify-content: center;
   z-index: 1000;
-  padding: 20px;
 }
 
 .modal-content {
   background: white;
-  border-radius: 16px;
-  width: 100%;
+  border-radius: 12px;
+  width: 90%;
   max-width: 600px;
   max-height: 90vh;
   overflow-y: auto;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
 }
 
 .modal-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 24px;
-  border-bottom: 1px solid #e5e5ea;
+  padding: 20px 24px;
+  border-bottom: 1px solid #e5e7eb;
 }
 
-.modal-header h2 {
+.modal-header h3 {
+  margin: 0;
   font-size: 20px;
+  font-weight: 600;
   color: #1d1d1f;
-  display: flex;
-  align-items: center;
-  gap: 10px;
 }
 
 .btn-close {
   width: 32px;
   height: 32px;
-  border-radius: 50%;
   border: none;
-  background: #f5f5f7;
-  color: #1d1d1f;
+  border-radius: 6px;
+  background: #f3f4f6;
+  color: #6b7280;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -769,70 +1070,98 @@ const formatarCategoria = (categoria) => {
 }
 
 .btn-close:hover {
-  background: #e5e5ea;
+  background: #e5e7eb;
 }
 
-.modal-content form {
+.modal-form {
   padding: 24px;
 }
 
-.modal-actions {
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-group label {
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+}
+
+.form-input,
+.form-select,
+.form-textarea {
+  padding: 10px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 14px;
+  transition: all 0.2s;
+}
+
+.form-input:focus,
+.form-select:focus,
+.form-textarea:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.form-textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.form-actions {
   display: flex;
   gap: 12px;
   justify-content: flex-end;
   margin-top: 24px;
-  padding-top: 20px;
-  border-top: 1px solid #e5e5ea;
 }
 
-.loading,
-.empty-state {
-  text-align: center;
-  padding: 60px 20px;
-  color: #6e6e73;
+.btn-secondary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background: #f3f4f6;
+  color: #374151;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
 }
 
-.empty-state i {
-  font-size: 64px;
-  color: #d2d2d7;
-  margin-bottom: 16px;
-}
-
-.empty-state p {
-  font-size: 18px;
-  margin-bottom: 24px;
+.btn-secondary:hover {
+  background: #e5e7eb;
 }
 
 @media (max-width: 768px) {
-  .page-header {
+  .header-content {
     flex-direction: column;
-    align-items: flex-start;
     gap: 16px;
-  }
-
-  .periodo-selector {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .custom-period {
-    margin-left: 0;
-  }
-
-  .data-header {
-    flex-direction: column;
     align-items: flex-start;
-    gap: 12px;
   }
-
-  .data-saldo {
-    flex-direction: column;
-    gap: 8px;
+  
+  .resumo-cards {
+    grid-template-columns: 1fr;
   }
-
-  .movimentacao-item {
-    flex-wrap: wrap;
+  
+  .filters-row {
+    grid-template-columns: 1fr;
+  }
+  
+  .form-row {
+    grid-template-columns: 1fr;
   }
 }
 </style>
-

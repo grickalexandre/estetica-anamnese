@@ -134,6 +134,12 @@
           </div>
           <span v-if="!collapsed" class="nav-text">Precificação</span>
         </router-link>
+        <router-link to="/fluxo-caixa" class="nav-item" :class="{ 'collapsed': collapsed }">
+          <div class="nav-icon">
+            <i class="fas fa-chart-line"></i>
+          </div>
+          <span v-if="!collapsed" class="nav-text">Fluxo de Caixa</span>
+        </router-link>
       </div>
 
       <!-- Relatórios -->
