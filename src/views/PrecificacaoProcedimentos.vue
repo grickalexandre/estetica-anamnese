@@ -372,6 +372,25 @@ import { useClinica } from '../composables/useClinica'
 import { db } from '../firebase.js'
 import { collection, addDoc, updateDoc, deleteDoc, getDocs, query, where, orderBy, doc } from 'firebase/firestore'
 
+// Funções de notificação
+const showSuccess = (message) => {
+  // Implementar notificação de sucesso
+  console.log('✅', message)
+  alert(message)
+}
+
+const showWarning = (message) => {
+  // Implementar notificação de aviso
+  console.log('⚠️', message)
+  alert(message)
+}
+
+const showError = (message) => {
+  // Implementar notificação de erro
+  console.log('❌', message)
+  alert(message)
+}
+
 const { isAuthenticated } = useAuth()
 const { clinicaId } = useClinica()
 
@@ -688,6 +707,10 @@ const limparSelecao = () => {
 
 const salvarPrecificacao = async () => {
   try {
+    console.log('🔍 Iniciando salvamento da precificação...')
+    console.log('📋 Dados do formulário:', form.value)
+    console.log('🏥 ClinicaId:', clinicaId.value)
+    
     if (!form.value.nome || form.value.nome.trim() === '') {
       showWarning('Por favor, selecione um procedimento')
       return
@@ -705,20 +728,28 @@ const salvarPrecificacao = async () => {
       ativo: true
     }
 
+    console.log('💾 Dados para salvar:', dadosParaSalvar)
+
     if (form.value.id) {
       // Editar existente
+      console.log('✏️ Editando precificação existente...')
       await updateDoc(doc(db, 'precificacaoProcedimentos', form.value.id), dadosParaSalvar)
       showSuccess('Precificação atualizada com sucesso!')
     } else {
       // Criar novo
-      await addDoc(collection(db, 'precificacaoProcedimentos'), dadosParaSalvar)
+      console.log('➕ Criando nova precificação...')
+      const docRef = await addDoc(collection(db, 'precificacaoProcedimentos'), dadosParaSalvar)
+      console.log('✅ Precificação salva com ID:', docRef.id)
       showSuccess('Precificação salva com sucesso!')
     }
 
+    console.log('🔄 Recarregando procedimentos...')
     await carregarProcedimentos()
+    console.log('🧹 Limpando seleção...')
     limparSelecao()
+    console.log('✅ Processo concluído!')
   } catch (error) {
-    console.error('Erro ao salvar precificação:', error)
+    console.error('❌ Erro ao salvar precificação:', error)
     showError('Erro ao salvar precificação: ' + error.message)
   }
 }
