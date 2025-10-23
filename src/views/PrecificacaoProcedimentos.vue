@@ -4,12 +4,12 @@
     <div class="page-header">
       <div class="header-content">
         <div class="header-title">
-          <h1>Precificação de Procedimentos</h1>
-          <p>Calcule custos, margem de lucro e preços sugeridos para seus procedimentos</p>
+          <h1><i class="fas fa-calculator"></i> Precificação de Procedimentos</h1>
+          <p>Sistema de cálculo de custos e formação de preços para procedimentos estéticos</p>
         </div>
         <div class="header-actions">
           <div class="procedimento-selector">
-            <label>Selecionar Procedimento:</label>
+            <label><i class="fas fa-list"></i> Selecionar Procedimento:</label>
             <select v-model="procedimentoSelecionado" @change="carregarProcedimentoSelecionado" class="procedimento-select">
               <option value="">Escolha um procedimento...</option>
               <option v-for="proc in procedimentosCadastrados" :key="proc.id" :value="proc.id">
@@ -21,11 +21,20 @@
       </div>
     </div>
 
-    <!-- Filtros -->
+    <!-- Filtros e Controles -->
     <div class="filters-section">
+      <div class="filters-header">
+        <h3><i class="fas fa-filter"></i> Filtros e Busca</h3>
+        <div class="filters-actions">
+          <button @click="exportarExcel" class="btn-export">
+            <i class="fas fa-file-excel"></i>
+            Exportar Excel
+          </button>
+        </div>
+      </div>
       <div class="filters-row">
         <div class="filter-group">
-          <label>Buscar procedimento:</label>
+          <label><i class="fas fa-search"></i> Buscar procedimento:</label>
           <input 
             v-model="filtroBusca" 
             type="text" 
@@ -34,12 +43,22 @@
           />
         </div>
         <div class="filter-group">
-          <label>Ordenar por:</label>
+          <label><i class="fas fa-sort"></i> Ordenar por:</label>
           <select v-model="ordenacao" class="filter-select">
             <option value="nome">Nome</option>
+            <option value="categoria">Categoria</option>
             <option value="precoSugerido">Preço Sugerido</option>
             <option value="margemLucro">Margem de Lucro</option>
             <option value="lucroFinal">Lucro Final</option>
+            <option value="dataCriacao">Data de Criação</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label><i class="fas fa-chart-line"></i> Status:</label>
+          <select v-model="filtroStatus" class="filter-select">
+            <option value="">Todos</option>
+            <option value="ativo">Ativos</option>
+            <option value="inativo">Inativos</option>
           </select>
         </div>
       </div>
@@ -48,12 +67,16 @@
     <!-- Tabela de Procedimentos -->
     <div class="table-container">
       <div class="table-header">
-        <h3>Procedimentos Cadastrados</h3>
-        <div class="table-actions">
-          <button @click="exportarExcel" class="btn-secondary">
-            <i class="fas fa-file-excel"></i>
-            Exportar Excel
-          </button>
+        <h3><i class="fas fa-table"></i> Procedimentos Precificados</h3>
+        <div class="table-stats">
+          <span class="stat-item">
+            <i class="fas fa-list"></i>
+            {{ procedimentosFiltrados.length }} procedimentos
+          </span>
+          <span class="stat-item">
+            <i class="fas fa-dollar-sign"></i>
+            Média: R$ {{ mediaPrecos }}
+          </span>
         </div>
       </div>
 
@@ -249,6 +272,7 @@ const loading = ref(false)
 const showModal = ref(false)
 const modoEdicao = ref(false)
 const filtroBusca = ref('')
+const filtroStatus = ref('')
 const ordenacao = ref('nome')
 
 // Formulário
@@ -274,8 +298,14 @@ const procedimentosFiltrados = computed(() => {
   // Filtro por busca
   if (filtroBusca.value) {
     filtrados = filtrados.filter(p => 
-      p.nome.toLowerCase().includes(filtroBusca.value.toLowerCase())
+      p.nome.toLowerCase().includes(filtroBusca.value.toLowerCase()) ||
+      p.categoria.toLowerCase().includes(filtroBusca.value.toLowerCase())
     )
+  }
+
+  // Filtro por status
+  if (filtroStatus.value) {
+    filtrados = filtrados.filter(p => p.ativo === (filtroStatus.value === 'ativo'))
   }
 
   // Ordenação
@@ -283,18 +313,32 @@ const procedimentosFiltrados = computed(() => {
     switch (ordenacao.value) {
       case 'nome':
         return a.nome.localeCompare(b.nome)
+      case 'categoria':
+        return a.categoria.localeCompare(b.categoria)
       case 'precoSugerido':
         return b.precoSugerido - a.precoSugerido
       case 'margemLucro':
         return b.margemLucro - a.margemLucro
       case 'lucroFinal':
         return b.lucroFinal - a.lucroFinal
+      case 'dataCriacao':
+        return new Date(b.dataCriacao) - new Date(a.dataCriacao)
       default:
         return 0
     }
   })
 
   return filtrados
+})
+
+const mediaPrecos = computed(() => {
+  if (procedimentosFiltrados.value.length === 0) return '0,00'
+  const total = procedimentosFiltrados.value.reduce((sum, p) => sum + (p.precoSugerido || 0), 0)
+  const media = total / procedimentosFiltrados.value.length
+  return new Intl.NumberFormat('pt-BR', { 
+    minimumFractionDigits: 2, 
+    maximumFractionDigits: 2 
+  }).format(media)
 })
 
 const custoTotal = computed(() => {
@@ -605,6 +649,50 @@ onMounted(() => {
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
+.filters-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.filters-header h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #1d1d1f;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.filters-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.btn-export {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: #10b981;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-export:hover {
+  background: #059669;
+  transform: translateY(-1px);
+}
+
 .filters-row {
   display: flex;
   gap: 24px;
@@ -659,6 +747,28 @@ onMounted(() => {
   font-size: 18px;
   font-weight: 600;
   color: #1d1d1f;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.table-stats {
+  display: flex;
+  gap: 24px;
+  align-items: center;
+}
+
+.stat-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.stat-item i {
+  color: #007AFF;
 }
 
 .table-wrapper {
