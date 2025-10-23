@@ -78,6 +78,9 @@
       @cancel="handlePromptCancel"
       @close="handlePromptCancel"
     />
+
+    <!-- PWA Install Banner -->
+    <PWAInstall v-if="!isClientPage" />
   </div>
 </template>
 
@@ -96,6 +99,7 @@ import MobileMenu from './components/MobileMenu.vue'
 import Toast from './components/Toast.vue'
 import ConfirmModal from './components/ConfirmModal.vue'
 import PromptModal from './components/PromptModal.vue'
+import PWAInstall from './components/PWAInstall.vue'
 
 const route = useRoute()
 const router = useRouter()

@@ -1,163 +1,200 @@
-import { ref } from 'vue'
-
-// Estado global para notificações
-const toastState = ref({
-  show: false,
-  message: '',
-  title: '',
-  type: 'info',
-  duration: 4000
-})
-
-const confirmState = ref({
-  show: false,
-  title: 'Confirmar Ação',
-  message: '',
-  type: 'warning',
-  confirmText: 'Confirmar',
-  cancelText: 'Cancelar',
-  confirmIcon: 'fas fa-check',
-  loading: false,
-  resolve: null,
-  reject: null
-})
-
-const promptState = ref({
-  show: false,
-  title: 'Informação Necessária',
-  message: '',
-  label: '',
-  placeholder: '',
-  defaultValue: '',
-  inputType: 'text',
-  required: false,
-  confirmText: 'Confirmar',
-  cancelText: 'Cancelar',
-  loading: false,
-  resolve: null,
-  reject: null
-})
+import { ref, reactive } from 'vue'
+import { usePWA } from './usePWA.js'
 
 export function useNotifications() {
-  // Toast/Alert
-  const showToast = (message, options = {}) => {
-    toastState.value = {
-      show: true,
-      message,
-      title: options.title || '',
-      type: options.type || 'info',
-      duration: options.duration || 4000
+  const { sendNotification, showToast } = usePWA()
+  
+  // Estado do toast
+  const toastState = reactive({
+    show: false,
+    message: '',
+    title: '',
+    type: 'info',
+    duration: 4000
+  })
+
+  // Estado do modal de confirmação
+  const confirmState = reactive({
+    show: false,
+    title: '',
+    message: '',
+    type: 'warning',
+    confirmText: 'Confirmar',
+    cancelText: 'Cancelar',
+    confirmIcon: 'fas fa-check',
+    loading: false,
+    onConfirm: null,
+    onCancel: null
+  })
+
+  // Estado do modal de prompt
+  const promptState = reactive({
+    show: false,
+    title: '',
+    message: '',
+    label: '',
+    placeholder: '',
+    defaultValue: '',
+    inputType: 'text',
+    required: false,
+    confirmText: 'Confirmar',
+    cancelText: 'Cancelar',
+    loading: false,
+    onConfirm: null,
+    onCancel: null
+  })
+
+  // Mostrar toast
+  const showToastNotification = (type, title, message, duration = 4000) => {
+    toastState.show = true
+    toastState.type = type
+    toastState.title = title
+    toastState.message = message
+    toastState.duration = duration
+
+    // Auto-fechar
+    setTimeout(() => {
+      closeToast()
+    }, duration)
+
+    // Notificação nativa se disponível
+    if (type === 'success' || type === 'error') {
+      showToast(message, type)
     }
   }
 
-  const showSuccess = (message, title = 'Sucesso!') => {
-    showToast(message, { type: 'success', title, duration: 4000 })
-  }
-
-  const showError = (message, title = 'Erro') => {
-    showToast(message, { type: 'error', title, duration: 6000 })
-  }
-
-  const showWarning = (message, title = 'Atenção') => {
-    showToast(message, { type: 'warning', title, duration: 5000 })
-  }
-
-  const showInfo = (message, title = '') => {
-    showToast(message, { type: 'info', title, duration: 4000 })
-  }
-
+  // Fechar toast
   const closeToast = () => {
-    toastState.value.show = false
+    toastState.show = false
   }
 
-  // Confirm Modal
-  const showConfirm = (message, options = {}) => {
-    return new Promise((resolve, reject) => {
-      confirmState.value = {
-        show: true,
-        title: options.title || 'Confirmar Ação',
-        message,
-        type: options.type || 'warning',
-        confirmText: options.confirmText || 'Confirmar',
-        cancelText: options.cancelText || 'Cancelar',
-        confirmIcon: options.confirmIcon || 'fas fa-check',
-        loading: false,
-        resolve,
-        reject
+  // Mostrar confirmação
+  const showConfirm = (title, message, options = {}) => {
+    return new Promise((resolve) => {
+      confirmState.show = true
+      confirmState.title = title
+      confirmState.message = message
+      confirmState.type = options.type || 'warning'
+      confirmState.confirmText = options.confirmText || 'Confirmar'
+      confirmState.cancelText = options.cancelText || 'Cancelar'
+      confirmState.confirmIcon = options.confirmIcon || 'fas fa-check'
+      confirmState.loading = false
+      confirmState.onConfirm = () => {
+        confirmState.show = false
+        resolve(true)
+      }
+      confirmState.onCancel = () => {
+        confirmState.show = false
+        resolve(false)
       }
     })
   }
 
+  // Mostrar prompt
+  const showPrompt = (title, message, options = {}) => {
+    return new Promise((resolve) => {
+      promptState.show = true
+      promptState.title = title
+      promptState.message = message
+      promptState.label = options.label || 'Valor'
+      promptState.placeholder = options.placeholder || ''
+      promptState.defaultValue = options.defaultValue || ''
+      promptState.inputType = options.inputType || 'text'
+      promptState.required = options.required || false
+      promptState.confirmText = options.confirmText || 'Confirmar'
+      promptState.cancelText = options.cancelText || 'Cancelar'
+      promptState.loading = false
+      promptState.onConfirm = (value) => {
+        promptState.show = false
+        resolve(value)
+      }
+      promptState.onCancel = () => {
+        promptState.show = false
+        resolve(null)
+      }
+    })
+  }
+
+  // Handlers dos modais
   const handleConfirmOk = () => {
-    if (confirmState.value.resolve) {
-      confirmState.value.resolve(true)
+    if (confirmState.onConfirm) {
+      confirmState.onConfirm()
     }
-    confirmState.value.show = false
   }
 
   const handleConfirmCancel = () => {
-    if (confirmState.value.reject) {
-      confirmState.value.reject(false)
+    if (confirmState.onCancel) {
+      confirmState.onCancel()
     }
-    confirmState.value.show = false
-  }
-
-  // Prompt Modal
-  const showPrompt = (message, options = {}) => {
-    return new Promise((resolve, reject) => {
-      promptState.value = {
-        show: true,
-        title: options.title || 'Informação Necessária',
-        message,
-        label: options.label || '',
-        placeholder: options.placeholder || '',
-        defaultValue: options.defaultValue || '',
-        inputType: options.inputType || 'text',
-        required: options.required !== undefined ? options.required : false,
-        confirmText: options.confirmText || 'Confirmar',
-        cancelText: options.cancelText || 'Cancelar',
-        loading: false,
-        resolve,
-        reject
-      }
-    })
   }
 
   const handlePromptOk = (value) => {
-    if (promptState.value.resolve) {
-      promptState.value.resolve(value)
+    if (promptState.onConfirm) {
+      promptState.onConfirm(value)
     }
-    promptState.value.show = false
   }
 
   const handlePromptCancel = () => {
-    if (promptState.value.reject) {
-      promptState.value.reject(null)
+    if (promptState.onCancel) {
+      promptState.onCancel()
     }
-    promptState.value.show = false
+  }
+
+  // Funções de conveniência
+  const showSuccess = (message, title = 'Sucesso') => {
+    showToastNotification('success', title, message)
+  }
+
+  const showError = (message, title = 'Erro') => {
+    showToastNotification('error', title, message)
+  }
+
+  const showWarning = (message, title = 'Atenção') => {
+    showToastNotification('warning', title, message)
+  }
+
+  const showInfo = (message, title = 'Informação') => {
+    showToastNotification('info', title, message)
+  }
+
+  // Substituir alert por notificação
+  const alert = (message, title = 'Sistema') => {
+    showInfo(message, title)
+  }
+
+  // Substituir confirm por modal
+  const confirm = (message, title = 'Confirmação') => {
+    return showConfirm(title, message)
+  }
+
+  // Substituir prompt por modal
+  const prompt = (message, defaultValue = '', title = 'Entrada') => {
+    return showPrompt(title, message, { defaultValue })
   }
 
   return {
-    // Toast state
+    // Estado
     toastState,
-    showToast,
+    confirmState,
+    promptState,
+    
+    // Métodos principais
+    showToastNotification,
+    showConfirm,
+    showPrompt,
+    closeToast,
+    handleConfirmOk,
+    handleConfirmCancel,
+    handlePromptOk,
+    handlePromptCancel,
+    
+    // Funções de conveniência
     showSuccess,
     showError,
     showWarning,
     showInfo,
-    closeToast,
-
-    // Confirm state
-    confirmState,
-    showConfirm,
-    handleConfirmOk,
-    handleConfirmCancel,
-
-    // Prompt state
-    promptState,
-    showPrompt,
-    handlePromptOk,
-    handlePromptCancel
+    alert,
+    confirm,
+    prompt
   }
 }
-

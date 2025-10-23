@@ -1,12 +1,14 @@
 {
-  "name": "Anamnese Clínica de Estética",
-  "short_name": "Anamnese",
-  "description": "Sistema de anamnese para clínica de estética",
+  "name": "Sistema de Gestão - Clínica de Estética",
+  "short_name": "Clínica Estética",
+  "description": "Sistema completo de gestão para clínicas de estética com anamnese, agendamento, financeiro e mais",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#f5f5f7",
-  "theme_color": "#1d1d1f",
+  "background_color": "#f8f9fa",
+  "theme_color": "#3b82f6",
   "orientation": "portrait-primary",
+  "scope": "/",
+  "lang": "pt-BR",
   "icons": [
     {
       "src": "/icon-192x192.png",
@@ -21,6 +23,59 @@
       "purpose": "any maskable"
     }
   ],
-  "categories": ["medical", "health", "productivity"],
-  "lang": "pt-BR"
+  "categories": ["medical", "health", "productivity", "business"],
+  "screenshots": [
+    {
+      "src": "/screenshot-desktop.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide"
+    },
+    {
+      "src": "/screenshot-mobile.png",
+      "sizes": "390x844",
+      "type": "image/png",
+      "form_factor": "narrow"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Nova Anamnese",
+      "short_name": "Anamnese",
+      "description": "Criar nova anamnese",
+      "url": "/nova",
+      "icons": [
+        {
+          "src": "/icon-192x192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "Agendamento",
+      "short_name": "Agenda",
+      "description": "Gerenciar agendamentos",
+      "url": "/agendamento-online",
+      "icons": [
+        {
+          "src": "/icon-192x192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "Financeiro",
+      "short_name": "Financeiro",
+      "description": "Controle financeiro",
+      "url": "/fluxo-caixa",
+      "icons": [
+        {
+          "src": "/icon-192x192.png",
+          "sizes": "192x192"
+        }
+      ]
+    }
+  ],
+  "related_applications": [],
+  "prefer_related_applications": false
 }

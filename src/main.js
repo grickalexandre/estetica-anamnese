@@ -41,6 +41,7 @@ import PrecificacaoProcedimentos from './views/PrecificacaoProcedimentos.vue'
 import AgendamentoOnline from './views/AgendamentoOnline.vue'
 import { auth } from './firebase.js'
 import './style.css'
+import './utils/notificationUtils.js'
 
 const routes = [
   // Rotas públicas
