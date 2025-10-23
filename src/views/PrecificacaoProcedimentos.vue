@@ -171,6 +171,96 @@
             <i class="fas fa-times"></i>
             Cancelar
           </button>
+          <button @click="toggleAnaliseConcorrencia" class="btn-info">
+            <i class="fas fa-chart-bar"></i>
+            Análise de Concorrência
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Análise de Concorrência -->
+    <div v-if="showAnaliseConcorrencia" class="analise-concorrencia-section">
+      <div class="analise-header">
+        <h3><i class="fas fa-chart-bar"></i> Análise de Concorrência</h3>
+        <div class="analise-actions">
+          <button @click="adicionarConcorrente" class="btn-add">
+            <i class="fas fa-plus"></i>
+            Adicionar Concorrente
+          </button>
+          <button @click="toggleAnaliseConcorrencia" class="btn-close">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+      </div>
+      
+      <div class="analise-content">
+        <div class="analise-stats">
+          <div class="stat-card">
+            <div class="stat-icon">
+              <i class="fas fa-dollar-sign"></i>
+            </div>
+            <div class="stat-info">
+              <span class="stat-label">Preço Médio do Mercado</span>
+              <span class="stat-value">{{ formatarMoeda(precoMedioMercado) }}</span>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">
+              <i class="fas fa-chart-line"></i>
+            </div>
+            <div class="stat-info">
+              <span class="stat-label">Nossa Posição</span>
+              <span class="stat-value" :class="posicaoClass">{{ posicaoMercado }}</span>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">
+              <i class="fas fa-percentage"></i>
+            </div>
+            <div class="stat-info">
+              <span class="stat-label">Diferença de Preço</span>
+              <span class="stat-value" :class="diferencaClass">{{ diferencaPreco }}%</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="concorrentes-table">
+          <table class="concorrentes-table-content">
+            <thead>
+              <tr>
+                <th>Concorrente</th>
+                <th>Preço</th>
+                <th>Diferença</th>
+                <th>Status</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="concorrente in concorrentes" :key="concorrente.id" class="concorrente-row">
+                <td>{{ concorrente.nome }}</td>
+                <td class="currency-cell">{{ formatarMoeda(concorrente.preco) }}</td>
+                <td class="diferenca-cell">
+                  <span class="diferenca-badge" :class="getDiferencaClass(concorrente.diferenca)">
+                    {{ concorrente.diferenca }}%
+                  </span>
+                </td>
+                <td>
+                  <span class="status-badge" :class="concorrente.ativo ? 'ativo' : 'inativo'">
+                    {{ concorrente.ativo ? 'Ativo' : 'Inativo' }}
+                  </span>
+                </td>
+                <td class="actions-cell">
+                  <button @click="editarConcorrente(concorrente)" class="btn-icon" title="Editar">
+                    <i class="fas fa-edit"></i>
+                  </button>
+                  <button @click="excluirConcorrente(concorrente)" class="btn-icon btn-danger" title="Excluir">
+                    <i class="fas fa-trash"></i>
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </div>
     </div>
@@ -484,6 +574,8 @@ const procedimentos = ref([])
 const procedimentosCadastrados = ref([])
 const procedimentoSelecionado = ref('')
 const historicoPrecos = ref([])
+const showAnaliseConcorrencia = ref(false)
+const concorrentes = ref([])
 const loading = ref(false)
 const showModal = ref(false)
 const modoEdicao = ref(false)
@@ -583,6 +675,46 @@ const ultimaAtualizacao = computed(() => {
   if (historicoPrecos.value.length === 0) return 'N/A'
   const ultimo = historicoPrecos.value[0]
   return formatarData(ultimo.dataCriacao)
+})
+
+// Computed para análise de concorrência
+const precoMedioMercado = computed(() => {
+  if (concorrentes.value.length === 0) return 0
+  const total = concorrentes.value.reduce((sum, c) => sum + c.preco, 0)
+  return total / concorrentes.value.length
+})
+
+const posicaoMercado = computed(() => {
+  if (concorrentes.value.length === 0) return 'N/A'
+  const nossoPreco = form.value.precoCobrado
+  const precoMedio = precoMedioMercado.value
+  
+  if (nossoPreco < precoMedio * 0.9) return 'Abaixo do Mercado'
+  if (nossoPreco > precoMedio * 1.1) return 'Acima do Mercado'
+  return 'Alinhado ao Mercado'
+})
+
+const posicaoClass = computed(() => {
+  const posicao = posicaoMercado.value
+  if (posicao.includes('Abaixo')) return 'posicao-abaixo'
+  if (posicao.includes('Acima')) return 'posicao-acima'
+  return 'posicao-alinhado'
+})
+
+const diferencaPreco = computed(() => {
+  if (concorrentes.value.length === 0) return 0
+  const nossoPreco = form.value.precoCobrado
+  const precoMedio = precoMedioMercado.value
+  
+  if (precoMedio === 0) return 0
+  return ((nossoPreco - precoMedio) / precoMedio * 100).toFixed(1)
+})
+
+const diferencaClass = computed(() => {
+  const diferenca = parseFloat(diferencaPreco.value)
+  if (diferenca > 10) return 'diferenca-alta'
+  if (diferenca < -10) return 'diferenca-baixa'
+  return 'diferenca-normal'
 })
 
 const custoTotal = computed(() => {
@@ -945,6 +1077,94 @@ const exportarHistorico = () => {
   // Implementar exportação do histórico
   console.log('Exportar histórico de preços')
   showSuccess('Funcionalidade de exportação será implementada em breve!')
+}
+
+const toggleAnaliseConcorrencia = () => {
+  showAnaliseConcorrencia.value = !showAnaliseConcorrencia.value
+  if (showAnaliseConcorrencia.value) {
+    carregarConcorrentes()
+  }
+}
+
+const carregarConcorrentes = async () => {
+  try {
+    // Dados de exemplo - em produção viria do Firebase
+    concorrentes.value = [
+      { id: 1, nome: 'Clínica A', preco: 1200, diferenca: -20, ativo: true },
+      { id: 2, nome: 'Clínica B', preco: 1500, diferenca: 0, ativo: true },
+      { id: 3, nome: 'Clínica C', preco: 1800, diferenca: 20, ativo: true },
+      { id: 4, nome: 'Clínica D', preco: 1400, diferenca: -6.7, ativo: false }
+    ]
+    
+    // Calcular diferenças em relação ao nosso preço
+    concorrentes.value.forEach(concorrente => {
+      const nossoPreco = form.value.precoCobrado
+      if (nossoPreco > 0) {
+        concorrente.diferenca = ((concorrente.preco - nossoPreco) / nossoPreco * 100).toFixed(1)
+      }
+    })
+  } catch (error) {
+    console.error('Erro ao carregar concorrentes:', error)
+  }
+}
+
+const adicionarConcorrente = () => {
+  const nome = prompt('Nome do concorrente:')
+  const preco = parseFloat(prompt('Preço do concorrente (R$):'))
+  
+  if (nome && preco) {
+    const novoConcorrente = {
+      id: Date.now(),
+      nome: nome,
+      preco: preco,
+      diferenca: 0,
+      ativo: true
+    }
+    
+    // Calcular diferença
+    const nossoPreco = form.value.precoCobrado
+    if (nossoPreco > 0) {
+      novoConcorrente.diferenca = ((preco - nossoPreco) / nossoPreco * 100).toFixed(1)
+    }
+    
+    concorrentes.value.push(novoConcorrente)
+    showSuccess('Concorrente adicionado com sucesso!')
+  }
+}
+
+const editarConcorrente = (concorrente) => {
+  const novoNome = prompt('Nome do concorrente:', concorrente.nome)
+  const novoPreco = parseFloat(prompt('Preço do concorrente (R$):', concorrente.preco))
+  
+  if (novoNome && novoPreco) {
+    concorrente.nome = novoNome
+    concorrente.preco = novoPreco
+    
+    // Recalcular diferença
+    const nossoPreco = form.value.precoCobrado
+    if (nossoPreco > 0) {
+      concorrente.diferenca = ((novoPreco - nossoPreco) / nossoPreco * 100).toFixed(1)
+    }
+    
+    showSuccess('Concorrente atualizado com sucesso!')
+  }
+}
+
+const excluirConcorrente = (concorrente) => {
+  if (confirm('Tem certeza que deseja excluir este concorrente?')) {
+    const index = concorrentes.value.findIndex(c => c.id === concorrente.id)
+    if (index > -1) {
+      concorrentes.value.splice(index, 1)
+      showSuccess('Concorrente excluído com sucesso!')
+    }
+  }
+}
+
+const getDiferencaClass = (diferenca) => {
+  const diff = parseFloat(diferenca)
+  if (diff > 10) return 'diferenca-alta'
+  if (diff < -10) return 'diferenca-baixa'
+  return 'diferenca-normal'
 }
 
 const exportarExcel = () => {
@@ -1391,6 +1611,181 @@ onMounted(() => {
 .actions-cell {
   display: flex;
   gap: 8px;
+}
+
+/* Estilos para Análise de Concorrência */
+.analise-concorrencia-section {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e5e7eb;
+}
+
+.analise-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.analise-header h3 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: #1d1d1f;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.analise-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.btn-info {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-info:hover {
+  background: #2563eb;
+  transform: translateY(-1px);
+}
+
+.btn-add {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: #10b981;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-add:hover {
+  background: #059669;
+  transform: translateY(-1px);
+}
+
+.btn-close {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: #6b7280;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-close:hover {
+  background: #4b5563;
+  transform: translateY(-1px);
+}
+
+.analise-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.concorrentes-table {
+  overflow-x: auto;
+}
+
+.concorrentes-table-content {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.concorrentes-table-content th {
+  background: #f9fafb;
+  padding: 12px;
+  text-align: left;
+  font-weight: 600;
+  color: #374151;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.concorrentes-table-content td {
+  padding: 12px;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.concorrente-row:hover {
+  background: #f9fafb;
+}
+
+.diferenca-badge {
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.diferenca-badge.diferenca-alta {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.diferenca-badge.diferenca-baixa {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.diferenca-badge.diferenca-normal {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.posicao-abaixo {
+  color: #10b981;
+}
+
+.posicao-acima {
+  color: #ef4444;
+}
+
+.posicao-alinhado {
+  color: #3b82f6;
+}
+
+.diferenca-alta {
+  color: #f59e0b;
+}
+
+.diferenca-baixa {
+  color: #3b82f6;
+}
+
+.diferenca-normal {
+  color: #10b981;
 }
 
 .filters-row {
