@@ -375,6 +375,51 @@
       </div>
       
       <div class="alertas-content">
+        <!-- Configurações de Fontes de Dados -->
+        <div class="configuracoes-fontes">
+          <h4><i class="fas fa-database"></i> Fontes de Dados de Concorrentes</h4>
+          <div class="fontes-grid">
+            <div class="fonte-item">
+              <label>
+                <input v-model="configFontes.firebase" type="checkbox">
+                <span class="fonte-label">Firebase (Dados Salvos)</span>
+              </label>
+              <p class="fonte-desc">Dados salvos manualmente no sistema</p>
+            </div>
+            <div class="fonte-item">
+              <label>
+                <input v-model="configFontes.googlePlaces" type="checkbox">
+                <span class="fonte-label">Google Places API</span>
+              </label>
+              <p class="fonte-desc">Buscar clínicas próximas automaticamente</p>
+            </div>
+            <div class="fonte-item">
+              <label>
+                <input v-model="configFontes.webScraping" type="checkbox">
+                <span class="fonte-label">Web Scraping</span>
+              </label>
+              <p class="fonte-desc">Extrair preços de sites de concorrentes</p>
+            </div>
+            <div class="fonte-item">
+              <label>
+                <input v-model="configFontes.crowdsourcing" type="checkbox">
+                <span class="fonte-label">Crowdsourcing</span>
+              </label>
+              <p class="fonte-desc">Clientes e parceiros reportam preços</p>
+            </div>
+          </div>
+          <div class="fonte-actions">
+            <button @click="atualizarFontes" class="btn-atualizar">
+              <i class="fas fa-sync"></i>
+              Atualizar Dados
+            </button>
+            <button @click="configurarAPIs" class="btn-config-api">
+              <i class="fas fa-cog"></i>
+              Configurar APIs
+            </button>
+          </div>
+        </div>
+
         <!-- Configurações de Alertas -->
         <div class="configuracoes-alertas">
           <h4><i class="fas fa-sliders-h"></i> Configurações de Alertas</h4>
@@ -801,6 +846,13 @@ const configAlertas = ref({
   margemMinima: 20,
   notificacoesAtivas: true,
   intervaloVerificacao: 15
+})
+
+const configFontes = ref({
+  firebase: true,
+  googlePlaces: false,
+  webScraping: false,
+  crowdsourcing: false
 })
 const loading = ref(false)
 const showModal = ref(false)
@@ -1371,34 +1423,20 @@ const carregarConcorrentes = async () => {
   try {
     console.log('🔍 Carregando concorrentes...')
     
-    // Tentar carregar do Firebase primeiro
-    if (clinicaId.value) {
-      try {
-        const q = query(
-          collection(db, 'concorrentes'),
-          where('clinicaId', '==', clinicaId.value),
-          where('ativo', '==', true)
-        )
-        
-        const querySnapshot = await getDocs(q)
-        const concorrentesFirebase = querySnapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        }))
-        
-        if (concorrentesFirebase.length > 0) {
-          console.log('📊 Concorrentes carregados do Firebase:', concorrentesFirebase.length)
-          concorrentes.value = concorrentesFirebase
-        } else {
-          console.log('⚠️ Nenhum concorrente no Firebase, usando dados de exemplo')
-          carregarConcorrentesExemplo()
-        }
-      } catch (firebaseError) {
-        console.log('⚠️ Erro ao carregar do Firebase, usando dados de exemplo:', firebaseError.message)
-        carregarConcorrentesExemplo()
-      }
+    // 1. Tentar carregar do Firebase (dados salvos)
+    const concorrentesFirebase = await carregarConcorrentesFirebase()
+    
+    // 2. Tentar carregar dados públicos (APIs, web scraping)
+    const concorrentesPublicos = await carregarConcorrentesPublicos()
+    
+    // 3. Combinar e deduplicar dados
+    const todosConcorrentes = combinarDadosConcorrentes(concorrentesFirebase, concorrentesPublicos)
+    
+    if (todosConcorrentes.length > 0) {
+      concorrentes.value = todosConcorrentes
+      console.log('📊 Total de concorrentes carregados:', todosConcorrentes.length)
     } else {
-      console.log('⚠️ ClinicaId não disponível, usando dados de exemplo')
+      console.log('⚠️ Nenhum concorrente encontrado, usando dados de exemplo')
       carregarConcorrentesExemplo()
     }
     
@@ -1409,6 +1447,84 @@ const carregarConcorrentes = async () => {
     console.error('Erro ao carregar concorrentes:', error)
     carregarConcorrentesExemplo()
   }
+}
+
+const carregarConcorrentesFirebase = async () => {
+  if (!clinicaId.value) return []
+  
+  try {
+    const q = query(
+      collection(db, 'concorrentes'),
+      where('clinicaId', '==', clinicaId.value),
+      where('ativo', '==', true)
+    )
+    
+    const querySnapshot = await getDocs(q)
+    const concorrentes = querySnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data(),
+      fonte: 'firebase'
+    }))
+    
+    console.log('📊 Concorrentes do Firebase:', concorrentes.length)
+    return concorrentes
+  } catch (error) {
+    console.log('⚠️ Erro ao carregar do Firebase:', error.message)
+    return []
+  }
+}
+
+const carregarConcorrentesPublicos = async () => {
+  try {
+    console.log('🌐 Buscando dados públicos de concorrentes...')
+    
+    // Simular busca em APIs públicas (implementar conforme necessário)
+    const dadosPublicos = await buscarDadosPublicosConcorrentes()
+    
+    console.log('📊 Dados públicos encontrados:', dadosPublicos.length)
+    return dadosPublicos
+  } catch (error) {
+    console.log('⚠️ Erro ao carregar dados públicos:', error.message)
+    return []
+  }
+}
+
+const buscarDadosPublicosConcorrentes = async () => {
+  // Implementar busca em APIs públicas
+  // Exemplo: Google Places API, APIs de preços, etc.
+  
+  // Por enquanto, retornar array vazio
+  // Em produção, implementar:
+  // - Google Places API para encontrar clínicas
+  // - Web scraping de sites de concorrentes
+  // - APIs de agregação de preços
+  // - Feeds RSS de atualizações
+  
+  return []
+}
+
+const combinarDadosConcorrentes = (firebase, publicos) => {
+  const combinados = [...firebase]
+  
+  // Adicionar dados públicos que não existem no Firebase
+  publicos.forEach(publico => {
+    const existe = firebase.some(f => f.nome === publico.nome)
+    if (!existe) {
+      combinados.push({
+        ...publico,
+        fonte: 'publico',
+        ativo: true
+      })
+    }
+  })
+  
+  // Remover duplicatas por nome
+  const unicos = combinados.filter((concorrente, index, array) => 
+    array.findIndex(c => c.nome === concorrente.nome) === index
+  )
+  
+  console.log('🔄 Dados combinados:', unicos.length)
+  return unicos
 }
 
 const carregarConcorrentesExemplo = () => {
@@ -1663,6 +1779,24 @@ const ignorarAlerta = (alerta) => {
   }
   
   showSuccess('Alerta ignorado')
+}
+
+const atualizarFontes = async () => {
+  try {
+    console.log('🔄 Atualizando dados de concorrentes...')
+    showSuccess('Atualizando dados de concorrentes...')
+    
+    await carregarConcorrentes()
+    
+    showSuccess('Dados atualizados com sucesso!')
+  } catch (error) {
+    console.error('Erro ao atualizar fontes:', error)
+    showError('Erro ao atualizar dados de concorrentes')
+  }
+}
+
+const configurarAPIs = () => {
+  showSuccess('Funcionalidade de configuração de APIs será implementada em breve!')
 }
 
 const configurarAlertas = () => {
@@ -2938,6 +3072,118 @@ input:checked + .slider:before {
 .status-badge.ignorado {
   background: #f3f4f6;
   color: #374151;
+}
+
+/* Estilos para Configurações de Fontes */
+.configuracoes-fontes {
+  background: #f8fafc;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 24px;
+  border: 1px solid #e2e8f0;
+}
+
+.configuracoes-fontes h4 {
+  margin: 0 0 16px 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #1d1d1f;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.fontes-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.fonte-item {
+  background: white;
+  border-radius: 8px;
+  padding: 16px;
+  border: 1px solid #e2e8f0;
+  transition: all 0.2s;
+}
+
+.fonte-item:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transform: translateY(-1px);
+}
+
+.fonte-item label {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  margin-bottom: 8px;
+}
+
+.fonte-item input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: #3b82f6;
+}
+
+.fonte-label {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1d1d1f;
+}
+
+.fonte-desc {
+  font-size: 14px;
+  color: #6b7280;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.fonte-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+.btn-atualizar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-atualizar:hover {
+  background: #2563eb;
+  transform: translateY(-1px);
+}
+
+.btn-config-api {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: #6b7280;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-config-api:hover {
+  background: #4b5563;
+  transform: translateY(-1px);
 }
 
 .filters-row {
