@@ -26,6 +26,10 @@
       <div class="filters-header">
         <h3><i class="fas fa-filter"></i> Filtros e Busca</h3>
         <div class="filters-actions">
+          <button @click="toggleRelatoriosMargem" class="btn-reports">
+            <i class="fas fa-chart-pie"></i>
+            Relatórios de Margem
+          </button>
           <button @click="exportarExcel" class="btn-export">
             <i class="fas fa-file-excel"></i>
             Exportar Excel
@@ -350,6 +354,119 @@
       </div>
     </div>
 
+    <!-- Relatórios de Margem por Categoria -->
+    <div v-if="showRelatoriosMargem" class="relatorios-margem-section">
+      <div class="relatorios-header">
+        <h3><i class="fas fa-chart-pie"></i> Relatórios de Margem por Categoria</h3>
+        <div class="relatorios-actions">
+          <button @click="exportarRelatorioMargem" class="btn-export-small">
+            <i class="fas fa-download"></i>
+            Exportar Relatório
+          </button>
+          <button @click="toggleRelatoriosMargem" class="btn-close">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+      </div>
+      
+      <div class="relatorios-content">
+        <!-- Resumo Geral -->
+        <div class="resumo-geral">
+          <h4><i class="fas fa-chart-bar"></i> Resumo Geral</h4>
+          <div class="resumo-stats">
+            <div class="stat-card">
+              <div class="stat-icon">
+                <i class="fas fa-percentage"></i>
+              </div>
+              <div class="stat-info">
+                <span class="stat-label">Margem Média Geral</span>
+                <span class="stat-value">{{ margemMediaGeral }}%</span>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon">
+                <i class="fas fa-dollar-sign"></i>
+              </div>
+              <div class="stat-info">
+                <span class="stat-label">Lucro Total Estimado</span>
+                <span class="stat-value">{{ formatarMoeda(lucroTotalEstimado) }}</span>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon">
+                <i class="fas fa-list"></i>
+              </div>
+              <div class="stat-info">
+                <span class="stat-label">Total de Procedimentos</span>
+                <span class="stat-value">{{ totalProcedimentos }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Análise por Categoria -->
+        <div class="analise-categorias">
+          <h4><i class="fas fa-layer-group"></i> Análise por Categoria</h4>
+          <div class="categorias-grid">
+            <div v-for="categoria in relatorioCategorias" :key="categoria.nome" class="categoria-card">
+              <div class="categoria-header">
+                <h5>{{ categoria.nome }}</h5>
+                <span class="categoria-badge" :class="getCategoriaClass(categoria.margemMedia)">
+                  {{ categoria.margemMedia }}%
+                </span>
+              </div>
+              <div class="categoria-stats">
+                <div class="categoria-stat">
+                  <span class="stat-label">Procedimentos:</span>
+                  <span class="stat-value">{{ categoria.total }}</span>
+                </div>
+                <div class="categoria-stat">
+                  <span class="stat-label">Margem Média:</span>
+                  <span class="stat-value">{{ categoria.margemMedia }}%</span>
+                </div>
+                <div class="categoria-stat">
+                  <span class="stat-label">Lucro Total:</span>
+                  <span class="stat-value">{{ formatarMoeda(categoria.lucroTotal) }}</span>
+                </div>
+                <div class="categoria-stat">
+                  <span class="stat-label">Preço Médio:</span>
+                  <span class="stat-value">{{ formatarMoeda(categoria.precoMedio) }}</span>
+                </div>
+              </div>
+              <div class="categoria-chart">
+                <div class="chart-bar">
+                  <div class="chart-fill" :style="{ width: categoria.margemMedia + '%' }"></div>
+                </div>
+                <span class="chart-label">Margem: {{ categoria.margemMedia }}%</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Alertas de Margem -->
+        <div class="alertas-margem">
+          <h4><i class="fas fa-exclamation-triangle"></i> Alertas de Margem</h4>
+          <div class="alertas-list">
+            <div v-for="alerta in alertasMargem" :key="alerta.id" class="alerta-item" :class="alerta.tipo">
+              <div class="alerta-icon">
+                <i :class="alerta.icone"></i>
+              </div>
+              <div class="alerta-content">
+                <div class="alerta-title">{{ alerta.titulo }}</div>
+                <div class="alerta-description">{{ alerta.descricao }}</div>
+              </div>
+              <div class="alerta-action">
+                <button @click="verDetalhesAlerta(alerta)" class="btn-alerta">
+                  <i class="fas fa-eye"></i>
+                  Ver Detalhes
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Tabela de Procedimentos -->
     <div class="table-container">
       <div class="table-header">
@@ -575,7 +692,9 @@ const procedimentosCadastrados = ref([])
 const procedimentoSelecionado = ref('')
 const historicoPrecos = ref([])
 const showAnaliseConcorrencia = ref(false)
+const showRelatoriosMargem = ref(false)
 const concorrentes = ref([])
+const alertasMargem = ref([])
 const loading = ref(false)
 const showModal = ref(false)
 const modoEdicao = ref(false)
@@ -715,6 +834,48 @@ const diferencaClass = computed(() => {
   if (diferenca > 10) return 'diferenca-alta'
   if (diferenca < -10) return 'diferenca-baixa'
   return 'diferenca-normal'
+})
+
+// Computed para relatórios de margem
+const margemMediaGeral = computed(() => {
+  if (procedimentosFiltrados.value.length === 0) return 0
+  const total = procedimentosFiltrados.value.reduce((sum, p) => sum + (p.margemLucro || 0), 0)
+  return (total / procedimentosFiltrados.value.length).toFixed(1)
+})
+
+const lucroTotalEstimado = computed(() => {
+  return procedimentosFiltrados.value.reduce((sum, p) => sum + (p.lucroFinal || 0), 0)
+})
+
+const totalProcedimentos = computed(() => {
+  return procedimentosFiltrados.value.length
+})
+
+const relatorioCategorias = computed(() => {
+  const categorias = {}
+  
+  procedimentosFiltrados.value.forEach(proc => {
+    if (!categorias[proc.categoria]) {
+      categorias[proc.categoria] = {
+        nome: proc.categoria,
+        total: 0,
+        margemTotal: 0,
+        lucroTotal: 0,
+        precoTotal: 0
+      }
+    }
+    
+    categorias[proc.categoria].total++
+    categorias[proc.categoria].margemTotal += proc.margemLucro || 0
+    categorias[proc.categoria].lucroTotal += proc.lucroFinal || 0
+    categorias[proc.categoria].precoTotal += proc.precoCobrado || 0
+  })
+  
+  return Object.values(categorias).map(cat => ({
+    ...cat,
+    margemMedia: (cat.margemTotal / cat.total).toFixed(1),
+    precoMedio: cat.precoTotal / cat.total
+  }))
 })
 
 const custoTotal = computed(() => {
@@ -1165,6 +1326,76 @@ const getDiferencaClass = (diferenca) => {
   if (diff > 10) return 'diferenca-alta'
   if (diff < -10) return 'diferenca-baixa'
   return 'diferenca-normal'
+}
+
+const toggleRelatoriosMargem = () => {
+  showRelatoriosMargem.value = !showRelatoriosMargem.value
+  if (showRelatoriosMargem.value) {
+    gerarAlertasMargem()
+  }
+}
+
+const gerarAlertasMargem = () => {
+  alertasMargem.value = []
+  
+  // Verificar margens baixas
+  procedimentosFiltrados.value.forEach(proc => {
+    if (proc.margemLucro < 20) {
+      alertasMargem.value.push({
+        id: `baixa-${proc.id}`,
+        tipo: 'alerta-baixa',
+        icone: 'fas fa-exclamation-triangle',
+        titulo: 'Margem Baixa',
+        descricao: `${proc.nome} tem margem de apenas ${proc.margemLucro}%`,
+        procedimento: proc
+      })
+    }
+  })
+  
+  // Verificar categorias com margem baixa
+  relatorioCategorias.value.forEach(cat => {
+    if (cat.margemMedia < 25) {
+      alertasMargem.value.push({
+        id: `categoria-${cat.nome}`,
+        tipo: 'alerta-categoria',
+        icone: 'fas fa-layer-group',
+        titulo: 'Categoria com Margem Baixa',
+        descricao: `${cat.nome} tem margem média de ${cat.margemMedia}%`,
+        categoria: cat
+      })
+    }
+  })
+  
+  // Verificar se não há alertas
+  if (alertasMargem.value.length === 0) {
+    alertasMargem.value.push({
+      id: 'sem-alertas',
+      tipo: 'sucesso',
+      icone: 'fas fa-check-circle',
+      titulo: 'Todas as Margens Estão Adequadas',
+      descricao: 'Nenhum procedimento com margem baixa encontrado'
+    })
+  }
+}
+
+const getCategoriaClass = (margem) => {
+  const margemNum = parseFloat(margem)
+  if (margemNum >= 50) return 'categoria-alta'
+  if (margemNum >= 30) return 'categoria-media'
+  if (margemNum >= 20) return 'categoria-baixa'
+  return 'categoria-critica'
+}
+
+const verDetalhesAlerta = (alerta) => {
+  if (alerta.procedimento) {
+    showWarning(`Detalhes do procedimento: ${alerta.procedimento.nome}\nMargem: ${alerta.procedimento.margemLucro}%\nPreço: ${formatarMoeda(alerta.procedimento.precoCobrado)}`)
+  } else if (alerta.categoria) {
+    showWarning(`Detalhes da categoria: ${alerta.categoria.nome}\nMargem Média: ${alerta.categoria.margemMedia}%\nTotal de Procedimentos: ${alerta.categoria.total}`)
+  }
+}
+
+const exportarRelatorioMargem = () => {
+  showSuccess('Funcionalidade de exportação de relatório será implementada em breve!')
 }
 
 const exportarExcel = () => {
@@ -1786,6 +2017,289 @@ onMounted(() => {
 
 .diferenca-normal {
   color: #10b981;
+}
+
+/* Estilos para Relatórios de Margem */
+.relatorios-margem-section {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e5e7eb;
+}
+
+.relatorios-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.relatorios-header h3 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: #1d1d1f;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.relatorios-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.btn-reports {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: #8b5cf6;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-reports:hover {
+  background: #7c3aed;
+  transform: translateY(-1px);
+}
+
+.relatorios-content {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.resumo-geral h4,
+.analise-categorias h4,
+.alertas-margem h4 {
+  margin: 0 0 16px 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #1d1d1f;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.resumo-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+.categorias-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.categoria-card {
+  background: #f9fafb;
+  border-radius: 12px;
+  padding: 20px;
+  border: 1px solid #e5e7eb;
+  transition: all 0.2s;
+}
+
+.categoria-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}
+
+.categoria-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.categoria-header h5 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #1d1d1f;
+}
+
+.categoria-badge {
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.categoria-badge.categoria-alta {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.categoria-badge.categoria-media {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.categoria-badge.categoria-baixa {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.categoria-badge.categoria-critica {
+  background: #fecaca;
+  color: #7f1d1d;
+}
+
+.categoria-stats {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.categoria-stat {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.categoria-stat .stat-label {
+  font-size: 14px;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.categoria-stat .stat-value {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1d1d1f;
+}
+
+.categoria-chart {
+  margin-top: 16px;
+}
+
+.chart-bar {
+  width: 100%;
+  height: 8px;
+  background: #e5e7eb;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.chart-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #10b981, #059669);
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+.chart-label {
+  font-size: 12px;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.alertas-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.alerta-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  transition: all 0.2s;
+}
+
+.alerta-item.alerta-baixa {
+  background: #fef3c7;
+  border-color: #f59e0b;
+}
+
+.alerta-item.alerta-categoria {
+  background: #dbeafe;
+  border-color: #3b82f6;
+}
+
+.alerta-item.sucesso {
+  background: #dcfce7;
+  border-color: #10b981;
+}
+
+.alerta-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+}
+
+.alerta-baixa .alerta-icon {
+  background: #f59e0b;
+  color: white;
+}
+
+.alerta-categoria .alerta-icon {
+  background: #3b82f6;
+  color: white;
+}
+
+.sucesso .alerta-icon {
+  background: #10b981;
+  color: white;
+}
+
+.alerta-content {
+  flex: 1;
+}
+
+.alerta-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1d1d1f;
+  margin-bottom: 4px;
+}
+
+.alerta-description {
+  font-size: 14px;
+  color: #6b7280;
+}
+
+.btn-alerta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  background: #6b7280;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-alerta:hover {
+  background: #4b5563;
+  transform: translateY(-1px);
 }
 
 .filters-row {
