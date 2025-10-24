@@ -275,10 +275,10 @@
                   <p class="evolucao-data">{{ formatarData(evolucao.data) }} - {{ evolucao.profissional }}</p>
                 </div>
                 <div class="evolucao-actions">
-                  <button @click="editarEvolucao(evolucao)" class="btn-icon">
+                  <button @click="editarEvolucao(evolucao)" class="btn-icon" title="Editar evolução">
                     <i class="fas fa-edit"></i>
                   </button>
-                  <button @click="excluirEvolucao(evolucao)" class="btn-icon danger">
+                  <button @click="excluirEvolucao(evolucao)" class="btn-icon danger" title="Excluir evolução">
                     <i class="fas fa-trash"></i>
                   </button>
                 </div>
@@ -459,6 +459,12 @@
       @fechar="fecharModalEvolucao"
       @salvar="salvarEvolucao"
     />
+    
+    <!-- Debug info -->
+    <div v-if="modalEvolucao" style="position: fixed; top: 10px; right: 10px; background: red; color: white; padding: 10px; z-index: 9999;">
+      Modal aberto: {{ modalEvolucao }}<br>
+      Evolução editando: {{ evolucaoEditando ? 'Sim' : 'Não' }}
+    </div>
 
     <ModalExame 
       v-if="modalExame" 
@@ -527,6 +533,7 @@ const prescricaoEditando = ref(null)
 // Computed
 const totalAtendimentos = computed(() => {
   console.log('📊 Calculando total de atendimentos...')
+  console.log('👤 Paciente atual:', pacienteSelecionado.value?.nome)
   console.log('📋 Atendimentos disponíveis:', atendimentos.value.length)
   console.log('📋 Lista de atendimentos:', atendimentos.value)
   
@@ -534,10 +541,12 @@ const totalAtendimentos = computed(() => {
   const realizados = atendimentos.value.filter(atendimento => {
     const isRealizado = atendimento.status?.toLowerCase() === 'realizado'
     console.log(`🔍 Atendimento: ${atendimento.procedimento} - Status: ${atendimento.status} - Realizado: ${isRealizado}`)
+    console.log(`🔍 Cliente: ${atendimento.cliente} - Paciente: ${atendimento.paciente}`)
     return isRealizado
   })
   
   console.log('✅ Atendimentos realizados encontrados:', realizados.length)
+  console.log('✅ Para o paciente:', pacienteSelecionado.value?.nome)
   return realizados.length
 })
 const totalEvolucoes = computed(() => evolucoes.value.length)
@@ -1051,9 +1060,11 @@ const carregarAtendimentos = async () => {
       const nomeSelecionado = pacienteSelecionado.value.nome.toLowerCase()
       const statusRealizado = agendamento.status?.toLowerCase() === 'realizado'
       
-      console.log(`🔍 Comparando: "${nomePaciente}" com "${nomeSelecionado}"`)
+      console.log(`🔍 COMPARAÇÃO PARA JULIANA:`)
+      console.log(`🔍 Nome do paciente no agendamento: "${nomePaciente}"`)
+      console.log(`🔍 Nome selecionado: "${nomeSelecionado}"`)
       console.log(`🔍 Status: "${agendamento.status}" -> Realizado: ${statusRealizado}`)
-      console.log(`🔍 Dados do agendamento:`, {
+      console.log(`🔍 Dados completos do agendamento:`, {
         cliente: agendamento.cliente,
         nomeCliente: agendamento.nomeCliente,
         paciente: agendamento.paciente,
@@ -1064,6 +1075,10 @@ const carregarAtendimentos = async () => {
       const nomeMatch = nomePaciente.includes(nomeSelecionado) || 
                        nomeSelecionado.includes(nomePaciente) ||
                        nomePaciente === nomeSelecionado
+      
+      console.log(`🔍 Nome match: ${nomeMatch}`)
+      console.log(`🔍 Status match: ${statusRealizado}`)
+      console.log(`🔍 Resultado final: ${nomeMatch && statusRealizado}`)
       
       return nomeMatch && statusRealizado
     })
@@ -1156,8 +1171,15 @@ const fecharModalPrescricao = () => {
 
 // Ações
 const editarEvolucao = (evolucao) => {
+  console.log('✏️ Editando evolução clínica...')
+  console.log('📋 Evolução selecionada:', evolucao)
+  console.log('👤 Paciente:', pacienteSelecionado.value)
+  
   evolucaoEditando.value = evolucao
   modalEvolucao.value = true
+  
+  console.log('✅ Modal de edição aberto:', modalEvolucao.value)
+  console.log('✅ Evolução sendo editada:', evolucaoEditando.value)
 }
 
 const excluirEvolucao = async (evolucao) => {
