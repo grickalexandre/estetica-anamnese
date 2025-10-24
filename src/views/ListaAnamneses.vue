@@ -5,6 +5,10 @@
         <h1><i class="fas fa-users"></i> Lista de Pacientes</h1>
         <div class="header-actions">
           <VoltarHome />
+          <button @click="compartilharLinkAnamnese" class="btn btn-secondary">
+            <i class="fas fa-share-alt"></i>
+            Compartilhar Link
+          </button>
           <router-link to="/nova">
             <button class="btn btn-primary">
               <i class="fas fa-plus"></i>
@@ -159,12 +163,14 @@ import { collection, getDocs, orderBy, query, where } from 'firebase/firestore'
 import { useClinica } from '../composables/useClinica.js'
 import { usePaginacao } from '../composables/usePaginacao.js'
 import { useFiltros } from '../composables/useFiltros.js'
+import { useNotifications } from '../composables/useNotifications.js'
 import VoltarHome from '../components/VoltarHome.vue'
 import Filtros from '../components/Filtros.vue'
 import Paginacao from '../components/Paginacao.vue'
 
 const router = useRouter()
 const { clinicaId } = useClinica()
+const { showSuccess, showError } = useNotifications()
 const anamneses = ref([])
 const carregando = ref(true)
 
@@ -375,6 +381,31 @@ const fecharToast = () => {
     toast.value.timeoutId = null
   }
   toast.value.show = false
+}
+
+// Função para compartilhar link de anamnese
+const compartilharLinkAnamnese = async () => {
+  try {
+    const baseUrl = window.location.origin
+    const linkAnamnese = `${baseUrl}/anamnese-cliente`
+    
+    if (navigator.share) {
+      // Usar Web Share API se disponível
+      await navigator.share({
+        title: 'Anamnese Online',
+        text: 'Preencha sua anamnese online para agilizar seu atendimento',
+        url: linkAnamnese
+      })
+      showSuccess('Link compartilhado com sucesso!')
+    } else {
+      // Fallback: copiar para área de transferência
+      await navigator.clipboard.writeText(linkAnamnese)
+      showSuccess('Link copiado para a área de transferência!')
+    }
+  } catch (error) {
+    console.error('Erro ao compartilhar link:', error)
+    showError('Erro ao compartilhar link. Tente novamente.')
+  }
 }
 
 const editarPaciente = (paciente) => {

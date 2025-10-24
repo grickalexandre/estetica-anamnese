@@ -14,6 +14,54 @@
       <div v-if="success" class="success">{{ success }}</div>
 
       <form @submit.prevent="salvarConfiguracoes">
+        <!-- Link de Anamnese -->
+        <h2><i class="fas fa-link"></i> Link de Anamnese para Clientes</h2>
+        <div class="link-section">
+          <div class="link-info">
+            <p>Configure o link que será enviado aos seus clientes para preenchimento da anamnese online.</p>
+          </div>
+          
+          <div class="form-group">
+            <label>URL Personalizada (Opcional)</label>
+            <div class="input-group">
+              <input 
+                v-model="configuracoes.urlPersonalizada" 
+                type="text" 
+                placeholder="exemplo: minha-clinica"
+                @input="atualizarLinkAnamnese"
+              >
+              <span class="input-suffix">.vercel.app/anamnese-cliente</span>
+            </div>
+            <small>Deixe em branco para usar o link padrão</small>
+          </div>
+
+          <div class="link-preview">
+            <label>Link Atual:</label>
+            <div class="link-display">
+              <input 
+                :value="linkAnamneseCompleto" 
+                readonly 
+                class="link-input"
+                @click="copiarLink"
+              >
+              <button @click="copiarLink" class="btn-copy" title="Copiar link">
+                <i class="fas fa-copy"></i>
+              </button>
+            </div>
+          </div>
+
+          <div class="link-actions">
+            <button @click="testarLink" type="button" class="btn btn-secondary">
+              <i class="fas fa-external-link-alt"></i>
+              Testar Link
+            </button>
+            <button @click="gerarQRCode" type="button" class="btn btn-secondary">
+              <i class="fas fa-qrcode"></i>
+              Gerar QR Code
+            </button>
+          </div>
+        </div>
+
         <!-- Informações Básicas -->
         <h2><i class="fas fa-building"></i> Informações Básicas</h2>
         <div class="form-row">
@@ -195,8 +243,51 @@ const configuracoes = ref({
   especialidades: '',
   horarioSegSex: '',
   horarioSabado: '',
-  observacoesHorarios: ''
+  observacoesHorarios: '',
+  urlPersonalizada: ''
 })
+
+// Link de anamnese
+const linkAnamneseCompleto = ref('')
+
+const atualizarLinkAnamnese = () => {
+  const baseUrl = window.location.origin
+  if (configuracoes.value.urlPersonalizada) {
+    // Se tem URL personalizada, usar ela
+    linkAnamneseCompleto.value = `https://${configuracoes.value.urlPersonalizada}.vercel.app/anamnese-cliente`
+  } else {
+    // Usar URL padrão
+    linkAnamneseCompleto.value = `${baseUrl}/anamnese-cliente`
+  }
+}
+
+const copiarLink = async () => {
+  try {
+    await navigator.clipboard.writeText(linkAnamneseCompleto.value)
+    success.value = 'Link copiado para a área de transferência!'
+    setTimeout(() => success.value = '', 3000)
+  } catch (err) {
+    // Fallback para navegadores que não suportam clipboard API
+    const textArea = document.createElement('textarea')
+    textArea.value = linkAnamneseCompleto.value
+    document.body.appendChild(textArea)
+    textArea.select()
+    document.execCommand('copy')
+    document.body.removeChild(textArea)
+    success.value = 'Link copiado para a área de transferência!'
+    setTimeout(() => success.value = '', 3000)
+  }
+}
+
+const testarLink = () => {
+  window.open(linkAnamneseCompleto.value, '_blank')
+}
+
+const gerarQRCode = () => {
+  // Implementar geração de QR Code
+  const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(linkAnamneseCompleto.value)}`
+  window.open(qrUrl, '_blank')
+}
 
 const carregarConfiguracoes = async () => {
   try {
@@ -305,6 +396,7 @@ const salvarConfiguracoes = async () => {
 
 onMounted(() => {
   carregarConfiguracoes()
+  atualizarLinkAnamnese()
 })
 </script>
 
@@ -460,6 +552,117 @@ onMounted(() => {
   font-size: 12px;
   color: #6b7280;
   font-weight: 600;
+}
+
+/* Link de Anamnese */
+.link-section {
+  background: #f8f9fa;
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 32px;
+  border: 1px solid #e5e7eb;
+}
+
+.link-info {
+  margin-bottom: 20px;
+}
+
+.link-info p {
+  color: #6b7280;
+  margin: 0;
+  font-size: 14px;
+}
+
+.input-group {
+  display: flex;
+  align-items: center;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.input-group input {
+  flex: 1;
+  border: none;
+  padding: 12px 16px;
+  font-size: 14px;
+}
+
+.input-suffix {
+  background: #f3f4f6;
+  padding: 12px 16px;
+  color: #6b7280;
+  font-size: 14px;
+  border-left: 1px solid #d1d5db;
+}
+
+.link-preview {
+  margin: 20px 0;
+}
+
+.link-display {
+  display: flex;
+  align-items: center;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  overflow: hidden;
+  background: white;
+}
+
+.link-input {
+  flex: 1;
+  border: none;
+  padding: 12px 16px;
+  font-size: 14px;
+  background: #f9fafb;
+  cursor: pointer;
+}
+
+.link-input:focus {
+  outline: none;
+  background: white;
+}
+
+.btn-copy {
+  background: #3b82f6;
+  color: white;
+  border: none;
+  padding: 12px 16px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btn-copy:hover {
+  background: #2563eb;
+}
+
+.link-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.link-actions .btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border-radius: 8px;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.btn-secondary {
+  background: #f3f4f6;
+  color: #374151;
+  border: 1px solid #d1d5db;
+}
+
+.btn-secondary:hover {
+  background: #e5e7eb;
+  color: #1f2937;
 }
 
 .danger-zone {
