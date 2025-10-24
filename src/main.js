@@ -39,6 +39,7 @@ import Planos from './views/Planos.vue'
 import MinhaAssinatura from './views/MinhaAssinatura.vue'
 import PrecificacaoProcedimentos from './views/PrecificacaoProcedimentos.vue'
 import AgendamentoOnline from './views/AgendamentoOnline.vue'
+import ProntuarioEletronico from './views/ProntuarioEletronico.vue'
 import { auth } from './firebase.js'
 import './style.css'
 import './utils/notificationUtils.js'
@@ -111,7 +112,10 @@ const routes = [
   
   
   // Rotas de agendamento
-  { path: '/agendamento-online', component: AgendamentoOnline, meta: { requiresAuth: true } }
+  { path: '/agendamento-online', component: AgendamentoOnline, meta: { requiresAuth: true } },
+  
+  // Rotas de prontuário eletrônico
+  { path: '/prontuario-eletronico', component: ProntuarioEletronico, meta: { requiresAuth: true } }
 ]
 
 const router = createRouter({

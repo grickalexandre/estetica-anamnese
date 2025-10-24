@@ -60,6 +60,12 @@
           </div>
           <span v-if="!collapsed" class="nav-text">Lista de Pacientes</span>
         </router-link>
+        <router-link to="/prontuario-eletronico" class="nav-item" :class="{ 'collapsed': collapsed }">
+          <div class="nav-icon">
+            <i class="fas fa-file-medical"></i>
+          </div>
+          <span v-if="!collapsed" class="nav-text">Prontuário Eletrônico</span>
+        </router-link>
       </div>
 
       <!-- Financeiro -->
