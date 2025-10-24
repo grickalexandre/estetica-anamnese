@@ -61,7 +61,17 @@
 
         <div v-else-if="buscaPaciente && !carregando" class="no-results">
           <i class="fas fa-search"></i>
-          <p>Nenhum paciente encontrado</p>
+          <h3>Nenhum paciente encontrado</h3>
+          <p>Não encontramos pacientes com o termo "{{ buscaPaciente }}"</p>
+          <div class="search-tips">
+            <p><strong>Dicas para busca:</strong></p>
+            <ul>
+              <li>Digite o nome completo ou parcial</li>
+              <li>Use CPF (com ou sem pontos)</li>
+              <li>Digite o telefone</li>
+              <li>Use o email</li>
+            </ul>
+          </div>
         </div>
       </div>
     </div>
@@ -411,7 +421,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { db } from '../firebase.js'
 import { collection, getDocs, query, where, orderBy, addDoc, updateDoc, deleteDoc, doc, serverTimestamp } from 'firebase/firestore'
 import { useClinica } from '../composables/useClinica.js'
@@ -511,26 +521,46 @@ const buscarPacientes = async () => {
   
   try {
     carregando.value = true
+    console.log('Buscando pacientes com termo:', buscaPaciente.value)
+    console.log('ClinicaId:', clinicaId.value)
+    
+    // Buscar na coleção anamneses que contém os dados dos pacientes
     const q = query(
-      collection(db, 'pacientes'),
+      collection(db, 'anamneses'),
       where('clinicaId', '==', clinicaId.value || 'demo')
     )
     const snapshot = await getDocs(q)
     
-    const todosPacientes = snapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data()
-    }))
+    console.log('Documentos encontrados:', snapshot.docs.length)
+    
+    const todosPacientes = snapshot.docs.map(doc => {
+      const data = doc.data()
+      return {
+        id: doc.id,
+        nome: data.nome || 'Nome não informado',
+        cpf: data.cpf || '',
+        telefone: data.telefone || '',
+        email: data.email || '',
+        dataNascimento: data.dataNascimento || '',
+        endereco: data.endereco || '',
+        ...data
+      }
+    })
+    
+    console.log('Pacientes mapeados:', todosPacientes.length)
     
     const termo = buscaPaciente.value.toLowerCase()
     pacientesEncontrados.value = todosPacientes.filter(paciente => 
       paciente.nome.toLowerCase().includes(termo) ||
       (paciente.cpf && paciente.cpf.includes(termo)) ||
-      (paciente.telefone && paciente.telefone.includes(termo))
+      (paciente.telefone && paciente.telefone.includes(termo)) ||
+      (paciente.email && paciente.email.toLowerCase().includes(termo))
     )
+    
+    console.log('Pacientes filtrados:', pacientesEncontrados.value.length)
   } catch (error) {
     console.error('Erro ao buscar pacientes:', error)
-    showError('Erro ao buscar pacientes')
+    showError('Erro ao buscar pacientes: ' + error.message)
   } finally {
     carregando.value = false
   }
@@ -764,6 +794,18 @@ const calcularIdade = (dataNascimento) => {
   return idade
 }
 
+// Busca em tempo real com debounce
+let timeoutId = null
+watch(buscaPaciente, (novoValor) => {
+  if (timeoutId) {
+    clearTimeout(timeoutId)
+  }
+  
+  timeoutId = setTimeout(() => {
+    buscarPacientes()
+  }, 300) // Aguarda 300ms após parar de digitar
+})
+
 onMounted(() => {
   // Inicialização se necessário
 })
@@ -933,6 +975,32 @@ onMounted(() => {
   font-size: 48px;
   margin-bottom: 16px;
   color: #d1d5db;
+}
+
+.search-tips {
+  margin-top: 1.5rem;
+  padding: 1rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+  text-align: left;
+  max-width: 400px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.search-tips p {
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+}
+
+.search-tips ul {
+  margin: 0;
+  padding-left: 1.5rem;
+}
+
+.search-tips li {
+  margin-bottom: 0.25rem;
+  color: #555;
 }
 
 /* Cabeçalho do Paciente */
