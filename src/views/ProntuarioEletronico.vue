@@ -81,6 +81,10 @@
               <i class="fas fa-bug"></i>
               Verificar Dados
             </button>
+            <button @click="debugAtendimentos" class="btn btn-outline">
+              <i class="fas fa-calendar-check"></i>
+              Debug Atendimentos
+            </button>
           </div>
         </div>
       </div>
@@ -766,6 +770,79 @@ const criarDadosTeste = async () => {
   }
 }
 
+const debugAtendimentos = async () => {
+  try {
+    console.log('🔍 DEBUG ATENDIMENTOS - Iniciando análise completa...')
+    
+    const colecoesParaTestar = [
+      'agendamentos',
+      'agenda', 
+      'atendimentos',
+      'consultas',
+      'procedimentos',
+      'appointments',
+      'schedules'
+    ]
+    
+    let relatorio = {
+      colecoesEncontradas: [],
+      totalDocumentos: 0,
+      exemplos: []
+    }
+    
+    for (const nomeColecao of colecoesParaTestar) {
+      try {
+        console.log(`🔍 Testando coleção: ${nomeColecao}`)
+        const q = query(collection(db, nomeColecao))
+        const snapshot = await getDocs(q)
+        
+        if (snapshot.docs.length > 0) {
+          console.log(`✅ ${nomeColecao}: ${snapshot.docs.length} documentos`)
+          relatorio.colecoesEncontradas.push({
+            nome: nomeColecao,
+            quantidade: snapshot.docs.length
+          })
+          relatorio.totalDocumentos += snapshot.docs.length
+          
+          // Pegar exemplo do primeiro documento
+          const exemplo = snapshot.docs[0].data()
+          relatorio.exemplos.push({
+            colecao: nomeColecao,
+            dados: exemplo
+          })
+          
+          console.log(`📋 Exemplo de ${nomeColecao}:`, exemplo)
+        } else {
+          console.log(`❌ ${nomeColecao}: 0 documentos`)
+        }
+      } catch (err) {
+        console.log(`❌ Erro ao acessar ${nomeColecao}:`, err.message)
+      }
+    }
+    
+    console.log('📊 RELATÓRIO COMPLETO:', relatorio)
+    
+    let mensagem = `Encontradas ${relatorio.colecoesEncontradas.length} coleções com dados:\n`
+    relatorio.colecoesEncontradas.forEach(c => {
+      mensagem += `• ${c.nome}: ${c.quantidade} documentos\n`
+    })
+    
+    if (relatorio.exemplos.length > 0) {
+      mensagem += `\nExemplos de campos encontrados:\n`
+      relatorio.exemplos.forEach(e => {
+        const campos = Object.keys(e.dados)
+        mensagem += `• ${e.colecao}: ${campos.join(', ')}\n`
+      })
+    }
+    
+    showSuccess(mensagem)
+    
+  } catch (error) {
+    console.error('❌ Erro no debug de atendimentos:', error)
+    showError('Erro no debug: ' + error.message)
+  }
+}
+
 const carregarProntuario = async () => {
   if (!pacienteSelecionado.value) return
   
@@ -838,38 +915,104 @@ const carregarAnamneses = async () => {
 const carregarAtendimentos = async () => {
   try {
     console.log('🏥 Carregando atendimentos para paciente:', pacienteSelecionado.value.nome)
+    console.log('🏥 ClinicaId:', clinicaId.value)
     
-    // Buscar atendimentos por nome do paciente (já que pode não ter pacienteId)
-    const q = query(
-      collection(db, 'agendamentos'),
-      where('clinicaId', '==', clinicaId.value || 'demo'),
-      orderBy('dataHora', 'desc')
-    )
-    const snapshot = await getDocs(q)
+    // Primeiro, vamos testar diferentes coleções possíveis
+    const colecoesParaTestar = [
+      'agendamentos',
+      'agenda', 
+      'atendimentos',
+      'consultas',
+      'procedimentos'
+    ]
     
-    console.log('📅 Total de agendamentos encontrados:', snapshot.docs.length)
+    let dadosEncontrados = []
+    let colecaoUsada = ''
+    
+    for (const nomeColecao of colecoesParaTestar) {
+      try {
+        console.log(`🔍 Testando coleção: ${nomeColecao}`)
+        const q = query(
+          collection(db, nomeColecao),
+          where('clinicaId', '==', clinicaId.value || 'demo')
+        )
+        const snapshot = await getDocs(q)
+        console.log(`📊 ${nomeColecao}: ${snapshot.docs.length} documentos`)
+        
+        if (snapshot.docs.length > 0) {
+          console.log(`✅ Encontrou dados em: ${nomeColecao}`)
+          console.log(`📋 Primeiro documento:`, snapshot.docs[0].data())
+          dadosEncontrados = snapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+          }))
+          colecaoUsada = nomeColecao
+          break
+        }
+      } catch (err) {
+        console.log(`❌ Erro ao acessar ${nomeColecao}:`, err.message)
+      }
+    }
+    
+    if (dadosEncontrados.length === 0) {
+      console.log('❌ Nenhuma coleção com dados encontrada')
+      // Tentar buscar sem filtro de clinicaId
+      try {
+        console.log('🔍 Tentando buscar sem filtro de clinicaId...')
+        const q = query(collection(db, 'agendamentos'))
+        const snapshot = await getDocs(q)
+        console.log(`📊 Agendamentos (sem filtro): ${snapshot.docs.length} documentos`)
+        
+        if (snapshot.docs.length > 0) {
+          console.log('📋 Primeiro agendamento (sem filtro):', snapshot.docs[0].data())
+          dadosEncontrados = snapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+          }))
+          colecaoUsada = 'agendamentos'
+        }
+      } catch (err) {
+        console.log('❌ Erro ao buscar sem filtro:', err.message)
+      }
+    }
+    
+    console.log(`📊 Usando coleção: ${colecaoUsada}`)
+    console.log(`📊 Total de documentos: ${dadosEncontrados.length}`)
     
     // Filtrar por nome do paciente
-    const atendimentosDoPaciente = snapshot.docs
-      .map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }))
-      .filter(agendamento => {
-        const nomePaciente = agendamento.cliente?.toLowerCase() || agendamento.nomeCliente?.toLowerCase() || ''
-        const nomeSelecionado = pacienteSelecionado.value.nome.toLowerCase()
-        
-        console.log(`🔍 Comparando: "${nomePaciente}" com "${nomeSelecionado}"`)
-        
-        return nomePaciente.includes(nomeSelecionado) || 
-               nomeSelecionado.includes(nomePaciente) ||
-               nomePaciente === nomeSelecionado
+    const atendimentosDoPaciente = dadosEncontrados.filter(agendamento => {
+      const nomePaciente = agendamento.cliente?.toLowerCase() || 
+                          agendamento.nomeCliente?.toLowerCase() || 
+                          agendamento.paciente?.toLowerCase() || ''
+      const nomeSelecionado = pacienteSelecionado.value.nome.toLowerCase()
+      
+      console.log(`🔍 Comparando: "${nomePaciente}" com "${nomeSelecionado}"`)
+      console.log(`🔍 Dados do agendamento:`, {
+        cliente: agendamento.cliente,
+        nomeCliente: agendamento.nomeCliente,
+        paciente: agendamento.paciente,
+        procedimento: agendamento.procedimento
       })
+      
+      return nomePaciente.includes(nomeSelecionado) || 
+             nomeSelecionado.includes(nomePaciente) ||
+             nomePaciente === nomeSelecionado
+    })
     
     console.log('👤 Atendimentos do paciente:', atendimentosDoPaciente.length)
     console.log('📋 Lista de atendimentos:', atendimentosDoPaciente)
     
     atendimentos.value = atendimentosDoPaciente
+    
+    if (atendimentosDoPaciente.length === 0 && dadosEncontrados.length > 0) {
+      console.log('⚠️ Encontrou dados mas nenhum match com o paciente')
+      console.log('📋 Todos os nomes encontrados:', dadosEncontrados.map(d => ({
+        cliente: d.cliente,
+        nomeCliente: d.nomeCliente,
+        paciente: d.paciente
+      })))
+    }
+    
   } catch (error) {
     console.error('❌ Erro ao carregar atendimentos:', error)
     showError('Erro ao carregar atendimentos: ' + error.message)
