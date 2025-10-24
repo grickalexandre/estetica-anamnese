@@ -72,6 +72,16 @@
               <li>Use o email</li>
             </ul>
           </div>
+          <div class="debug-actions">
+            <button @click="criarDadosTeste" class="btn btn-secondary">
+              <i class="fas fa-plus"></i>
+              Criar Dados de Teste
+            </button>
+            <button @click="verificarDados" class="btn btn-outline">
+              <i class="fas fa-bug"></i>
+              Verificar Dados
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -521,20 +531,69 @@ const buscarPacientes = async () => {
   
   try {
     carregando.value = true
-    console.log('Buscando pacientes com termo:', buscaPaciente.value)
-    console.log('ClinicaId:', clinicaId.value)
+    console.log('🔍 Buscando pacientes com termo:', buscaPaciente.value)
+    console.log('🏥 ClinicaId:', clinicaId.value)
     
-    // Buscar na coleção anamneses que contém os dados dos pacientes
+    // Primeiro, vamos testar se existem dados em diferentes coleções
+    console.log('📊 Testando coleções disponíveis...')
+    
+    // Teste 1: Buscar na coleção anamneses
+    try {
+      const qAnamneses = query(
+        collection(db, 'anamneses'),
+        where('clinicaId', '==', clinicaId.value || 'demo')
+      )
+      const snapshotAnamneses = await getDocs(qAnamneses)
+      console.log('📋 Anamneses encontradas:', snapshotAnamneses.docs.length)
+      
+      if (snapshotAnamneses.docs.length > 0) {
+        console.log('📋 Primeira anamnese:', snapshotAnamneses.docs[0].data())
+      }
+    } catch (err) {
+      console.log('❌ Erro ao buscar anamneses:', err)
+    }
+    
+    // Teste 2: Buscar na coleção pacientes (caso exista)
+    try {
+      const qPacientes = query(
+        collection(db, 'pacientes'),
+        where('clinicaId', '==', clinicaId.value || 'demo')
+      )
+      const snapshotPacientes = await getDocs(qPacientes)
+      console.log('👥 Pacientes encontrados:', snapshotPacientes.docs.length)
+      
+      if (snapshotPacientes.docs.length > 0) {
+        console.log('👥 Primeiro paciente:', snapshotPacientes.docs[0].data())
+      }
+    } catch (err) {
+      console.log('❌ Erro ao buscar pacientes:', err)
+    }
+    
+    // Teste 3: Buscar sem filtro de clinicaId
+    try {
+      const qSemFiltro = query(collection(db, 'anamneses'))
+      const snapshotSemFiltro = await getDocs(qSemFiltro)
+      console.log('🌐 Total de anamneses (sem filtro):', snapshotSemFiltro.docs.length)
+      
+      if (snapshotSemFiltro.docs.length > 0) {
+        console.log('🌐 Primeira anamnese (sem filtro):', snapshotSemFiltro.docs[0].data())
+      }
+    } catch (err) {
+      console.log('❌ Erro ao buscar sem filtro:', err)
+    }
+    
+    // Agora vamos fazer a busca real
     const q = query(
       collection(db, 'anamneses'),
       where('clinicaId', '==', clinicaId.value || 'demo')
     )
     const snapshot = await getDocs(q)
     
-    console.log('Documentos encontrados:', snapshot.docs.length)
+    console.log('📊 Documentos encontrados na busca principal:', snapshot.docs.length)
     
     const todosPacientes = snapshot.docs.map(doc => {
       const data = doc.data()
+      console.log('👤 Processando paciente:', data.nome, data)
       return {
         id: doc.id,
         nome: data.nome || 'Nome não informado',
@@ -547,19 +606,28 @@ const buscarPacientes = async () => {
       }
     })
     
-    console.log('Pacientes mapeados:', todosPacientes.length)
+    console.log('👥 Pacientes mapeados:', todosPacientes.length)
+    console.log('👥 Lista completa de pacientes:', todosPacientes)
     
     const termo = buscaPaciente.value.toLowerCase()
-    pacientesEncontrados.value = todosPacientes.filter(paciente => 
-      paciente.nome.toLowerCase().includes(termo) ||
-      (paciente.cpf && paciente.cpf.includes(termo)) ||
-      (paciente.telefone && paciente.telefone.includes(termo)) ||
-      (paciente.email && paciente.email.toLowerCase().includes(termo))
-    )
+    console.log('🔍 Termo de busca:', termo)
     
-    console.log('Pacientes filtrados:', pacientesEncontrados.value.length)
+    pacientesEncontrados.value = todosPacientes.filter(paciente => {
+      const matchNome = paciente.nome.toLowerCase().includes(termo)
+      const matchCpf = paciente.cpf && paciente.cpf.includes(termo)
+      const matchTelefone = paciente.telefone && paciente.telefone.includes(termo)
+      const matchEmail = paciente.email && paciente.email.toLowerCase().includes(termo)
+      
+      console.log(`🔍 ${paciente.nome}: nome=${matchNome}, cpf=${matchCpf}, telefone=${matchTelefone}, email=${matchEmail}`)
+      
+      return matchNome || matchCpf || matchTelefone || matchEmail
+    })
+    
+    console.log('✅ Pacientes filtrados:', pacientesEncontrados.value.length)
+    console.log('✅ Resultado final:', pacientesEncontrados.value)
+    
   } catch (error) {
-    console.error('Erro ao buscar pacientes:', error)
+    console.error('❌ Erro ao buscar pacientes:', error)
     showError('Erro ao buscar pacientes: ' + error.message)
   } finally {
     carregando.value = false
@@ -569,6 +637,88 @@ const buscarPacientes = async () => {
 const selecionarPaciente = async (paciente) => {
   pacienteSelecionado.value = paciente
   await carregarProntuario()
+}
+
+// Funções de debug
+const verificarDados = async () => {
+  try {
+    console.log('🔍 Verificando dados disponíveis...')
+    
+    // Verificar anamneses
+    const qAnamneses = query(collection(db, 'anamneses'))
+    const snapshotAnamneses = await getDocs(qAnamneses)
+    console.log('📋 Total de anamneses:', snapshotAnamneses.docs.length)
+    
+    if (snapshotAnamneses.docs.length > 0) {
+      console.log('📋 Primeira anamnese:', snapshotAnamneses.docs[0].data())
+    }
+    
+    // Verificar pacientes
+    const qPacientes = query(collection(db, 'pacientes'))
+    const snapshotPacientes = await getDocs(qPacientes)
+    console.log('👥 Total de pacientes:', snapshotPacientes.docs.length)
+    
+    if (snapshotPacientes.docs.length > 0) {
+      console.log('👥 Primeiro paciente:', snapshotPacientes.docs[0].data())
+    }
+    
+    showSuccess(`Encontrados: ${snapshotAnamneses.docs.length} anamneses, ${snapshotPacientes.docs.length} pacientes`)
+  } catch (error) {
+    console.error('Erro ao verificar dados:', error)
+    showError('Erro ao verificar dados: ' + error.message)
+  }
+}
+
+const criarDadosTeste = async () => {
+  try {
+    console.log('🧪 Criando dados de teste...')
+    
+    const dadosTeste = [
+      {
+        nome: 'João Silva',
+        cpf: '123.456.789-00',
+        telefone: '(11) 99999-9999',
+        email: 'joao@email.com',
+        dataNascimento: '1990-01-01',
+        endereco: 'Rua das Flores, 123',
+        clinicaId: clinicaId.value || 'demo',
+        dataCriacao: serverTimestamp()
+      },
+      {
+        nome: 'Maria Santos',
+        cpf: '987.654.321-00',
+        telefone: '(11) 88888-8888',
+        email: 'maria@email.com',
+        dataNascimento: '1985-05-15',
+        endereco: 'Av. Principal, 456',
+        clinicaId: clinicaId.value || 'demo',
+        dataCriacao: serverTimestamp()
+      },
+      {
+        nome: 'Pedro Oliveira',
+        cpf: '456.789.123-00',
+        telefone: '(11) 77777-7777',
+        email: 'pedro@email.com',
+        dataNascimento: '1992-12-10',
+        endereco: 'Rua da Paz, 789',
+        clinicaId: clinicaId.value || 'demo',
+        dataCriacao: serverTimestamp()
+      }
+    ]
+    
+    for (const paciente of dadosTeste) {
+      await addDoc(collection(db, 'anamneses'), paciente)
+      console.log('✅ Paciente criado:', paciente.nome)
+    }
+    
+    showSuccess('Dados de teste criados com sucesso!')
+    
+    // Recarregar a busca
+    await buscarPacientes()
+  } catch (error) {
+    console.error('Erro ao criar dados de teste:', error)
+    showError('Erro ao criar dados de teste: ' + error.message)
+  }
 }
 
 const carregarProntuario = async () => {
@@ -1001,6 +1151,40 @@ onMounted(() => {
 .search-tips li {
   margin-bottom: 0.25rem;
   color: #555;
+}
+
+.debug-actions {
+  margin-top: 1.5rem;
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.debug-actions .btn {
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.debug-actions .btn-secondary {
+  background: #6c757d;
+  color: white;
+  border: none;
+}
+
+.debug-actions .btn-outline {
+  background: transparent;
+  color: #6c757d;
+  border: 1px solid #6c757d;
+}
+
+.debug-actions .btn:hover {
+  opacity: 0.8;
+  transform: translateY(-1px);
 }
 
 /* Cabeçalho do Paciente */
