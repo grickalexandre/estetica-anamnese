@@ -39,12 +39,6 @@
           </div>
           <span v-if="!collapsed" class="nav-text">Agenda</span>
         </router-link>
-        <router-link to="/agendamento-online" class="nav-item" :class="{ 'collapsed': collapsed }">
-          <div class="nav-icon">
-            <i class="fas fa-calendar-plus"></i>
-          </div>
-          <span v-if="!collapsed" class="nav-text">Agendamento Online</span>
-        </router-link>
         <router-link to="/registrar-atendimento-agendado" class="nav-item" :class="{ 'collapsed': collapsed }">
           <div class="nav-icon">
             <i class="fas fa-user-check"></i>
@@ -157,12 +151,6 @@
             <i class="fas fa-chart-line"></i>
           </div>
           <span v-if="!collapsed" class="nav-text">Fluxo de Caixa</span>
-        </router-link>
-        <router-link to="/agendamento-online" class="nav-item" :class="{ 'collapsed': collapsed }">
-          <div class="nav-icon">
-            <i class="fas fa-calendar-alt"></i>
-          </div>
-          <span v-if="!collapsed" class="nav-text">Agendamento</span>
         </router-link>
       </div>
 

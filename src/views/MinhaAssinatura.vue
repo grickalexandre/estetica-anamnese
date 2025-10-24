@@ -352,7 +352,6 @@ const getPeriodoLabel = (periodo) => {
 
 const formatarRecurso = (recurso) => {
   const labels = {
-    'agendamento_online': 'Agendamento Online',
     'whatsapp': 'Integração WhatsApp',
     'relatorios_avancados': 'Relatórios Avançados',
     'multi_usuario': 'Múltiplos Usuários',

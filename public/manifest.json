@@ -52,10 +52,10 @@
       ]
     },
     {
-      "name": "Agendamento",
+      "name": "Agenda",
       "short_name": "Agenda",
       "description": "Gerenciar agendamentos",
-      "url": "/agendamento-online",
+      "url": "/agenda",
       "icons": [
         {
           "src": "/icon-192x192.png",

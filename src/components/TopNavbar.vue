@@ -151,7 +151,7 @@ const detectActiveMenu = () => {
   
   if (path.startsWith('/dashboard')) {
     activeMenu.value = 'dashboard'
-  } else if (path.startsWith('/agenda') || path.startsWith('/agendamento-online') || path.startsWith('/registrar-atendimento')) {
+  } else if (path.startsWith('/agenda') || path.startsWith('/registrar-atendimento')) {
     activeMenu.value = 'atendimento'
   } else if (path.startsWith('/lista') || path.startsWith('/prontuario-eletronico') || path.startsWith('/editar-paciente')) {
     activeMenu.value = 'pacientes'
