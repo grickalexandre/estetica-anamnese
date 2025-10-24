@@ -200,6 +200,49 @@
           </div>
         </div>
 
+        <!-- Atendimentos -->
+        <div v-if="tabAtiva === 'atendimentos'" class="tab-panel">
+          <div class="section-header">
+            <h3><i class="fas fa-calendar-check"></i> Atendimentos Realizados</h3>
+          </div>
+
+          <div v-if="atendimentos.length === 0" class="empty-state">
+            <i class="fas fa-calendar-times"></i>
+            <h3>Nenhum atendimento registrado</h3>
+            <p>Este paciente ainda não possui atendimentos registrados</p>
+          </div>
+
+          <div v-else class="atendimentos-list">
+            <div v-for="atendimento in atendimentos" :key="atendimento.id" class="atendimento-card">
+              <div class="atendimento-header">
+                <div class="atendimento-info">
+                  <h4>{{ atendimento.procedimento || 'Procedimento não informado' }}</h4>
+                  <p class="atendimento-data">
+                    <i class="fas fa-calendar"></i>
+                    {{ formatarData(atendimento.dataHora) }} às {{ formatarHora(atendimento.dataHora) }}
+                  </p>
+                  <p v-if="atendimento.profissional">
+                    <i class="fas fa-user-md"></i>
+                    Profissional: {{ atendimento.profissional }}
+                  </p>
+                  <p v-if="atendimento.valor">
+                    <i class="fas fa-dollar-sign"></i>
+                    Valor: R$ {{ formatarMoeda(atendimento.valor) }}
+                  </p>
+                </div>
+                <div class="atendimento-status">
+                  <span :class="getStatusClass(atendimento.status)">
+                    {{ getStatusText(atendimento.status) }}
+                  </span>
+                </div>
+              </div>
+              <div v-if="atendimento.observacoes" class="atendimento-observacoes">
+                <p><strong>Observações:</strong> {{ atendimento.observacoes }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <!-- Evoluções Clínicas -->
         <div v-if="tabAtiva === 'evolucoes'" class="tab-panel">
           <div class="section-header">
@@ -454,6 +497,7 @@ const carregando = ref(false)
 const tabAtiva = ref('resumo')
 const tabs = ref([
   { id: 'resumo', label: 'Resumo', icon: 'fas fa-chart-pie' },
+  { id: 'atendimentos', label: 'Atendimentos', icon: 'fas fa-calendar-check' },
   { id: 'evolucoes', label: 'Evoluções', icon: 'fas fa-stethoscope' },
   { id: 'exames', label: 'Exames', icon: 'fas fa-vial' },
   { id: 'prescricoes', label: 'Prescrições', icon: 'fas fa-prescription-bottle' },
@@ -465,6 +509,7 @@ const evolucoes = ref([])
 const exames = ref([])
 const prescricoes = ref([])
 const anamneses = ref([])
+const atendimentos = ref([])
 
 // Modais
 const modalEvolucao = ref(false)
@@ -475,7 +520,7 @@ const exameEditando = ref(null)
 const prescricaoEditando = ref(null)
 
 // Computed
-const totalAtendimentos = computed(() => evolucoes.value.length)
+const totalAtendimentos = computed(() => atendimentos.value.length)
 const totalEvolucoes = computed(() => evolucoes.value.length)
 const totalExames = computed(() => exames.value.length)
 const totalPrescricoes = computed(() => prescricoes.value.length)
@@ -729,7 +774,8 @@ const carregarProntuario = async () => {
       carregarEvolucoes(),
       carregarExames(),
       carregarPrescricoes(),
-      carregarAnamneses()
+      carregarAnamneses(),
+      carregarAtendimentos()
     ])
   } catch (error) {
     console.error('Erro ao carregar prontuário:', error)
@@ -787,6 +833,47 @@ const carregarAnamneses = async () => {
     id: doc.id,
     ...doc.data()
   }))
+}
+
+const carregarAtendimentos = async () => {
+  try {
+    console.log('🏥 Carregando atendimentos para paciente:', pacienteSelecionado.value.nome)
+    
+    // Buscar atendimentos por nome do paciente (já que pode não ter pacienteId)
+    const q = query(
+      collection(db, 'agendamentos'),
+      where('clinicaId', '==', clinicaId.value || 'demo'),
+      orderBy('dataHora', 'desc')
+    )
+    const snapshot = await getDocs(q)
+    
+    console.log('📅 Total de agendamentos encontrados:', snapshot.docs.length)
+    
+    // Filtrar por nome do paciente
+    const atendimentosDoPaciente = snapshot.docs
+      .map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }))
+      .filter(agendamento => {
+        const nomePaciente = agendamento.cliente?.toLowerCase() || agendamento.nomeCliente?.toLowerCase() || ''
+        const nomeSelecionado = pacienteSelecionado.value.nome.toLowerCase()
+        
+        console.log(`🔍 Comparando: "${nomePaciente}" com "${nomeSelecionado}"`)
+        
+        return nomePaciente.includes(nomeSelecionado) || 
+               nomeSelecionado.includes(nomePaciente) ||
+               nomePaciente === nomeSelecionado
+      })
+    
+    console.log('👤 Atendimentos do paciente:', atendimentosDoPaciente.length)
+    console.log('📋 Lista de atendimentos:', atendimentosDoPaciente)
+    
+    atendimentos.value = atendimentosDoPaciente
+  } catch (error) {
+    console.error('❌ Erro ao carregar atendimentos:', error)
+    showError('Erro ao carregar atendimentos: ' + error.message)
+  }
 }
 
 // Modais
@@ -942,6 +1029,44 @@ const calcularIdade = (dataNascimento) => {
     idade--
   }
   return idade
+}
+
+// Funções auxiliares para atendimentos
+const formatarHora = (dataHora) => {
+  if (!dataHora) return ''
+  const data = new Date(dataHora)
+  return data.toLocaleTimeString('pt-BR', { 
+    hour: '2-digit', 
+    minute: '2-digit' 
+  })
+}
+
+const formatarMoeda = (valor) => {
+  if (!valor) return '0,00'
+  return parseFloat(valor).toLocaleString('pt-BR', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  })
+}
+
+const getStatusClass = (status) => {
+  const statusMap = {
+    'realizado': 'status-realizado',
+    'agendado': 'status-agendado',
+    'cancelado': 'status-cancelado',
+    'pendente': 'status-pendente'
+  }
+  return statusMap[status?.toLowerCase()] || 'status-pendente'
+}
+
+const getStatusText = (status) => {
+  const statusMap = {
+    'realizado': 'Realizado',
+    'agendado': 'Agendado',
+    'cancelado': 'Cancelado',
+    'pendente': 'Pendente'
+  }
+  return statusMap[status?.toLowerCase()] || 'Pendente'
 }
 
 // Busca em tempo real com debounce
@@ -1185,6 +1310,88 @@ onMounted(() => {
 .debug-actions .btn:hover {
   opacity: 0.8;
   transform: translateY(-1px);
+}
+
+/* Estilos para atendimentos */
+.atendimentos-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.atendimento-card {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.atendimento-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+}
+
+.atendimento-info h4 {
+  margin: 0 0 0.5rem 0;
+  color: #1f2937;
+  font-size: 1.1rem;
+}
+
+.atendimento-info p {
+  margin: 0.25rem 0;
+  color: #6b7280;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.atendimento-info i {
+  width: 16px;
+  color: #9ca3af;
+}
+
+.atendimento-status span {
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  text-transform: uppercase;
+}
+
+.status-realizado {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.status-agendado {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.status-cancelado {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.status-pendente {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.atendimento-observacoes {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+.atendimento-observacoes p {
+  margin: 0;
+  color: #4b5563;
+  font-size: 0.9rem;
 }
 
 /* Cabeçalho do Paciente */
