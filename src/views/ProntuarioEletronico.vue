@@ -861,16 +861,33 @@ const carregarProntuario = async () => {
 }
 
 const carregarEvolucoes = async () => {
-  const q = query(
-    collection(db, 'evolucoes_clinicas'),
-    where('pacienteId', '==', pacienteSelecionado.value.id),
-    orderBy('data', 'desc')
-  )
-  const snapshot = await getDocs(q)
-  evolucoes.value = snapshot.docs.map(doc => ({
-    id: doc.id,
-    ...doc.data()
-  }))
+  try {
+    console.log('🔄 Carregando evoluções clínicas...')
+    console.log('👤 Paciente ID:', pacienteSelecionado.value.id)
+    
+    const q = query(
+      collection(db, 'evolucoes_clinicas'),
+      where('pacienteId', '==', pacienteSelecionado.value.id),
+      orderBy('data', 'desc')
+    )
+    const snapshot = await getDocs(q)
+    
+    console.log('📊 Evoluções encontradas:', snapshot.docs.length)
+    
+    evolucoes.value = snapshot.docs.map(doc => {
+      const data = doc.data()
+      console.log('📋 Evolução:', data)
+      return {
+        id: doc.id,
+        ...data
+      }
+    })
+    
+    console.log('✅ Evoluções carregadas:', evolucoes.value.length)
+  } catch (error) {
+    console.error('❌ Erro ao carregar evoluções:', error)
+    showError('Erro ao carregar evoluções: ' + error.message)
+  }
 }
 
 const carregarExames = async () => {
@@ -1021,8 +1038,11 @@ const carregarAtendimentos = async () => {
 
 // Modais
 const abrirModalNovaEvolucao = () => {
+  console.log('🔓 Abrindo modal de nova evolução...')
+  console.log('👤 Paciente selecionado:', pacienteSelecionado.value)
   evolucaoEditando.value = null
   modalEvolucao.value = true
+  console.log('✅ Modal aberto:', modalEvolucao.value)
 }
 
 const abrirModalNovoExame = () => {
@@ -1082,6 +1102,11 @@ const imprimirPrescricao = (prescricao) => {
 // Salvar dados
 const salvarEvolucao = async (dadosEvolucao) => {
   try {
+    console.log('💾 Salvando evolução clínica...')
+    console.log('📋 Dados recebidos:', dadosEvolucao)
+    console.log('👤 Paciente selecionado:', pacienteSelecionado.value)
+    console.log('🏥 ClinicaId:', clinicaId.value)
+    
     const dados = {
       ...dadosEvolucao,
       pacienteId: pacienteSelecionado.value.id,
@@ -1090,18 +1115,30 @@ const salvarEvolucao = async (dadosEvolucao) => {
       data: serverTimestamp()
     }
     
+    console.log('📊 Dados completos para salvar:', dados)
+    
     if (evolucaoEditando.value) {
+      console.log('✏️ Editando evolução existente:', evolucaoEditando.value.id)
       await updateDoc(doc(db, 'evolucoes_clinicas', evolucaoEditando.value.id), dados)
     } else {
-      await addDoc(collection(db, 'evolucoes_clinicas'), dados)
+      console.log('➕ Criando nova evolução')
+      const docRef = await addDoc(collection(db, 'evolucoes_clinicas'), dados)
+      console.log('✅ Evolução criada com ID:', docRef.id)
     }
     
+    console.log('🔄 Recarregando evoluções...')
     await carregarEvolucoes()
+    
+    console.log('❌ Fechando modal...')
     fecharModalEvolucao()
+    
+    console.log('✅ Mostrando sucesso...')
     showSuccess('Evolução salva com sucesso')
+    
   } catch (error) {
-    console.error('Erro ao salvar evolução:', error)
-    showError('Erro ao salvar evolução')
+    console.error('❌ Erro ao salvar evolução:', error)
+    console.error('❌ Stack trace:', error.stack)
+    showError('Erro ao salvar evolução: ' + error.message)
   }
 }
 
