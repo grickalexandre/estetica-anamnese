@@ -16,22 +16,22 @@
       <!-- Dashboard -->
       <div v-if="activeMenu === 'dashboard'" class="menu-section">
         <div class="section-title">
-          <i class="fas fa-chart-pie"></i>
+          <i class="fas fa-tachometer-alt"></i>
           <span>Visão Geral</span>
         </div>
         <router-link to="/dashboard" class="nav-item" :class="{ 'collapsed': collapsed }">
           <div class="nav-icon">
-            <i class="fas fa-chart-pie"></i>
+            <i class="fas fa-tachometer-alt"></i>
           </div>
           <span v-if="!collapsed" class="nav-text">Dashboard Principal</span>
         </router-link>
       </div>
 
-      <!-- Agenda -->
-      <div v-if="activeMenu === 'agenda'" class="menu-section">
+      <!-- Atendimento -->
+      <div v-if="activeMenu === 'atendimento'" class="menu-section">
         <div class="section-title">
-          <i class="fas fa-calendar-alt"></i>
-          <span>Agendamentos</span>
+          <i class="fas fa-stethoscope"></i>
+          <span>Atendimento</span>
         </div>
         <router-link to="/agenda" class="nav-item" :class="{ 'collapsed': collapsed }">
           <div class="nav-icon">
@@ -39,11 +39,17 @@
           </div>
           <span v-if="!collapsed" class="nav-text">Agenda</span>
         </router-link>
+        <router-link to="/agendamento-online" class="nav-item" :class="{ 'collapsed': collapsed }">
+          <div class="nav-icon">
+            <i class="fas fa-calendar-plus"></i>
+          </div>
+          <span v-if="!collapsed" class="nav-text">Agendamento Online</span>
+        </router-link>
         <router-link to="/registrar-atendimento-agendado" class="nav-item" :class="{ 'collapsed': collapsed }">
           <div class="nav-icon">
             <i class="fas fa-user-check"></i>
           </div>
-          <span v-if="!collapsed" class="nav-text">Atendimento Agendado</span>
+          <span v-if="!collapsed" class="nav-text">Registrar Atendimento</span>
         </router-link>
       </div>
 
@@ -66,17 +72,23 @@
           </div>
           <span v-if="!collapsed" class="nav-text">Prontuário Eletrônico</span>
         </router-link>
+        <router-link to="/nova" class="nav-item" :class="{ 'collapsed': collapsed }">
+          <div class="nav-icon">
+            <i class="fas fa-user-plus"></i>
+          </div>
+          <span v-if="!collapsed" class="nav-text">Nova Anamnese</span>
+        </router-link>
       </div>
 
       <!-- Financeiro -->
       <div v-if="activeMenu === 'financeiro'" class="menu-section">
         <div class="section-title">
-          <i class="fas fa-dollar-sign"></i>
+          <i class="fas fa-chart-line"></i>
           <span>Gestão Financeira</span>
         </div>
         <router-link to="/financeiro" class="nav-item" :class="{ 'collapsed': collapsed }">
           <div class="nav-icon">
-            <i class="fas fa-chart-line"></i>
+            <i class="fas fa-chart-pie"></i>
           </div>
           <span v-if="!collapsed" class="nav-text">Visão Geral</span>
         </router-link>

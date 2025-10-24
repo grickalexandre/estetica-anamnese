@@ -17,47 +17,52 @@
 
       <!-- Main Navigation Items -->
       <div class="navbar-menu">
+        <!-- Dashboard -->
         <router-link 
           to="/dashboard" 
           class="navbar-item" 
           :class="{ 'active': activeMenu === 'dashboard' }"
           @click="setActiveMenu('dashboard')"
         >
-          <i class="fas fa-chart-pie"></i>
+          <i class="fas fa-tachometer-alt"></i>
           <span>Dashboard</span>
         </router-link>
 
-        <router-link 
-          to="/agenda" 
-          class="navbar-item" 
-          :class="{ 'active': activeMenu === 'agenda' }"
-          @click="setActiveMenu('agenda')"
+        <!-- Atendimento -->
+        <div 
+          class="navbar-item dropdown" 
+          :class="{ 'active': activeMenu === 'atendimento' }"
+          @click="setActiveMenu('atendimento')"
         >
-          <i class="fas fa-calendar-alt"></i>
-          <span>Agenda</span>
-        </router-link>
+          <i class="fas fa-stethoscope"></i>
+          <span>Atendimento</span>
+          <i class="fas fa-chevron-down dropdown-arrow"></i>
+        </div>
 
-        <router-link 
-          to="/lista" 
-          class="navbar-item notification-badge" 
+        <!-- Pacientes -->
+        <div 
+          class="navbar-item dropdown notification-badge" 
           :class="{ 'active': activeMenu === 'pacientes' }"
           @click="setActiveMenu('pacientes')"
         >
           <i class="fas fa-users"></i>
           <span>Pacientes</span>
           <span v-if="pendingCount > 0" class="notification-count">{{ pendingCount }}</span>
-        </router-link>
+          <i class="fas fa-chevron-down dropdown-arrow"></i>
+        </div>
 
+        <!-- Financeiro -->
         <div 
           class="navbar-item dropdown" 
           :class="{ 'active': activeMenu === 'financeiro' }"
           @click="setActiveMenu('financeiro')"
         >
-          <i class="fas fa-dollar-sign"></i>
+          <i class="fas fa-chart-line"></i>
           <span>Financeiro</span>
           <i class="fas fa-chevron-down dropdown-arrow"></i>
         </div>
 
+        <!-- Relatórios -->
         <div 
           class="navbar-item dropdown" 
           :class="{ 'active': activeMenu === 'relatorios' }"
@@ -68,16 +73,7 @@
           <i class="fas fa-chevron-down dropdown-arrow"></i>
         </div>
 
-        <div 
-          class="navbar-item dropdown" 
-          :class="{ 'active': activeMenu === 'gestao' }"
-          @click="setActiveMenu('gestao')"
-        >
-          <i class="fas fa-users-cog"></i>
-          <span>Gestão</span>
-          <i class="fas fa-chevron-down dropdown-arrow"></i>
-        </div>
-
+        <!-- Configurações -->
         <router-link 
           to="/configuracoes" 
           class="navbar-item" 
@@ -155,16 +151,14 @@ const detectActiveMenu = () => {
   
   if (path.startsWith('/dashboard')) {
     activeMenu.value = 'dashboard'
-  } else if (path.startsWith('/agenda')) {
-    activeMenu.value = 'agenda'
-  } else if (path.startsWith('/lista')) {
+  } else if (path.startsWith('/agenda') || path.startsWith('/agendamento-online') || path.startsWith('/registrar-atendimento')) {
+    activeMenu.value = 'atendimento'
+  } else if (path.startsWith('/lista') || path.startsWith('/prontuario-eletronico') || path.startsWith('/editar-paciente')) {
     activeMenu.value = 'pacientes'
-  } else if (path.startsWith('/financeiro') || path.startsWith('/comissoes') || path.startsWith('/pagamentos')) {
+  } else if (path.startsWith('/financeiro') || path.startsWith('/comissoes') || path.startsWith('/pagamentos') || path.startsWith('/fluxo-caixa')) {
     activeMenu.value = 'financeiro'
   } else if (path.startsWith('/relatorios') || path.startsWith('/avaliacoes') || path.startsWith('/auditoria')) {
     activeMenu.value = 'relatorios'
-  } else if (path.startsWith('/equipe-clinica') || path.startsWith('/minha-assinatura') || path.startsWith('/planos')) {
-    activeMenu.value = 'gestao'
   } else if (path.startsWith('/configuracoes')) {
     activeMenu.value = 'configuracoes'
   }
