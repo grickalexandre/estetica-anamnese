@@ -195,12 +195,14 @@ import { collection, addDoc, serverTimestamp, query, where, getDocs } from 'fire
 import { useConfiguracoes } from '../composables/useConfiguracoes'
 import { useClinica } from '../composables/useClinica.js'
 import { usePacientes } from '../composables/usePacientes.js'
+import { useFinanceiro } from '../composables/useFinanceiro.js'
 import { compressAnamneseImage, isValidImage } from '../utils/imageCompressor.js'
 import { uploadToCloudinary } from '../utils/cloudinary.js'
 
 const { configuracoes, carregando } = useConfiguracoes()
 const { clinicaId } = useClinica()
 const { buscarOuCriarCliente, atualizarCliente, incrementarAnamnese } = usePacientes()
+const { adicionarContaReceber } = useFinanceiro()
 
 const error = ref('')
 const success = ref('')
@@ -350,6 +352,31 @@ const salvarAnamnese = async () => {
       })
       // Incrementar contador de anamneses
       await incrementarAnamnese(cliente.id)
+    }
+
+    // 5. Criar conta a receber automaticamente se configurado
+    if (configuracoes.value.gerarContaReceber && configuracoes.value.valorAnamnese > 0) {
+      try {
+        console.log('Criando conta a receber para anamnese...')
+        await adicionarContaReceber({
+          descricao: `Consulta de Anamnese - ${formulario.value.nome}`,
+          valor: parseFloat(configuracoes.value.valorAnamnese),
+          dataVencimento: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 7 dias
+          categoria: 'consultas',
+          formaPagamento: 'dinheiro',
+          clienteId: cliente?.id || null,
+          clienteNome: formulario.value.nome,
+          clienteTelefone: formulario.value.telefone,
+          observacoes: `Conta gerada automaticamente pela anamnese online de ${formulario.value.nome}`,
+          status: 'pendente',
+          origem: 'anamnese_online',
+          anamneseId: docRef.id
+        })
+        console.log('Conta a receber criada com sucesso!')
+      } catch (err) {
+        console.error('Erro ao criar conta a receber:', err)
+        // Não falhar o processo se der erro na conta a receber
+      }
     }
 
     success.value = 'Anamnese enviada com sucesso! Nossa equipe entrará em contato em breve. Seu cadastro foi realizado automaticamente.'

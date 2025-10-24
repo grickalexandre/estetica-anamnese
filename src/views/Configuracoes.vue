@@ -14,6 +14,37 @@
       <div v-if="success" class="success">{{ success }}</div>
 
       <form @submit.prevent="salvarConfiguracoes">
+        <!-- Configurações Financeiras -->
+        <h2><i class="fas fa-dollar-sign"></i> Configurações Financeiras</h2>
+        <div class="finance-section">
+          <div class="form-group">
+            <label>Valor da Consulta de Anamnese (R$)</label>
+            <input 
+              v-model="configuracoes.valorAnamnese" 
+              type="number" 
+              step="0.01" 
+              min="0"
+              placeholder="0.00"
+              @input="atualizarValorAnamnese"
+            >
+            <small>Valor que será cobrado pela consulta de anamnese</small>
+          </div>
+          
+          <div class="form-group">
+            <label>Gerar Conta a Receber Automaticamente</label>
+            <div class="checkbox-group">
+              <label class="checkbox-label">
+                <input 
+                  v-model="configuracoes.gerarContaReceber" 
+                  type="checkbox"
+                >
+                <span class="checkmark"></span>
+                Criar conta a receber automaticamente quando cliente preencher anamnese
+              </label>
+            </div>
+          </div>
+        </div>
+
         <!-- Link de Anamnese -->
         <h2><i class="fas fa-link"></i> Link de Anamnese para Clientes</h2>
         <div class="link-section">
@@ -244,7 +275,9 @@ const configuracoes = ref({
   horarioSegSex: '',
   horarioSabado: '',
   observacoesHorarios: '',
-  urlPersonalizada: ''
+  urlPersonalizada: '',
+  valorAnamnese: 0,
+  gerarContaReceber: true
 })
 
 // Link de anamnese
@@ -287,6 +320,13 @@ const gerarQRCode = () => {
   // Implementar geração de QR Code
   const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(linkAnamneseCompleto.value)}`
   window.open(qrUrl, '_blank')
+}
+
+const atualizarValorAnamnese = () => {
+  // Validação básica do valor
+  if (configuracoes.value.valorAnamnese < 0) {
+    configuracoes.value.valorAnamnese = 0
+  }
 }
 
 const carregarConfiguracoes = async () => {
@@ -552,6 +592,57 @@ onMounted(() => {
   font-size: 12px;
   color: #6b7280;
   font-weight: 600;
+}
+
+/* Configurações Financeiras */
+.finance-section {
+  background: #f0f9ff;
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 32px;
+  border: 1px solid #bae6fd;
+}
+
+.checkbox-group {
+  margin-top: 8px;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  font-size: 14px;
+  color: #374151;
+}
+
+.checkbox-label input[type="checkbox"] {
+  display: none;
+}
+
+.checkmark {
+  width: 20px;
+  height: 20px;
+  border: 2px solid #d1d5db;
+  border-radius: 4px;
+  position: relative;
+  transition: all 0.2s ease;
+}
+
+.checkbox-label input[type="checkbox"]:checked + .checkmark {
+  background: #3b82f6;
+  border-color: #3b82f6;
+}
+
+.checkbox-label input[type="checkbox"]:checked + .checkmark::after {
+  content: '✓';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: white;
+  font-size: 12px;
+  font-weight: bold;
 }
 
 /* Link de Anamnese */
