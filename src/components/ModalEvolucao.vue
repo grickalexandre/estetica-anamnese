@@ -84,6 +84,10 @@ const props = defineProps({
   evolucao: {
     type: Object,
     default: null
+  },
+  profissionalSugerido: {
+    type: String,
+    default: ''
   }
 })
 
@@ -129,8 +133,14 @@ const salvarEvolucao = async () => {
 }
 
 onMounted(() => {
+  console.log('🔧 Inicializando modal de evolução...')
+  console.log('👤 Paciente:', props.paciente)
+  console.log('👨‍⚕️ Profissional sugerido:', props.profissionalSugerido)
+  console.log('📋 Evolução editando:', props.evolucao)
+  
   // Preencher formulário se editando
   if (props.evolucao) {
+    console.log('✏️ Editando evolução existente')
     formulario.value = {
       titulo: props.evolucao.titulo || '',
       data: props.evolucao.data ? new Date(props.evolucao.data).toISOString().split('T')[0] : '',
@@ -143,9 +153,16 @@ onMounted(() => {
       observacoes: props.evolucao.observacoes || ''
     }
   } else {
-    // Nova evolução - preencher data atual
+    console.log('➕ Nova evolução - preenchendo dados iniciais')
+    // Nova evolução - preencher data atual e profissional sugerido
     formulario.value.data = new Date().toISOString().split('T')[0]
+    if (props.profissionalSugerido) {
+      console.log('✅ Preenchendo profissional sugerido:', props.profissionalSugerido)
+      formulario.value.profissional = props.profissionalSugerido
+    }
   }
+  
+  console.log('📋 Formulário inicializado:', formulario.value)
 })
 </script>
 

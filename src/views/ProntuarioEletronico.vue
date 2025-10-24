@@ -455,6 +455,7 @@
       v-if="modalEvolucao" 
       :paciente="pacienteSelecionado"
       :evolucao="evolucaoEditando"
+      :profissional-sugerido="buscarUltimoProfissional()"
       @fechar="fecharModalEvolucao"
       @salvar="salvarEvolucao"
     />
@@ -524,7 +525,12 @@ const exameEditando = ref(null)
 const prescricaoEditando = ref(null)
 
 // Computed
-const totalAtendimentos = computed(() => atendimentos.value.length)
+const totalAtendimentos = computed(() => {
+  // Filtrar apenas atendimentos realizados
+  return atendimentos.value.filter(atendimento => 
+    atendimento.status?.toLowerCase() === 'realizado'
+  ).length
+})
 const totalEvolucoes = computed(() => evolucoes.value.length)
 const totalExames = computed(() => exames.value.length)
 const totalPrescricoes = computed(() => prescricoes.value.length)
@@ -996,24 +1002,29 @@ const carregarAtendimentos = async () => {
     console.log(`📊 Usando coleção: ${colecaoUsada}`)
     console.log(`📊 Total de documentos: ${dadosEncontrados.length}`)
     
-    // Filtrar por nome do paciente
+    // Filtrar por nome do paciente E status realizado
     const atendimentosDoPaciente = dadosEncontrados.filter(agendamento => {
       const nomePaciente = agendamento.cliente?.toLowerCase() || 
                           agendamento.nomeCliente?.toLowerCase() || 
                           agendamento.paciente?.toLowerCase() || ''
       const nomeSelecionado = pacienteSelecionado.value.nome.toLowerCase()
+      const statusRealizado = agendamento.status?.toLowerCase() === 'realizado'
       
       console.log(`🔍 Comparando: "${nomePaciente}" com "${nomeSelecionado}"`)
+      console.log(`🔍 Status: "${agendamento.status}" -> Realizado: ${statusRealizado}`)
       console.log(`🔍 Dados do agendamento:`, {
         cliente: agendamento.cliente,
         nomeCliente: agendamento.nomeCliente,
         paciente: agendamento.paciente,
-        procedimento: agendamento.procedimento
+        procedimento: agendamento.procedimento,
+        status: agendamento.status
       })
       
-      return nomePaciente.includes(nomeSelecionado) || 
-             nomeSelecionado.includes(nomePaciente) ||
-             nomePaciente === nomeSelecionado
+      const nomeMatch = nomePaciente.includes(nomeSelecionado) || 
+                       nomeSelecionado.includes(nomePaciente) ||
+                       nomePaciente === nomeSelecionado
+      
+      return nomeMatch && statusRealizado
     })
     
     console.log('👤 Atendimentos do paciente:', atendimentosDoPaciente.length)
@@ -1040,9 +1051,41 @@ const carregarAtendimentos = async () => {
 const abrirModalNovaEvolucao = () => {
   console.log('🔓 Abrindo modal de nova evolução...')
   console.log('👤 Paciente selecionado:', pacienteSelecionado.value)
+  
+  // Buscar o último profissional que atendeu este paciente
+  const ultimoProfissional = buscarUltimoProfissional()
+  console.log('👨‍⚕️ Último profissional encontrado:', ultimoProfissional)
+  
   evolucaoEditando.value = null
   modalEvolucao.value = true
   console.log('✅ Modal aberto:', modalEvolucao.value)
+}
+
+// Função para buscar o último profissional que atendeu o paciente
+const buscarUltimoProfissional = () => {
+  if (!atendimentos.value || atendimentos.value.length === 0) {
+    console.log('❌ Nenhum atendimento encontrado para buscar profissional')
+    return ''
+  }
+  
+  // Buscar o atendimento mais recente com profissional
+  const atendimentoComProfissional = atendimentos.value
+    .filter(atendimento => atendimento.profissional && atendimento.profissional.trim() !== '')
+    .sort((a, b) => {
+      // Ordenar por data mais recente
+      const dataA = new Date(a.dataHora || a.data || 0)
+      const dataB = new Date(b.dataHora || b.data || 0)
+      return dataB - dataA
+    })
+  
+  if (atendimentoComProfissional.length > 0) {
+    const profissional = atendimentoComProfissional[0].profissional
+    console.log('✅ Profissional encontrado:', profissional)
+    return profissional
+  }
+  
+  console.log('❌ Nenhum profissional encontrado nos atendimentos')
+  return ''
 }
 
 const abrirModalNovoExame = () => {
