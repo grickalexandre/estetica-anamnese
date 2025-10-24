@@ -526,10 +526,19 @@ const prescricaoEditando = ref(null)
 
 // Computed
 const totalAtendimentos = computed(() => {
+  console.log('📊 Calculando total de atendimentos...')
+  console.log('📋 Atendimentos disponíveis:', atendimentos.value.length)
+  console.log('📋 Lista de atendimentos:', atendimentos.value)
+  
   // Filtrar apenas atendimentos realizados
-  return atendimentos.value.filter(atendimento => 
-    atendimento.status?.toLowerCase() === 'realizado'
-  ).length
+  const realizados = atendimentos.value.filter(atendimento => {
+    const isRealizado = atendimento.status?.toLowerCase() === 'realizado'
+    console.log(`🔍 Atendimento: ${atendimento.procedimento} - Status: ${atendimento.status} - Realizado: ${isRealizado}`)
+    return isRealizado
+  })
+  
+  console.log('✅ Atendimentos realizados encontrados:', realizados.length)
+  return realizados.length
 })
 const totalEvolucoes = computed(() => evolucoes.value.length)
 const totalExames = computed(() => exames.value.length)
@@ -870,15 +879,47 @@ const carregarEvolucoes = async () => {
   try {
     console.log('🔄 Carregando evoluções clínicas...')
     console.log('👤 Paciente ID:', pacienteSelecionado.value.id)
+    console.log('👤 Paciente Nome:', pacienteSelecionado.value.nome)
     
-    const q = query(
+    // Primeiro, tentar buscar por pacienteId
+    let q = query(
       collection(db, 'evolucoes_clinicas'),
-      where('pacienteId', '==', pacienteSelecionado.value.id),
-      orderBy('data', 'desc')
+      where('pacienteId', '==', pacienteSelecionado.value.id)
     )
-    const snapshot = await getDocs(q)
     
-    console.log('📊 Evoluções encontradas:', snapshot.docs.length)
+    let snapshot
+    try {
+      snapshot = await getDocs(q)
+      console.log('📊 Evoluções encontradas por pacienteId:', snapshot.docs.length)
+    } catch (error) {
+      console.log('❌ Erro ao buscar por pacienteId, tentando sem filtro:', error.message)
+      
+      // Se falhar, buscar todas e filtrar localmente
+      q = query(collection(db, 'evolucoes_clinicas'))
+      snapshot = await getDocs(q)
+      console.log('📊 Total de evoluções encontradas:', snapshot.docs.length)
+      
+      // Filtrar localmente por pacienteId
+      const evolucoesDoPaciente = snapshot.docs.filter(doc => {
+        const data = doc.data()
+        return data.pacienteId === pacienteSelecionado.value.id || 
+               data.pacienteNome === pacienteSelecionado.value.nome
+      })
+      
+      console.log('📊 Evoluções do paciente (filtro local):', evolucoesDoPaciente.length)
+      
+      evolucoes.value = evolucoesDoPaciente.map(doc => {
+        const data = doc.data()
+        console.log('📋 Evolução:', data)
+        return {
+          id: doc.id,
+          ...data
+        }
+      })
+      
+      console.log('✅ Evoluções carregadas:', evolucoes.value.length)
+      return
+    }
     
     evolucoes.value = snapshot.docs.map(doc => {
       const data = doc.data()
