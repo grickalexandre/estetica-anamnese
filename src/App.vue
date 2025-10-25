@@ -1,7 +1,10 @@
 <template>
   <div id="app" :class="{ 'no-menu-layout': isClientPage }">
-    <!-- Layout PWA para páginas administrativas -->
-    <PWALayout v-if="!isClientPage">
+    <!-- Página inicial com layout próprio -->
+    <router-view v-if="isHomePage"></router-view>
+    
+    <!-- Layout PWA para outras páginas administrativas -->
+    <PWALayout v-else-if="!isClientPage">
       <router-view></router-view>
     </PWALayout>
     
@@ -92,6 +95,10 @@ const {
 
 const isClientPage = computed(() => {
   return route.path === '/anamnese-cliente'
+})
+
+const isHomePage = computed(() => {
+  return route.path === '/'
 })
 
 

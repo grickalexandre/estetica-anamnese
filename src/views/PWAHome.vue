@@ -1,7 +1,7 @@
 <template>
   <PWALayout>
     <div class="pwa-home">
-      <!-- Header com cartão virtual -->
+      <!-- Cartão virtual -->
     <div class="header-section">
       <div class="virtual-card">
         <div class="card-header">
@@ -138,7 +138,6 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { auth } from '../firebase.js'
-import PWALayout from '../components/PWALayout.vue'
 
 const router = useRouter()
 const userInfo = ref(null)
