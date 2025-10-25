@@ -55,11 +55,11 @@ const navigateTo = (path) => {
 }
 
 .nav-item.active {
-  color: #667eea;
+  color: #00A859;
 }
 
 .nav-item:hover {
-  color: #667eea;
+  color: #00A859;
   transform: translateY(-2px);
 }
 

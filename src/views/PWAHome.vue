@@ -1,6 +1,7 @@
 <template>
-  <div class="pwa-home">
-    <!-- Header com cartão virtual -->
+  <PWALayout>
+    <div class="pwa-home">
+      <!-- Header com cartão virtual -->
     <div class="header-section">
       <div class="virtual-card">
         <div class="card-header">
@@ -129,16 +130,15 @@
       </div>
     </div>
 
-    <!-- Navegação inferior -->
-    <PWANavigation />
-  </div>
+    </div>
+  </PWALayout>
 </template>
 
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { auth } from '../firebase.js'
-import PWANavigation from '../components/PWANavigation.vue'
+import PWALayout from '../components/PWALayout.vue'
 
 const router = useRouter()
 const userInfo = ref(null)
@@ -168,24 +168,22 @@ const formatarHora = (hora) => {
 
 <style scoped>
 .pwa-home {
-  min-height: 100vh;
   background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-  padding-bottom: 80px; /* Espaço para navegação inferior */
 }
 
 /* Header com cartão virtual */
 .header-section {
   padding: 20px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #00A859 0%, #4CAF50 100%);
   margin-bottom: 20px;
 }
 
 .virtual-card {
-  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  background: linear-gradient(135deg, #00A859 0%, #4CAF50 100%);
   border-radius: 20px;
   padding: 24px;
   color: white;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 10px 30px rgba(0, 168, 89, 0.3);
   position: relative;
   overflow: hidden;
 }
@@ -309,7 +307,7 @@ const formatarHora = (hora) => {
   width: 48px;
   height: 48px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #00A859 0%, #4CAF50 100%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -345,7 +343,7 @@ const formatarHora = (hora) => {
 }
 
 .tracking-header i {
-  color: #667eea;
+  color: #00A859;
   font-size: 18px;
 }
 
@@ -390,7 +388,7 @@ const formatarHora = (hora) => {
 
 .tracking-time {
   font-weight: bold;
-  color: #667eea;
+  color: #00A859;
   font-size: 14px;
   min-width: 50px;
 }
@@ -453,7 +451,7 @@ const formatarHora = (hora) => {
 }
 
 .service-item.highlight span {
-  color: #f56565;
+  color: #FF6B35;
   font-weight: bold;
 }
 
@@ -461,7 +459,7 @@ const formatarHora = (hora) => {
   width: 56px;
   height: 56px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #00A859 0%, #4CAF50 100%);
   display: flex;
   align-items: center;
   justify-content: center;
