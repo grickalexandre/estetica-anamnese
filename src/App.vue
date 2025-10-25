@@ -1,38 +1,12 @@
 <template>
   <div id="app" :class="{ 'no-menu-layout': isClientPage }">
-    <!-- Top Navbar -->
-    <TopNavbar 
-      v-if="!isClientPage" 
-      :pending-count="pendingCount"
-      @logout="handleLogout"
-      @menu-change="handleMenuChange"
-      class="top-navbar"
-    />
+    <!-- Layout PWA para páginas administrativas -->
+    <PWALayout v-if="!isClientPage">
+      <router-view></router-view>
+    </PWALayout>
     
-    <!-- Sidebar Desktop -->
-    <Sidebar 
-      v-if="!isClientPage" 
-      :pending-count="pendingCount"
-      :active-menu="activeMenu"
-      @logout="handleLogout"
-      @toggle="handleSidebarToggle"
-      class="desktop-sidebar"
-    />
-    
-    <!-- Mobile Menu -->
-    <MobileMenu 
-      v-if="!isClientPage" 
-      :pending-count="pendingCount"
-      @logout="handleLogout"
-      class="mobile-menu"
-    />
-    
-    <!-- Main Content -->
-    <main class="main-content" :class="{ 
-      'with-navbar': !isClientPage,
-      'with-sidebar': !isClientPage && !sidebarCollapsed,
-      'with-sidebar-collapsed': !isClientPage && sidebarCollapsed
-    }">
+    <!-- Layout simples para página do cliente -->
+    <main v-else class="client-content">
       <router-view></router-view>
     </main>
     
@@ -93,9 +67,7 @@ import { useConfiguracoes } from './composables/useConfiguracoes'
 import { useClinica } from './composables/useClinica.js'
 import { useAuth } from './composables/useAuth.js'
 import { useNotifications } from './composables/useNotifications.js'
-import TopNavbar from './components/TopNavbar.vue'
-import Sidebar from './components/Sidebar.vue'
-import MobileMenu from './components/MobileMenu.vue'
+import PWALayout from './components/PWALayout.vue'
 import Toast from './components/Toast.vue'
 import ConfirmModal from './components/ConfirmModal.vue'
 import PromptModal from './components/PromptModal.vue'
@@ -104,8 +76,6 @@ import PWAInstall from './components/PWAInstall.vue'
 const route = useRoute()
 const router = useRouter()
 const pendingCount = ref(0)
-const sidebarCollapsed = ref(false)
-const activeMenu = ref('dashboard')
 
 const { clinicaId, inicializarClinica } = useClinica()
 const { isAuthenticated, isFree, isPaid, logout, initAuth } = useAuth()
@@ -124,13 +94,6 @@ const isClientPage = computed(() => {
   return route.path === '/anamnese-cliente'
 })
 
-const handleSidebarToggle = (collapsed) => {
-  sidebarCollapsed.value = collapsed
-}
-
-const handleMenuChange = (menu) => {
-  activeMenu.value = menu
-}
 
 const updatePendingCount = async () => {
   try {
@@ -202,58 +165,10 @@ watch(isClientPage, (newValue) => {
 </script>
 
 <style scoped>
-/* Layout principal */
-.main-content {
+/* Layout para página do cliente */
+.client-content {
   min-height: 100vh;
   background: #f8f9fa;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.main-content.with-navbar {
-  padding-top: 70px;
-}
-
-.main-content.with-sidebar {
-  margin-left: 280px;
-}
-
-.main-content.with-sidebar-collapsed {
-  margin-left: 70px;
-}
-
-/* Sidebar Desktop */
-.desktop-sidebar {
-  display: block;
-}
-
-/* Mobile Menu */
-.mobile-menu {
-  display: none;
-}
-
-/* Responsive */
-@media (max-width: 1024px) {
-  .main-content.with-sidebar {
-    margin-left: 0;
-  }
-  
-  .main-content.with-sidebar-collapsed {
-    margin-left: 0;
-  }
-}
-
-@media (max-width: 768px) {
-  .desktop-sidebar {
-    display: none;
-  }
-  
-  .mobile-menu {
-    display: block;
-  }
-  
-  .main-content.with-navbar {
-    padding-top: 60px;
-  }
 }
 
 /* Notificações */

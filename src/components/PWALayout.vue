@@ -1,7 +1,7 @@
 <template>
   <div class="pwa-layout">
     <!-- Header minimalista -->
-    <PWAHeader />
+    <PWAHeader :notification-count="notificationCount" />
     
     <!-- Conteúdo principal -->
     <main class="main-content">
@@ -14,8 +14,12 @@
 </template>
 
 <script setup>
+import { ref } from 'vue'
 import PWAHeader from './PWAHeader.vue'
 import PWANavigation from './PWANavigation.vue'
+
+// Props para notificações
+const notificationCount = ref(0)
 </script>
 
 <style scoped>

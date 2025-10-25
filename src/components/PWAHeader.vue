@@ -20,7 +20,7 @@
         <!-- Notificações -->
         <button class="notification-btn" @click="toggleNotifications">
           <i class="fas fa-bell"></i>
-          <span v-if="notificationCount > 0" class="notification-badge">{{ notificationCount }}</span>
+          <span v-if="props.notificationCount > 0" class="notification-badge">{{ props.notificationCount }}</span>
         </button>
         
         <!-- Dados da clínica -->
@@ -51,7 +51,14 @@ import { auth } from '../firebase.js'
 const router = useRouter()
 const route = useRoute()
 
-const notificationCount = ref(3)
+// Props
+const props = defineProps({
+  notificationCount: {
+    type: Number,
+    default: 0
+  }
+})
+
 const clinicName = ref('Clínica Estética')
 
 // Títulos das páginas
