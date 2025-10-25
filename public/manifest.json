@@ -40,18 +40,6 @@
   ],
   "shortcuts": [
     {
-      "name": "Nova Anamnese",
-      "short_name": "Anamnese",
-      "description": "Criar nova anamnese",
-      "url": "/nova",
-      "icons": [
-        {
-          "src": "/icon-192x192.png",
-          "sizes": "192x192"
-        }
-      ]
-    },
-    {
       "name": "Agenda",
       "short_name": "Agenda",
       "description": "Gerenciar agendamentos",
@@ -64,10 +52,34 @@
       ]
     },
     {
+      "name": "Pacientes",
+      "short_name": "Pacientes",
+      "description": "Gerenciar pacientes",
+      "url": "/lista",
+      "icons": [
+        {
+          "src": "/icon-192x192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
       "name": "Financeiro",
       "short_name": "Financeiro",
       "description": "Controle financeiro",
-      "url": "/fluxo-caixa",
+      "url": "/financeiro",
+      "icons": [
+        {
+          "src": "/icon-192x192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "Nova Anamnese",
+      "short_name": "Anamnese",
+      "description": "Criar nova anamnese",
+      "url": "/nova",
       "icons": [
         {
           "src": "/icon-192x192.png",

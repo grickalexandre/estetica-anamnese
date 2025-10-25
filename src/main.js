@@ -39,6 +39,7 @@ import Planos from './views/Planos.vue'
 import MinhaAssinatura from './views/MinhaAssinatura.vue'
 import PrecificacaoProcedimentos from './views/PrecificacaoProcedimentos.vue'
 import ProntuarioEletronico from './views/ProntuarioEletronico.vue'
+import PWAHome from './views/PWAHome.vue'
 import { auth } from './firebase.js'
 import './style.css'
 import './utils/notificationUtils.js'
@@ -50,7 +51,8 @@ const routes = [
   { path: '/anamnese-cliente', component: AnamneseCliente, meta: { public: true } },
   
   // Rotas protegidas
-  { path: '/', component: Home, meta: { requiresAuth: true } },
+  { path: '/', component: PWAHome, meta: { requiresAuth: true } },
+  { path: '/dashboard', component: Home, meta: { requiresAuth: true } },
   { path: '/nova', component: NovaAnamnese, meta: { requiresAuth: true } },
   { path: '/lista', component: ListaAnamneses, meta: { requiresAuth: true } },
   { path: '/detalhes/:id', component: DetalhesAnamnese, meta: { requiresAuth: true } },
