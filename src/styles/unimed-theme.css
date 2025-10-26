@@ -12,17 +12,17 @@
   --unimed-orange-light: #FF8A65;
   --unimed-orange-dark: #E64A19;
   
-  /* Cores neutras */
-  --unimed-gray-50: #F8F9FA;
-  --unimed-gray-100: #F1F3F4;
-  --unimed-gray-200: #E2E8F0;
-  --unimed-gray-300: #CBD5E0;
-  --unimed-gray-400: #A0AEC0;
-  --unimed-gray-500: #718096;
-  --unimed-gray-600: #4A5568;
-  --unimed-gray-700: #2D3748;
-  --unimed-gray-800: #1A202C;
-  --unimed-gray-900: #171923;
+  /* Cores neutras - tons mais claros */
+  --unimed-gray-50: #FFFFFF;
+  --unimed-gray-100: #F8F9FA;
+  --unimed-gray-200: #F1F3F4;
+  --unimed-gray-300: #E2E8F0;
+  --unimed-gray-400: #CBD5E0;
+  --unimed-gray-500: #A0AEC0;
+  --unimed-gray-600: #718096;
+  --unimed-gray-700: #4A5568;
+  --unimed-gray-800: #2D3748;
+  --unimed-gray-900: #1A202C;
   
   /* Cores de status */
   --unimed-success: #00A859;
@@ -62,8 +62,8 @@
 
 body {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  background-color: var(--unimed-gray-50);
-  color: var(--unimed-gray-700);
+  background-color: #F8F9FA;
+  color: #4A5568;
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;

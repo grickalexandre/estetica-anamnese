@@ -141,7 +141,7 @@ const logout = async () => {
 .page-title h1 {
   font-size: 18px;
   font-weight: bold;
-  color: #2d3748;
+  color: #4A5568;
   margin: 0;
 }
 
@@ -217,7 +217,7 @@ const logout = async () => {
 .clinic-name {
   font-size: 12px;
   font-weight: 500;
-  color: #2d3748;
+  color: #4A5568;
   line-height: 1.2;
 }
 

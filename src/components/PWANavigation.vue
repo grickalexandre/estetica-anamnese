@@ -51,7 +51,7 @@ const navigateTo = (path) => {
   padding: 8px 4px;
   cursor: pointer;
   transition: all 0.3s ease;
-  color: #718096;
+  color: #A0AEC0;
 }
 
 .nav-item.active {

@@ -167,7 +167,7 @@ const formatarHora = (hora) => {
 
 <style scoped>
 .pwa-home {
-  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  background: #F8F9FA;
 }
 
 /* Header com cartão virtual */
@@ -318,7 +318,7 @@ const formatarHora = (hora) => {
 .favorite-item span {
   font-size: 12px;
   font-weight: 500;
-  color: #4a5568;
+  color: #718096;
   text-align: center;
 }
 
@@ -349,7 +349,7 @@ const formatarHora = (hora) => {
 .tracking-header h3 {
   font-size: 16px;
   font-weight: bold;
-  color: #2d3748;
+  color: #4A5568;
   margin: 0;
 }
 
@@ -398,7 +398,7 @@ const formatarHora = (hora) => {
 
 .tracking-patient {
   font-weight: 500;
-  color: #2d3748;
+  color: #4A5568;
   font-size: 14px;
 }
 
@@ -470,7 +470,7 @@ const formatarHora = (hora) => {
 .service-item span {
   font-size: 12px;
   font-weight: 500;
-  color: #4a5568;
+  color: #718096;
   text-align: center;
 }
 

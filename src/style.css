@@ -6,10 +6,10 @@
 
 body {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', Helvetica, Arial, sans-serif;
-  /* Paleta Unimed */
-  background: linear-gradient(135deg, #f8f9fa 0%, #e8f5e8 100%);
+  /* Paleta Unimed - tons claros */
+  background: #F8F9FA;
   min-height: 100vh;
-  color: #2d3748;
+  color: #4A5568;
   line-height: 1.6;
   font-weight: 400;
   -webkit-font-smoothing: antialiased;
@@ -25,9 +25,8 @@ body::before {
   right: 0;
   bottom: 0;
   background: 
-    radial-gradient(circle at 20% 80%, rgba(29, 29, 31, 0.03) 0%, transparent 50%),
-    radial-gradient(circle at 80% 20%, rgba(29, 29, 31, 0.03) 0%, transparent 50%),
-    radial-gradient(circle at 40% 40%, rgba(29, 29, 31, 0.02) 0%, transparent 50%);
+    radial-gradient(circle at 20% 80%, rgba(0, 168, 89, 0.02) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(0, 168, 89, 0.02) 0%, transparent 50%);
   pointer-events: none;
   z-index: -1;
 }
