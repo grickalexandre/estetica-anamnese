@@ -2,6 +2,102 @@
    TEMA UNIMED - CORES E ESTILOS GLOBAIS
    ======================================== */
 
+/* Forçar aplicação do tema em todos os elementos */
+* {
+  box-sizing: border-box;
+}
+
+/* Reset de cores antigas e aplicação forçada do tema Unimed */
+
+/* Forçar cores Unimed em botões comuns */
+button, .btn, input[type="button"], input[type="submit"] {
+  background: var(--unimed-gradient-primary) !important;
+  color: white !important;
+  border: none !important;
+}
+
+button:hover, .btn:hover, input[type="button"]:hover, input[type="submit"]:hover {
+  background: linear-gradient(135deg, var(--unimed-green-dark) 0%, var(--unimed-green) 100%) !important;
+}
+
+/* Forçar cores Unimed em campos de entrada */
+input, textarea, select {
+  border-color: var(--unimed-green) !important;
+}
+
+input:focus, textarea:focus, select:focus {
+  border-color: var(--unimed-green) !important;
+  box-shadow: 0 0 0 3px rgba(0, 168, 89, 0.1) !important;
+}
+
+/* Forçar cores Unimed em cards e seções */
+.card, .section, .panel {
+  background: var(--unimed-gray-50) !important;
+  border: 1px solid var(--unimed-gray-200) !important;
+}
+
+/* Forçar cores Unimed em badges e status */
+.badge, .status, .tag {
+  background: var(--unimed-green-bg) !important;
+  color: var(--unimed-green-dark) !important;
+  border: 1px solid var(--unimed-green) !important;
+}
+
+/* Forçar cores Unimed em elementos específicos das páginas */
+.action-btn, .btn-action {
+  background: var(--unimed-gradient-primary) !important;
+  color: white !important;
+}
+
+.action-btn:hover, .btn-action:hover {
+  background: linear-gradient(135deg, var(--unimed-green-dark) 0%, var(--unimed-green) 100%) !important;
+}
+
+/* Botões secundários */
+.btn-secondary, .btn-outline {
+  background: var(--unimed-gray-50) !important;
+  color: var(--unimed-green) !important;
+  border: 1px solid var(--unimed-green) !important;
+}
+
+.btn-secondary:hover, .btn-outline:hover {
+  background: var(--unimed-green) !important;
+  color: white !important;
+}
+
+/* Seções de configuração */
+.finance-section, .link-section, .config-section {
+  background: var(--unimed-green-bg) !important;
+  border: 1px solid var(--unimed-green) !important;
+}
+
+/* Cards de resumo */
+.summary-card, .kpi-card, .metric-card {
+  background: var(--unimed-gray-50) !important;
+  border: 1px solid var(--unimed-gray-200) !important;
+}
+
+/* Ícones de status */
+.status-icon, .kpi-icon {
+  background: var(--unimed-gradient-primary) !important;
+  color: white !important;
+}
+
+/* Campos de filtro */
+.filter-input, .search-input {
+  border-color: var(--unimed-green) !important;
+}
+
+/* Botões de ação específicos */
+.btn-nova-receita, .btn-nova-despesa, .btn-fluxo, .btn-relatorio {
+  background: var(--unimed-gradient-primary) !important;
+  color: white !important;
+}
+
+.btn-nova-despesa, .btn-relatorio {
+  background: var(--unimed-gradient-secondary) !important;
+}
+
 :root {
   /* Cores principais Unimed */
   --unimed-green: #00A859;
