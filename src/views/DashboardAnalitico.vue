@@ -163,18 +163,18 @@ const formatarMoeda = (valor) => {
 .kpis-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 30px; }
 .kpi-card { background: white; border-radius: 12px; padding: 20px; display: flex; align-items: center; gap: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
 .kpi-icon { width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; color: white; }
-.kpi-card.receita .kpi-icon { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
-.kpi-card.despesa .kpi-icon { background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%); }
-.kpi-card.lucro.positivo .kpi-icon { background: linear-gradient(135deg, #34c759 0%, #43a047 100%); }
-.kpi-card.lucro.negativo .kpi-icon { background: linear-gradient(135deg, #ff3b30 0%, #e53935 100%); }
-.kpi-card.ticket .kpi-icon { background: linear-gradient(135deg, #ffa726 0%, #fb8c00 100%); }
-.kpi-card.atendimentos .kpi-icon { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
-.kpi-card.realizados .kpi-icon { background: linear-gradient(135deg, #34c759 0%, #43a047 100%); }
-.kpi-card.comparecimento .kpi-icon { background: linear-gradient(135deg, #007aff 0%, #0051d5 100%); }
-.kpi-card.cancelamento .kpi-icon { background: linear-gradient(135deg, #ff3b30 0%, #e53935 100%); }
-.kpi-card.novos .kpi-icon { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
-.kpi-card.unicos .kpi-icon { background: linear-gradient(135deg, #4caf50 0%, #43a047 100%); }
-.kpi-card.anamneses .kpi-icon { background: linear-gradient(135deg, #ffa726 0%, #fb8c00 100%); }
+.kpi-card.receita .kpi-icon { background: linear-gradient(135deg, #00A859 0%, #4CAF50 100%); }
+.kpi-card.despesa .kpi-icon { background: linear-gradient(135deg, #FF6B35 0%, #FF8A65 100%); }
+.kpi-card.lucro.positivo .kpi-icon { background: linear-gradient(135deg, #00A859 0%, #4CAF50 100%); }
+.kpi-card.lucro.negativo .kpi-icon { background: linear-gradient(135deg, #FF6B35 0%, #FF8A65 100%); }
+.kpi-card.ticket .kpi-icon { background: linear-gradient(135deg, #00A859 0%, #4CAF50 100%); }
+.kpi-card.atendimentos .kpi-icon { background: linear-gradient(135deg, #00A859 0%, #4CAF50 100%); }
+.kpi-card.realizados .kpi-icon { background: linear-gradient(135deg, #00A859 0%, #4CAF50 100%); }
+.kpi-card.comparecimento .kpi-icon { background: linear-gradient(135deg, #00A859 0%, #4CAF50 100%); }
+.kpi-card.cancelamento .kpi-icon { background: linear-gradient(135deg, #FF6B35 0%, #FF8A65 100%); }
+.kpi-card.novos .kpi-icon { background: linear-gradient(135deg, #00A859 0%, #4CAF50 100%); }
+.kpi-card.unicos .kpi-icon { background: linear-gradient(135deg, #00A859 0%, #4CAF50 100%); }
+.kpi-card.anamneses .kpi-icon { background: linear-gradient(135deg, #FF6B35 0%, #FF8A65 100%); }
 .kpi-content h3 { font-size: 14px; color: #6e6e73; margin-bottom: 4px; }
 .kpi-value { font-size: 24px; font-weight: 700; color: #1d1d1f; margin-bottom: 4px; }
 .kpi-label { font-size: 12px; color: #86868b; }

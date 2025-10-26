@@ -580,7 +580,7 @@ onMounted(() => {
 
 .progress-bar {
   height: 100%;
-  background: linear-gradient(90deg, #1d1d1f, #4b5563);
+  background: linear-gradient(90deg, #00A859, #4CAF50);
   transition: width 0.3s ease;
   border-radius: 4px;
 }

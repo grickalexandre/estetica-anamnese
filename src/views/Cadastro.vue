@@ -303,7 +303,7 @@ const handleCadastro = async () => {
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+  background: linear-gradient(135deg, #00A859 0%, #4CAF50 100%);
   color: #ffffff;
 }
 

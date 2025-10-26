@@ -314,32 +314,32 @@ const formatarData = (data) => {
 }
 
 .summary-card.receitas .summary-icon {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #00A859 0%, #4CAF50 100%);
   color: white;
 }
 
 .summary-card.recebido .summary-icon {
-  background: linear-gradient(135deg, #34c759 0%, #28a745 100%);
+  background: linear-gradient(135deg, #00A859 0%, #4CAF50 100%);
   color: white;
 }
 
 .summary-card.despesas .summary-icon {
-  background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+  background: linear-gradient(135deg, #FF6B35 0%, #FF8A65 100%);
   color: white;
 }
 
 .summary-card.pago .summary-icon {
-  background: linear-gradient(135deg, #ffa726 0%, #fb8c00 100%);
+  background: linear-gradient(135deg, #FF6B35 0%, #FF8A65 100%);
   color: white;
 }
 
 .summary-card.saldo.positivo .summary-icon {
-  background: linear-gradient(135deg, #4caf50 0%, #43a047 100%);
+  background: linear-gradient(135deg, #00A859 0%, #4CAF50 100%);
   color: white;
 }
 
 .summary-card.saldo.negativo .summary-icon {
-  background: linear-gradient(135deg, #f44336 0%, #e53935 100%);
+  background: linear-gradient(135deg, #FF6B35 0%, #FF8A65 100%);
   color: white;
 }
 
