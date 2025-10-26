@@ -572,7 +572,7 @@ onMounted(async () => {
   left: 0;
   right: 0;
   height: 4px;
-  background: linear-gradient(90deg, #007aff 0%, #5856d6 100%);
+  background: linear-gradient(90deg, #00A859 0%, #4CAF50 100%);
 }
 
 .procedimento-card:hover {
@@ -593,7 +593,7 @@ onMounted(async () => {
   width: 50px;
   height: 50px;
   border-radius: 12px;
-  background: linear-gradient(135deg, #007aff 0%, #5856d6 100%);
+  background: linear-gradient(135deg, #00A859 0%, #4CAF50 100%);
   display: flex;
   align-items: center;
   justify-content: center;

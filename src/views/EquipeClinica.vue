@@ -715,7 +715,7 @@ onMounted(() => {
   width: 50px;
   height: 50px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #00A859 0%, #4CAF50 100%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -851,7 +851,7 @@ onMounted(() => {
 
 /* Botões */
 .btn-primary {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #00A859 0%, #4CAF50 100%);
   color: white;
   border: none;
   padding: 0.6rem 1.2rem;

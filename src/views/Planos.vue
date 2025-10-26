@@ -483,7 +483,7 @@ onMounted(() => {
   top: -15px;
   left: 50%;
   transform: translateX(-50%);
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #00A859 0%, #4CAF50 100%);
   color: white;
   padding: 0.5rem 1.5rem;
   border-radius: 20px;
@@ -493,7 +493,7 @@ onMounted(() => {
 }
 
 .plano-badge.atual-badge {
-  background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+  background: linear-gradient(135deg, #00A859 0%, #4CAF50 100%);
 }
 
 .plano-header {
@@ -520,15 +520,15 @@ onMounted(() => {
 }
 
 .icone-profissional {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #00A859 0%, #4CAF50 100%);
 }
 
 .icone-premium {
-  background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%);
+  background: linear-gradient(135deg, #FF6B35 0%, #FF8A65 100%);
 }
 
 .icone-enterprise {
-  background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+  background: linear-gradient(135deg, #FF6B35 0%, #FF8A65 100%);
 }
 
 .plano-header h2 {
@@ -626,7 +626,7 @@ onMounted(() => {
 }
 
 .btn-plano:not(.atual) {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #00A859 0%, #4CAF50 100%);
   color: white;
 }
 
@@ -642,11 +642,11 @@ onMounted(() => {
 }
 
 .btn-plano.upgrade {
-  background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+  background: linear-gradient(135deg, #00A859 0%, #4CAF50 100%);
 }
 
 .btn-plano.downgrade {
-  background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%);
+  background: linear-gradient(135deg, #FF6B35 0%, #FF8A65 100%);
   color: #000;
 }
 

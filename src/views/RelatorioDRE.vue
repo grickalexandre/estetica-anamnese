@@ -641,22 +641,22 @@ const imprimirDRE = () => {
 }
 
 .summary-card.receitas .summary-icon {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #00A859 0%, #4CAF50 100%);
   color: white;
 }
 
 .summary-card.despesas .summary-icon {
-  background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+  background: linear-gradient(135deg, #FF6B35 0%, #FF8A65 100%);
   color: white;
 }
 
 .summary-card.lucro.positivo .summary-icon {
-  background: linear-gradient(135deg, #34c759 0%, #43a047 100%);
+  background: linear-gradient(135deg, #00A859 0%, #4CAF50 100%);
   color: white;
 }
 
 .summary-card.lucro.negativo .summary-icon {
-  background: linear-gradient(135deg, #ff3b30 0%, #e53935 100%);
+  background: linear-gradient(135deg, #FF6B35 0%, #FF8A65 100%);
   color: white;
 }
 

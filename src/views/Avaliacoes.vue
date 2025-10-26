@@ -575,27 +575,27 @@ onMounted(() => {
 }
 
 .nps-score.excelente {
-  background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+  background: linear-gradient(135deg, #00A859 0%, #4CAF50 100%);
   color: white;
 }
 
 .nps-score.muito-bom {
-  background: linear-gradient(135deg, #20c997 0%, #17a2b8 100%);
+  background: linear-gradient(135deg, #00A859 0%, #4CAF50 100%);
   color: white;
 }
 
 .nps-score.bom {
-  background: linear-gradient(135deg, #ffc107 0%, #ffeb3b 100%);
-  color: #000;
+  background: linear-gradient(135deg, #FF6B35 0%, #FF8A65 100%);
+  color: white;
 }
 
 .nps-score.ruim {
-  background: linear-gradient(135deg, #ff9800 0%, #ff5722 100%);
+  background: linear-gradient(135deg, #FF6B35 0%, #FF8A65 100%);
   color: white;
 }
 
 .nps-score.critico {
-  background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+  background: linear-gradient(135deg, #FF6B35 0%, #FF8A65 100%);
   color: white;
 }
 
@@ -676,7 +676,7 @@ onMounted(() => {
   width: 50px;
   height: 50px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #00A859 0%, #4CAF50 100%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -850,7 +850,7 @@ onMounted(() => {
   width: 50px;
   height: 50px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #00A859 0%, #4CAF50 100%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1017,7 +1017,7 @@ onMounted(() => {
 }
 
 .btn-responder {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #00A859 0%, #4CAF50 100%);
   color: white;
   border: none;
   padding: 0.6rem 1.2rem;
@@ -1192,7 +1192,7 @@ onMounted(() => {
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #00A859 0%, #4CAF50 100%);
   color: white;
   border: none;
   padding: 0.6rem 1.2rem;

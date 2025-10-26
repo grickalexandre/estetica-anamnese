@@ -297,7 +297,7 @@ onMounted(async () => {
 .foto-placeholder {
   width: 100%;
   height: 100%;
-  background: linear-gradient(135deg, #1d1d1f 0%, #2c2c2e 100%);
+  background: linear-gradient(135deg, #00A859 0%, #4CAF50 100%);
   display: flex;
   align-items: center;
   justify-content: center;

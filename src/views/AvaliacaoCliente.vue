@@ -273,7 +273,7 @@ const enviarAvaliacao = async () => {
 <style scoped>
 .avaliacao-container {
   min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #00A859 0%, #4CAF50 100%);
   padding: 2rem;
   display: flex;
   align-items: center;
@@ -331,7 +331,7 @@ const enviarAvaliacao = async () => {
   width: 100px;
   height: 100px;
   margin: 0 auto 1.5rem;
-  background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+  background: linear-gradient(135deg, #00A859 0%, #4CAF50 100%);
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -609,7 +609,7 @@ const enviarAvaliacao = async () => {
 .btn-enviar {
   width: 100%;
   padding: 1.25rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #00A859 0%, #4CAF50 100%);
   color: white;
   border: none;
   border-radius: 10px;

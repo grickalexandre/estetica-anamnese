@@ -422,7 +422,7 @@ const salvarAnamnese = async () => {
 <style scoped>
 .client-container {
   min-height: 100vh;
-  background: linear-gradient(135deg, #1d1d1f 0%, #2c2c2e 100%);
+  background: linear-gradient(135deg, #00A859 0%, #4CAF50 100%);
   position: relative;
   overflow: hidden;
 }
@@ -795,7 +795,7 @@ h2:first-of-type {
 
 .progress-bar {
   height: 100%;
-  background: linear-gradient(90deg, #1d1d1f, #4b5563);
+  background: linear-gradient(90deg, #00A859, #4CAF50);
   transition: width 0.3s ease;
   border-radius: 4px;
 }

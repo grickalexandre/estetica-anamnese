@@ -625,7 +625,7 @@ onMounted(async () => {
   width: 60px;
   height: 60px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #1d1d1f 0%, #2c2c2e 100%);
+  background: linear-gradient(135deg, #00A859 0%, #4CAF50 100%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -782,21 +782,21 @@ onMounted(async () => {
 }
 
 .toast-success {
-  background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
-  border-color: #28a745;
-  color: #155724;
+  background: linear-gradient(135deg, #E8F5E8 0%, #D4F1D4 100%);
+  border-color: #00A859;
+  color: #007A42;
 }
 
 .toast-warning {
-  background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
-  border-color: #ffc107;
-  color: #856404;
+  background: linear-gradient(135deg, #FFF5E6 0%, #FFE4CC 100%);
+  border-color: #FF6B35;
+  color: #E64A19;
 }
 
 .toast-error {
-  background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
-  border-color: #dc3545;
-  color: #721c24;
+  background: linear-gradient(135deg, #FFE6E6 0%, #FFCCCC 100%);
+  border-color: #FF6B35;
+  color: #E64A19;
 }
 
 .toast-content {

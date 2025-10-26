@@ -501,16 +501,16 @@ onMounted(() => {
 }
 
 .status-icon.status-ativa {
-  background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+  background: linear-gradient(135deg, #00A859 0%, #4CAF50 100%);
 }
 
 .status-icon.status-trial {
-  background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%);
+  background: linear-gradient(135deg, #FF6B35 0%, #FF8A65 100%);
 }
 
 .status-icon.status-cancelada,
 .status-icon.status-inadimplente {
-  background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+  background: linear-gradient(135deg, #FF6B35 0%, #FF8A65 100%);
 }
 
 .status-info {
@@ -684,7 +684,7 @@ onMounted(() => {
 }
 
 .btn-upgrade-mini {
-  background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+  background: linear-gradient(135deg, #00A859 0%, #4CAF50 100%);
   color: white;
   border: none;
   padding: 0.5rem 1rem;
@@ -767,7 +767,7 @@ onMounted(() => {
 .btn-acao {
   width: 100%;
   padding: 0.75rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #00A859 0%, #4CAF50 100%);
   color: white;
   border: none;
   border-radius: 10px;
@@ -782,16 +782,16 @@ onMounted(() => {
 }
 
 .btn-acao.upgrade {
-  background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+  background: linear-gradient(135deg, #00A859 0%, #4CAF50 100%);
 }
 
 .btn-acao.danger {
-  background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+  background: linear-gradient(135deg, #FF6B35 0%, #FF8A65 100%);
 }
 
 /* Aviso Trial */
 .aviso-trial {
-  background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%);
+  background: linear-gradient(135deg, #FF6B35 0%, #FF8A65 100%);
   color: white;
   display: flex;
   align-items: center;

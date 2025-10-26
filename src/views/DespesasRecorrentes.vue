@@ -346,7 +346,7 @@ const getTextoRecorrencia = (periodicidade) => {
 .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
 .page-header h1 { font-size: 28px; color: #1d1d1f; display: flex; align-items: center; gap: 12px; }
 
-.acao-rapida { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; margin-bottom: 24px; }
+.acao-rapida { background: linear-gradient(135deg, #00A859 0%, #4CAF50 100%); color: white; margin-bottom: 24px; }
 .acao-content { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
 .acao-content h3 { margin: 0 0 4px 0; font-size: 18px; display: flex; align-items: center; gap: 8px; }
 .acao-content p { margin: 0; font-size: 14px; opacity: 0.9; }

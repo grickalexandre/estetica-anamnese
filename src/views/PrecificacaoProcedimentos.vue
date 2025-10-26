@@ -2632,7 +2632,7 @@ onMounted(() => {
 
 .chart-fill {
   height: 100%;
-  background: linear-gradient(90deg, #10b981, #059669);
+  background: linear-gradient(90deg, #00A859, #4CAF50);
   border-radius: 4px;
   transition: width 0.3s ease;
 }

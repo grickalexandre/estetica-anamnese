@@ -532,11 +532,11 @@ const formatarMoeda = (valor) => {
   right: 0;
   height: 4px;
   border-radius: 16px 16px 0 0;
-  background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(90deg, #00A859 0%, #4CAF50 100%);
 }
 
 .profissional-header { display: flex; align-items: center; gap: 16px; margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid #e5e5ea; }
-.profissional-avatar { width: 60px; height: 60px; border-radius: 50%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center; color: white; font-size: 24px; }
+.profissional-avatar { width: 60px; height: 60px; border-radius: 50%; background: linear-gradient(135deg, #00A859 0%, #4CAF50 100%); display: flex; align-items: center; justify-content: center; color: white; font-size: 24px; }
 .profissional-info h3 { margin: 0 0 6px 0; font-size: 18px; color: #1d1d1f; }
 
 .badge { padding: 4px 12px; border-radius: 12px; font-size: 12px; background: #e5e5ea; color: #1d1d1f; display: inline-block; }

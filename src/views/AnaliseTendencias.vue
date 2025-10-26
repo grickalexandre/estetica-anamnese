@@ -562,22 +562,22 @@ const formatarMoeda = (valor) => {
 }
 
 .media-card.receitas .media-icon {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #00A859 0%, #4CAF50 100%);
   color: white;
 }
 
 .media-card.despesas .media-icon {
-  background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+  background: linear-gradient(135deg, #FF6B35 0%, #FF8A65 100%);
   color: white;
 }
 
 .media-card.lucro.positivo .media-icon {
-  background: linear-gradient(135deg, #34c759 0%, #43a047 100%);
+  background: linear-gradient(135deg, #00A859 0%, #4CAF50 100%);
   color: white;
 }
 
 .media-card.lucro.negativo .media-icon {
-  background: linear-gradient(135deg, #ff3b30 0%, #e53935 100%);
+  background: linear-gradient(135deg, #FF6B35 0%, #FF8A65 100%);
   color: white;
 }
 
