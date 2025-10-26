@@ -158,7 +158,7 @@ const formatarMoeda = (valor) => {
 .dashboard-container { max-width: 1400px; margin: 0 auto; padding: 20px; }
 .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
 .page-header h1 { font-size: 28px; color: #1d1d1f; display: flex; align-items: center; gap: 12px; }
-.periodo-select { padding: 10px 16px; border: 1px solid #d2d2d7; border-radius: 8px; font-size: 14px; }
+.periodo-select { padding: 10px 16px; border: 1px solid #00A859; border-radius: 8px; font-size: 14px; }
 .section-title { font-size: 18px; color: #1d1d1f; margin: 30px 0 16px; display: flex; align-items: center; gap: 10px; font-weight: 700; }
 .kpis-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 30px; }
 .kpi-card { background: white; border-radius: 12px; padding: 20px; display: flex; align-items: center; gap: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }

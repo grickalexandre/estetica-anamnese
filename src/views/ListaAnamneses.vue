@@ -498,13 +498,13 @@ onMounted(async () => {
 }
 
 .status-badge.pendente {
-  background-color: #fef3c7;
-  color: #92400e;
+  background-color: #FFF5E6;
+  color: #E64A19;
 }
 
 .status-badge.analisada {
-  background-color: #d1fae5;
-  color: #065f46;
+  background-color: #E8F5E8;
+  color: #007A42;
 }
 
 .origem-badge {

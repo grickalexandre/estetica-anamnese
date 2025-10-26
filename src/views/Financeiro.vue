@@ -394,19 +394,19 @@ const formatarData = (data) => {
 }
 
 .action-btn.receitas {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #00A859 0%, #4CAF50 100%);
 }
 
 .action-btn.despesas {
-  background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+  background: linear-gradient(135deg, #FF6B35 0%, #FF8A65 100%);
 }
 
 .action-btn.fluxo {
-  background: linear-gradient(135deg, #4caf50 0%, #43a047 100%);
+  background: linear-gradient(135deg, #00A859 0%, #4CAF50 100%);
 }
 
 .action-btn.relatorio {
-  background: linear-gradient(135deg, #ffa726 0%, #fb8c00 100%);
+  background: linear-gradient(135deg, #FF6B35 0%, #FF8A65 100%);
 }
 
 /* Vencimentos */

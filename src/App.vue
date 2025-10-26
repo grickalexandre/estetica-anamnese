@@ -206,7 +206,7 @@ watch(isClientPage, (newValue) => {
 }
 
 .notification.info {
-  border-left: 4px solid #3b82f6;
+  border-left: 4px solid #00A859;
 }
 
 @keyframes slideInRight {
