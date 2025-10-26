@@ -42,6 +42,7 @@ import ProntuarioEletronico from './views/ProntuarioEletronico.vue'
 import PWAHome from './views/PWAHome.vue'
 import { auth } from './firebase.js'
 import './style.css'
+import './styles/unimed-theme.css'
 import './utils/notificationUtils.js'
 
 const routes = [
