@@ -463,7 +463,7 @@ onMounted(() => {
 .form-group textarea {
   width: 100%;
   padding: 12px 16px;
-  border: 1px solid #d1d5db;
+  border: 1px solid #00A859;
   border-radius: 8px;
   font-size: 14px;
   transition: all 0.2s ease;
@@ -472,8 +472,8 @@ onMounted(() => {
 .form-group input:focus,
 .form-group textarea:focus {
   outline: none;
-  border-color: #1d1d1f;
-  box-shadow: 0 0 0 3px rgba(29, 29, 31, 0.1);
+  border-color: #00A859;
+  box-shadow: 0 0 0 3px rgba(0, 168, 89, 0.1);
 }
 
 
@@ -596,11 +596,11 @@ onMounted(() => {
 
 /* Configurações Financeiras */
 .finance-section {
-  background: #f0f9ff;
+  background: #E8F5E8;
   border-radius: 12px;
   padding: 24px;
   margin-bottom: 32px;
-  border: 1px solid #bae6fd;
+  border: 1px solid #00A859;
 }
 
 .checkbox-group {
@@ -630,8 +630,8 @@ onMounted(() => {
 }
 
 .checkbox-label input[type="checkbox"]:checked + .checkmark {
-  background: #3b82f6;
-  border-color: #3b82f6;
+  background: #00A859;
+  border-color: #00A859;
 }
 
 .checkbox-label input[type="checkbox"]:checked + .checkmark::after {
@@ -647,11 +647,11 @@ onMounted(() => {
 
 /* Link de Anamnese */
 .link-section {
-  background: #f8f9fa;
+  background: #E8F5E8;
   border-radius: 12px;
   padding: 24px;
   margin-bottom: 32px;
-  border: 1px solid #e5e7eb;
+  border: 1px solid #00A859;
 }
 
 .link-info {
@@ -715,7 +715,7 @@ onMounted(() => {
 }
 
 .btn-copy {
-  background: #3b82f6;
+  background: #00A859;
   color: white;
   border: none;
   padding: 12px 16px;
@@ -724,7 +724,7 @@ onMounted(() => {
 }
 
 .btn-copy:hover {
-  background: #2563eb;
+  background: #007A42;
 }
 
 .link-actions {
@@ -746,14 +746,14 @@ onMounted(() => {
 }
 
 .btn-secondary {
-  background: #f3f4f6;
-  color: #374151;
-  border: 1px solid #d1d5db;
+  background: #FFF5E6;
+  color: #E64A19;
+  border: 1px solid #FF6B35;
 }
 
 .btn-secondary:hover {
-  background: #e5e7eb;
-  color: #1f2937;
+  background: #FF6B35;
+  color: white;
 }
 
 .danger-zone {

@@ -140,23 +140,23 @@ watch(() => props.show, (newVal) => {
 
 /* Tipos de Modal */
 .modal-warning .modal-icon {
-  color: #ffc107;
-  background: rgba(255, 193, 7, 0.1);
+  color: #FF6B35;
+  background: rgba(255, 107, 53, 0.1);
 }
 
 .modal-danger .modal-icon {
-  color: #dc3545;
-  background: rgba(220, 53, 69, 0.1);
+  color: #FF6B35;
+  background: rgba(255, 107, 53, 0.1);
 }
 
 .modal-info .modal-icon {
-  color: #17a2b8;
-  background: rgba(23, 162, 184, 0.1);
+  color: #00A859;
+  background: rgba(0, 168, 89, 0.1);
 }
 
 .modal-success .modal-icon {
-  color: #28a745;
-  background: rgba(40, 167, 69, 0.1);
+  color: #00A859;
+  background: rgba(0, 168, 89, 0.1);
 }
 
 /* Header */
@@ -241,19 +241,19 @@ watch(() => props.show, (newVal) => {
 }
 
 .btn-warning {
-  background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%);
+  background: linear-gradient(135deg, #FF6B35 0%, #FF8A65 100%);
 }
 
 .btn-danger {
-  background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+  background: linear-gradient(135deg, #FF6B35 0%, #FF8A65 100%);
 }
 
 .btn-info {
-  background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+  background: linear-gradient(135deg, #00A859 0%, #4CAF50 100%);
 }
 
 .btn-success {
-  background: linear-gradient(135deg, #28a745 0%, #218838 100%);
+  background: linear-gradient(135deg, #00A859 0%, #4CAF50 100%);
 }
 
 .btn-cancel:disabled,
