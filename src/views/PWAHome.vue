@@ -58,14 +58,14 @@
     <div class="tracking-section">
       <div class="tracking-card">
         <div class="tracking-header">
-          <i class="fas fa-clock"></i>
-          <h3>Próximos Atendimentos</h3>
+          <i class="fas fa-calendar-check"></i>
+          <h3>Agendamentos de Hoje</h3>
         </div>
         <div class="tracking-content">
-          <p>Acompanhe seus próximos compromissos</p>
+          <p>Lista dos agendamentos confirmados para hoje</p>
           <div class="tracking-status" v-if="proximosAtendimentos.length === 0">
-            <i class="fas fa-calendar-check"></i>
-            <span>Nenhum atendimento agendado para hoje</span>
+            <i class="fas fa-calendar-times"></i>
+            <span>Nenhum agendamento confirmado para hoje</span>
           </div>
           <div v-else class="tracking-list">
             <div v-for="atendimento in proximosAtendimentos" :key="atendimento.id" class="tracking-item">
@@ -146,15 +146,13 @@ const carregarProximosAtendimentos = async () => {
     const inicioDia = new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate())
     const fimDia = new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate() + 1)
     
-    const agora = new Date()
-    
-    // Buscar agendamentos do dia atual
+    // Buscar agendamentos confirmados do dia atual
     const agendamentosRef = collection(db, 'agendamentos')
     const q = query(
       agendamentosRef,
       where('data', '>=', Timestamp.fromDate(inicioDia)),
       where('data', '<', Timestamp.fromDate(fimDia)),
-      where('status', 'in', ['agendado', 'confirmado']),
+      where('status', '==', 'confirmado'),
       orderBy('data', 'asc')
     )
     
@@ -165,24 +163,21 @@ const carregarProximosAtendimentos = async () => {
       const data = doc.data()
       const dataAgendamento = data.data.toDate()
       
-      // Filtrar apenas horários futuros
-      if (dataAgendamento > agora) {
-        agendamentos.push({
-          id: doc.id,
-          paciente: data.pacienteNome || 'Paciente',
-          procedimento: data.procedimento || 'Procedimento',
-          hora: dataAgendamento.toLocaleTimeString('pt-BR', { 
-            hour: '2-digit', 
-            minute: '2-digit' 
-          }),
-          status: data.status || 'agendado'
-        })
-      }
+      agendamentos.push({
+        id: doc.id,
+        paciente: data.pacienteNome || 'Paciente',
+        procedimento: data.procedimento || 'Procedimento',
+        hora: dataAgendamento.toLocaleTimeString('pt-BR', { 
+          hour: '2-digit', 
+          minute: '2-digit' 
+        }),
+        status: data.status || 'confirmado'
+      })
     })
     
     proximosAtendimentos.value = agendamentos
   } catch (error) {
-    console.error('Erro ao carregar próximos atendimentos:', error)
+    console.error('Erro ao carregar agendamentos do dia:', error)
     proximosAtendimentos.value = []
   }
 }
