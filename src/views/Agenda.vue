@@ -427,7 +427,7 @@
         <i class="fas fa-check-circle"></i>
         Marcar como Realizado
       </div>
-      <div class="menu-item danger" @click="cancelarAgendamento(menuAgendamento.agendamento)">
+      <div class="menu-item danger" @click="cancelarAgendamentoMenu(menuAgendamento.agendamento)">
         <i class="fas fa-times-circle"></i>
         Cancelar Agendamento
       </div>
@@ -1151,7 +1151,7 @@ const marcarComoRealizado = async (agendamento) => {
   }
 }
 
-const cancelarAgendamento = async (agendamento) => {
+const cancelarAgendamentoMenu = async (agendamento) => {
   fecharMenuAgendamento()
   try {
     const confirmado = await showConfirm(
