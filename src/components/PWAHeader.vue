@@ -15,14 +15,8 @@
         <h1>{{ pageTitle }}</h1>
       </div>
       
-      <!-- Área de notificações e ações -->
+      <!-- Área de ações -->
       <div class="header-actions">
-        <!-- Notificações -->
-        <button class="notification-btn" @click="toggleNotifications">
-          <i class="fas fa-bell"></i>
-          <span v-if="props.notificationCount > 0" class="notification-badge">{{ props.notificationCount }}</span>
-        </button>
-        
         <!-- Dados da clínica -->
         <div class="clinic-info" @click="showClinicInfo">
           <div class="clinic-avatar">
@@ -33,11 +27,6 @@
             <span class="clinic-status">Online</span>
           </div>
         </div>
-        
-        <!-- Botão sair -->
-        <button class="logout-btn" @click="logout">
-          <i class="fas fa-sign-out-alt"></i>
-        </button>
       </div>
     </div>
   </div>
@@ -46,18 +35,11 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { auth } from '../firebase.js'
 
 const router = useRouter()
 const route = useRoute()
 
-// Props
-const props = defineProps({
-  notificationCount: {
-    type: Number,
-    default: 0
-  }
-})
+// Props removidas - não precisamos mais de notificações
 
 const clinicName = ref('Clínica Estética')
 
@@ -83,23 +65,9 @@ const goBack = () => {
   router.go(-1)
 }
 
-const toggleNotifications = () => {
-  // Implementar lógica de notificações
-  console.log('Abrir notificações')
-}
-
 const showClinicInfo = () => {
   // Implementar modal com informações da clínica
   console.log('Mostrar informações da clínica')
-}
-
-const logout = async () => {
-  try {
-    await auth.signOut()
-    router.push('/login')
-  } catch (error) {
-    console.error('Erro ao fazer logout:', error)
-  }
 }
 </script>
 
@@ -151,36 +119,7 @@ const logout = async () => {
   gap: 16px;
 }
 
-.notification-btn {
-  position: relative;
-  background: none;
-  border: none;
-  color: #718096;
-  font-size: 18px;
-  cursor: pointer;
-  padding: 8px;
-  border-radius: 8px;
-  transition: all 0.3s ease;
-}
-
-.notification-btn:hover {
-  color: #00A859;
-  background: #E8F5E8;
-}
-
-.notification-badge {
-  position: absolute;
-  top: 4px;
-  right: 4px;
-  background: #FF6B35;
-  color: white;
-  font-size: 10px;
-  font-weight: bold;
-  padding: 2px 6px;
-  border-radius: 10px;
-  min-width: 16px;
-  text-align: center;
-}
+/* Estilos de notificações removidos */
 
 .clinic-info {
   display: flex;
@@ -227,21 +166,7 @@ const logout = async () => {
   font-weight: 500;
 }
 
-.logout-btn {
-  background: none;
-  border: none;
-  color: #e53e3e;
-  font-size: 18px;
-  cursor: pointer;
-  padding: 8px;
-  border-radius: 8px;
-  transition: all 0.3s ease;
-}
-
-.logout-btn:hover {
-  background: #fed7d7;
-  transform: scale(1.1);
-}
+/* Estilos de logout removidos */
 
 /* Responsividade */
 @media (max-width: 768px) {
