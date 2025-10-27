@@ -136,7 +136,7 @@ import { db } from '../firebase.js'
 import { collection, getDocs, query, where, orderBy, limit } from 'firebase/firestore'
 import { useClinica } from '../composables/useClinica.js'
 
-const { clinicaId } = useClinica()
+const { clinicaId, inicializarClinica } = useClinica()
 
 const carregando = ref(true)
 const periodoFiltro = ref('30')
@@ -457,8 +457,11 @@ const atualizarRelatorios = () => {
   carregarDados()
 }
 
-onMounted(() => {
-  carregarDados()
+onMounted(async () => {
+  // Inicializar clínica primeiro
+  await inicializarClinica()
+  // Depois carregar dados
+  await carregarDados()
 })
 </script>
 
