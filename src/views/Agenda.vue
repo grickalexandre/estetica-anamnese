@@ -1135,8 +1135,8 @@ const fecharMenuAgendamento = () => {
 
 const registrarAtendimento = (agendamento) => {
   fecharMenuAgendamento()
-  // Redirecionar para o prontuário do paciente
-  router.push(`/prontuario/${agendamento.clienteId}`)
+  // Redirecionar para a tela de registro de atendimento
+  router.push(`/registrar-atendimento-agendado?id=${agendamento.id}`)
 }
 
 const marcarComoRealizado = async (agendamento) => {

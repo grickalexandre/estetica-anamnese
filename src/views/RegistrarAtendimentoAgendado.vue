@@ -223,9 +223,12 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 import { useAgendamento } from '../composables/useAgendamento.js'
 import { useClinica } from '../composables/useClinica.js'
 
+const router = useRouter()
+const route = useRoute()
 const { clinicaId, inicializarClinica } = useClinica()
 const { agendamentos, buscarAgendamentos, atualizarAgendamento } = useAgendamento()
 
@@ -395,8 +398,17 @@ const formatarMoeda = (valor) => {
 }
 
 // Lifecycle
-onMounted(() => {
-  carregarAgendamentos()
+onMounted(async () => {
+  await carregarAgendamentos()
+  
+  // Verificar se há um ID de agendamento na query para pré-selecionar
+  const agendamentoId = route.query.id
+  if (agendamentoId) {
+    const agendamento = agendamentos.value.find(a => a.id === agendamentoId)
+    if (agendamento) {
+      registrarAtendimento(agendamento)
+    }
+  }
 })
 </script>
 
