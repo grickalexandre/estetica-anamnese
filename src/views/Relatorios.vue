@@ -135,6 +135,7 @@ import { ref, onMounted, nextTick } from 'vue'
 import { db } from '../firebase.js'
 import { collection, getDocs, query, where, orderBy, limit } from 'firebase/firestore'
 import { useClinica } from '../composables/useClinica.js'
+import Chart from 'chart.js/auto'
 
 const { clinicaId, inicializarClinica } = useClinica()
 
@@ -337,23 +338,35 @@ const calcularMetricas = (anamneses) => {
 }
 
 const criarGraficos = (anamneses) => {
+  console.log('Criando gráficos com', anamneses.length, 'anamneses')
+  
   // Destruir gráficos existentes
   if (anamnesesChartInstance) anamnesesChartInstance.destroy()
   if (origemChartInstance) origemChartInstance.destroy()
   if (statusChartInstance) statusChartInstance.destroy()
   if (diaSemanaChartInstance) diaSemanaChartInstance.destroy()
 
-  // Gráfico de anamneses por período
-  criarGraficoAnamneses(anamneses)
-  
-  // Gráfico de origem
-  criarGraficoOrigem(anamneses)
-  
-  // Gráfico de status
-  criarGraficoStatus(anamneses)
-  
-  // Gráfico por dia da semana
-  criarGraficoDiaSemana(anamneses)
+  try {
+    // Gráfico de anamneses por período
+    console.log('Criando gráfico de anamneses...')
+    criarGraficoAnamneses(anamneses)
+    
+    // Gráfico de origem
+    console.log('Criando gráfico de origem...')
+    criarGraficoOrigem(anamneses)
+    
+    // Gráfico de status
+    console.log('Criando gráfico de status...')
+    criarGraficoStatus(anamneses)
+    
+    // Gráfico por dia da semana
+    console.log('Criando gráfico de dia da semana...')
+    criarGraficoDiaSemana(anamneses)
+    
+    console.log('Todos os gráficos criados com sucesso!')
+  } catch (error) {
+    console.error('Erro ao criar gráficos:', error)
+  }
 }
 
 const criarGraficoAnamneses = (anamneses) => {
