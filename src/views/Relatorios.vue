@@ -366,6 +366,21 @@ const calcularMetricas = (anamneses) => {
 
 const criarGraficos = (anamneses) => {
   console.log('Criando gráficos com', anamneses.length, 'anamneses')
+  console.log('Chart.js disponível?', !!window.Chart)
+  
+  // Verificar se Chart.js está carregado
+  if (!window.Chart) {
+    console.error('Chart.js não está carregado! Aguardando...')
+    setTimeout(() => {
+      if (window.Chart) {
+        console.log('Chart.js carregado! Criando gráficos...')
+        criarGraficos(anamneses)
+      } else {
+        console.error('Chart.js ainda não carregado após timeout')
+      }
+    }, 1000)
+    return
+  }
   
   // Destruir gráficos existentes
   if (anamnesesChartInstance) anamnesesChartInstance.destroy()
@@ -582,7 +597,11 @@ onMounted(async () => {
   
   calcularMetricas(dadosDemo)
   await nextTick()
-  criarGraficos(dadosDemo)
+  
+  // Aguardar um pouco para garantir que o DOM e Chart.js estejam prontos
+  setTimeout(() => {
+    criarGraficos(dadosDemo)
+  }, 500)
   
   carregando.value = false
   console.log('Relatórios carregados com dados demo')
