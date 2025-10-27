@@ -1158,7 +1158,8 @@ const cancelarAgendamentoDoMenu = async (agendamento) => {
       'Deseja realmente cancelar este agendamento?',
       {
         title: 'Cancelar Agendamento',
-        type: 'warning'
+        type: 'warning',
+        confirmText: 'Sim, Cancelar'
       }
     )
     
