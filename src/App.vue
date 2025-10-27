@@ -1,9 +1,12 @@
 <template>
-  <div id="app" :class="{ 'no-menu-layout': isClientPage }">
+  <div id="app" :class="{ 'no-menu-layout': isClientPage || isAuthPage }">
     <!-- Página inicial com layout próprio -->
     <router-view v-if="isHomePage"></router-view>
     
-    <!-- Layout PWA para outras páginas administrativas -->
+    <!-- Páginas de autenticação sem layout -->
+    <router-view v-else-if="isAuthPage"></router-view>
+    
+    <!-- Layout PWA para páginas administrativas -->
     <PWALayout v-else-if="!isClientPage">
       <router-view></router-view>
     </PWALayout>
@@ -99,6 +102,10 @@ const isClientPage = computed(() => {
 
 const isHomePage = computed(() => {
   return route.path === '/'
+})
+
+const isAuthPage = computed(() => {
+  return route.path === '/login' || route.path === '/cadastro'
 })
 
 
