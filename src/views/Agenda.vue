@@ -127,7 +127,7 @@
                 <div 
                   v-for="agend in agendamentosPorHora(hora)" 
                   :key="agend.id"
-                  @click="editarAgendamento(agend)"
+                  @click="mostrarMenuAgendamento(agend, $event)"
                   :class="['agendamento-item', 'status-' + agend.status]"
                 >
                   <div class="agend-hora">{{ formatarHora(agend.dataHora) }}</div>
@@ -153,7 +153,7 @@
                 <div 
                   v-for="agend in agendamentosPorDiaHora(dia.data, hora)" 
                   :key="agend.id"
-                  @click="editarAgendamento(agend)"
+                  @click="mostrarMenuAgendamento(agend, $event)"
                   :class="['agendamento-mini', 'status-' + agend.status]"
                 >
                   <div class="agendamento-content">
@@ -192,7 +192,7 @@
                 <div 
                   v-for="agend in agendamentosPorDia(dia.data)" 
                   :key="agend.id"
-                  @click="editarAgendamento(agend)"
+                  @click="mostrarMenuAgendamento(agend, $event)"
                   :class="['agend-badge', 'status-' + agend.status]"
                 >
                   <div class="agendamento-content-mes">
@@ -410,6 +410,26 @@
             </button>
           </div>
         </form>
+      </div>
+    </div>
+
+    <!-- Menu de Contexto do Agendamento -->
+    <div v-if="menuAgendamento.visivel" class="menu-contexto" :style="{ left: menuAgendamento.x + 'px', top: menuAgendamento.y + 'px' }">
+      <div class="menu-item" @click="registrarAtendimento(menuAgendamento.agendamento)">
+        <i class="fas fa-stethoscope"></i>
+        Registrar Atendimento
+      </div>
+      <div class="menu-item" @click="editarAgendamento(menuAgendamento.agendamento)">
+        <i class="fas fa-edit"></i>
+        Editar Agendamento
+      </div>
+      <div class="menu-item" @click="marcarComoRealizado(menuAgendamento.agendamento)">
+        <i class="fas fa-check-circle"></i>
+        Marcar como Realizado
+      </div>
+      <div class="menu-item danger" @click="cancelarAgendamento(menuAgendamento.agendamento)">
+        <i class="fas fa-times-circle"></i>
+        Cancelar Agendamento
       </div>
     </div>
   </div>
@@ -918,6 +938,14 @@ const selecionarProfissionalInline = (prof) => {
 // ===== Pesquisa de Procedimento =====
 const modalPesquisaProcedimento = ref(false)
 const termoProc = ref('')
+
+// Menu de contexto do agendamento
+const menuAgendamento = ref({
+  visivel: false,
+  agendamento: null,
+  x: 0,
+  y: 0
+})
 const procedimentosFiltradosModal = computed(() => {
   const t = termoProc.value.toLowerCase().trim()
   if (!t) return procedimentos.value
@@ -1076,6 +1104,69 @@ const removerFoto = () => {
     fileInput.value.value = ''
   }
   console.log('🗑️ Foto removida do formulário')
+}
+
+// ===== Menu de Contexto do Agendamento =====
+const mostrarMenuAgendamento = (agendamento, event) => {
+  event.preventDefault()
+  event.stopPropagation()
+  
+  menuAgendamento.value = {
+    visivel: true,
+    agendamento: agendamento,
+    x: event.clientX,
+    y: event.clientY
+  }
+  
+  // Fechar menu ao clicar fora
+  setTimeout(() => {
+    document.addEventListener('click', fecharMenuAgendamento)
+  }, 100)
+}
+
+const fecharMenuAgendamento = () => {
+  menuAgendamento.value.visivel = false
+  document.removeEventListener('click', fecharMenuAgendamento)
+}
+
+const registrarAtendimento = (agendamento) => {
+  fecharMenuAgendamento()
+  // Redirecionar para o prontuário do paciente
+  router.push(`/prontuario/${agendamento.clienteId}`)
+}
+
+const marcarComoRealizado = async (agendamento) => {
+  fecharMenuAgendamento()
+  try {
+    await updateAgendamento(agendamento.id, { status: 'realizado' })
+    await carregarAgendamentos()
+    showToast('Agendamento marcado como realizado!', 'success')
+  } catch (error) {
+    console.error('Erro ao marcar como realizado:', error)
+    showToast('Erro ao marcar como realizado', 'error')
+  }
+}
+
+const cancelarAgendamento = async (agendamento) => {
+  fecharMenuAgendamento()
+  try {
+    const confirmado = await showConfirm(
+      'Deseja realmente cancelar este agendamento?',
+      {
+        title: 'Cancelar Agendamento',
+        type: 'warning'
+      }
+    )
+    
+    if (confirmado) {
+      await updateAgendamento(agendamento.id, { status: 'cancelado' })
+      await carregarAgendamentos()
+      showToast('Agendamento cancelado!', 'success')
+    }
+  } catch (error) {
+    console.error('Erro ao cancelar agendamento:', error)
+    showToast('Erro ao cancelar agendamento', 'error')
+  }
 }
 
 // Função para mostrar toast (usando o sistema global)
@@ -1518,6 +1609,52 @@ const mostrarToast = (message, type = 'error') => {
   .photo-overlay i {
     font-size: 20px;
   }
+}
+
+/* Menu de Contexto do Agendamento */
+.menu-contexto {
+  position: fixed;
+  background: white;
+  border: 1px solid #e1e5e9;
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+  min-width: 200px;
+  overflow: hidden;
+}
+
+.menu-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  border-bottom: 1px solid #f1f3f4;
+  font-size: 14px;
+  color: #2d3748;
+}
+
+.menu-item:last-child {
+  border-bottom: none;
+}
+
+.menu-item:hover {
+  background-color: #f8f9fa;
+}
+
+.menu-item.danger {
+  color: #e53e3e;
+}
+
+.menu-item.danger:hover {
+  background-color: #fed7d7;
+}
+
+.menu-item i {
+  width: 16px;
+  text-align: center;
+  font-size: 14px;
 }
 </style>
 
