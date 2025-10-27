@@ -417,6 +417,11 @@ const criarGraficoAnamneses = (anamneses) => {
     return
   }
   
+  if (!anamnesesChart.value) {
+    console.error('Canvas anamnesesChart não encontrado!')
+    return
+  }
+  
   const ctx = anamnesesChart.value.getContext('2d')
   
   // Agrupar por data
@@ -469,6 +474,11 @@ const criarGraficoOrigem = (anamneses) => {
     return
   }
   
+  if (!origemChart.value) {
+    console.error('Canvas origemChart não encontrado!')
+    return
+  }
+  
   const ctx = origemChart.value.getContext('2d')
   
   const porCliente = anamneses.filter(a => a.origem === 'cliente').length
@@ -499,6 +509,11 @@ const criarGraficoOrigem = (anamneses) => {
 const criarGraficoStatus = (anamneses) => {
   if (!window.Chart) {
     console.error('Chart.js não está carregado!')
+    return
+  }
+  
+  if (!statusChart.value) {
+    console.error('Canvas statusChart não encontrado!')
     return
   }
   
@@ -540,6 +555,11 @@ const criarGraficoStatus = (anamneses) => {
 const criarGraficoDiaSemana = (anamneses) => {
   if (!window.Chart) {
     console.error('Chart.js não está carregado!')
+    return
+  }
+  
+  if (!diaSemanaChart.value) {
+    console.error('Canvas diaSemanaChart não encontrado!')
     return
   }
   
@@ -600,8 +620,9 @@ onMounted(async () => {
   
   // Aguardar um pouco para garantir que o DOM e Chart.js estejam prontos
   setTimeout(() => {
+    console.log('Tentando criar gráficos após delay...')
     criarGraficos(dadosDemo)
-  }, 500)
+  }, 1000)
   
   carregando.value = false
   console.log('Relatórios carregados com dados demo')
