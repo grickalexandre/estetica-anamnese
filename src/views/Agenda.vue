@@ -459,8 +459,8 @@ const { clientes, buscarClientes } = usePacientes()
 const { profissionais, buscarProfissionais } = useProfissionais()
 const { procedimentos, buscarCatalogo } = useProcedimentos()
 
-const visualizacao = ref('semana')
-const dataAtual = ref('2025-10-20') // Data do agendamento criado
+const visualizacao = ref('dia')
+const dataAtual = ref(new Date().toISOString().split('T')[0]) // Sempre data atual
 const modalAgendamento = ref(false)
 const salvando = ref(false)
 const agendamentoEditando = ref(null)
@@ -495,6 +495,10 @@ const horariosTrabalho = ['08:00', '09:00', '10:00', '11:00', '12:00', '13:00', 
 
 onMounted(async () => {
   console.log('=== CARREGANDO AGENDA ===')
+  
+  // Sempre carregar com a data atual
+  dataAtual.value = new Date().toISOString().split('T')[0]
+  console.log('Data atual definida:', dataAtual.value)
   
   try {
     // 1. Inicializar clínica primeiro
