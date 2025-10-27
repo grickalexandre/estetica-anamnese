@@ -367,6 +367,12 @@ const calcularMetricas = (anamneses) => {
 const criarGraficos = (anamneses) => {
   console.log('Criando gráficos com', anamneses.length, 'anamneses')
   console.log('Chart.js disponível?', !!window.Chart)
+  console.log('Elementos canvas:', {
+    anamnesesChart: !!anamnesesChart.value,
+    origemChart: !!origemChart.value,
+    statusChart: !!statusChart.value,
+    diaSemanaChart: !!diaSemanaChart.value
+  })
   
   // Verificar se Chart.js está carregado
   if (!window.Chart) {
@@ -618,14 +624,14 @@ onMounted(async () => {
   calcularMetricas(dadosDemo)
   await nextTick()
   
+  carregando.value = false
+  console.log('Relatórios carregados com dados demo')
+  
   // Aguardar um pouco para garantir que o DOM e Chart.js estejam prontos
   setTimeout(() => {
     console.log('Tentando criar gráficos após delay...')
     criarGraficos(dadosDemo)
   }, 1000)
-  
-  carregando.value = false
-  console.log('Relatórios carregados com dados demo')
 })
 </script>
 
