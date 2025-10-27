@@ -14,12 +14,6 @@
           <div class="card-number">{{ userInfo?.nome || 'Usuário' }}</div>
           <div class="card-holder">{{ userInfo?.email || 'cliente@email.com' }}</div>
         </div>
-        <div class="card-actions">
-          <button class="card-btn primary">
-            <i class="fas fa-calendar-alt"></i>
-            AGENDA
-          </button>
-        </div>
       </div>
     </div>
 
