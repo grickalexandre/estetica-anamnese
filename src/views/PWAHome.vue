@@ -133,11 +133,59 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { auth } from '../firebase.js'
+import { auth, db } from '../firebase.js'
+import { collection, query, where, orderBy, getDocs, Timestamp } from 'firebase/firestore'
 
 const router = useRouter()
 const userInfo = ref(null)
 const proximosAtendimentos = ref([])
+
+const carregarProximosAtendimentos = async () => {
+  try {
+    const hoje = new Date()
+    const inicioDia = new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate())
+    const fimDia = new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate() + 1)
+    
+    const agora = new Date()
+    
+    // Buscar agendamentos do dia atual
+    const agendamentosRef = collection(db, 'agendamentos')
+    const q = query(
+      agendamentosRef,
+      where('data', '>=', Timestamp.fromDate(inicioDia)),
+      where('data', '<', Timestamp.fromDate(fimDia)),
+      where('status', 'in', ['agendado', 'confirmado']),
+      orderBy('data', 'asc')
+    )
+    
+    const querySnapshot = await getDocs(q)
+    const agendamentos = []
+    
+    querySnapshot.forEach((doc) => {
+      const data = doc.data()
+      const dataAgendamento = data.data.toDate()
+      
+      // Filtrar apenas horários futuros
+      if (dataAgendamento > agora) {
+        agendamentos.push({
+          id: doc.id,
+          paciente: data.pacienteNome || 'Paciente',
+          procedimento: data.procedimento || 'Procedimento',
+          hora: dataAgendamento.toLocaleTimeString('pt-BR', { 
+            hour: '2-digit', 
+            minute: '2-digit' 
+          }),
+          status: data.status || 'agendado'
+        })
+      }
+    })
+    
+    proximosAtendimentos.value = agendamentos
+  } catch (error) {
+    console.error('Erro ao carregar próximos atendimentos:', error)
+    proximosAtendimentos.value = []
+  }
+}
 
 onMounted(async () => {
   // Carregar informações do usuário
@@ -148,8 +196,8 @@ onMounted(async () => {
     }
   }
   
-  // Carregar próximos atendimentos (simulado)
-  proximosAtendimentos.value = []
+  // Carregar próximos atendimentos do dia
+  await carregarProximosAtendimentos()
 })
 
 const navigateTo = (path) => {
