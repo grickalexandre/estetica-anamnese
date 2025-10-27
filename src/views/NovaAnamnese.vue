@@ -16,6 +16,26 @@
       <form @submit.prevent="salvarAnamnese">
         <!-- Dados Pessoais -->
         <h2>👤 Dados Pessoais</h2>
+        
+        <!-- CPF como primeiro campo para busca automática -->
+        <div class="form-group">
+          <label>CPF *</label>
+          <input 
+            v-model="formulario.cpf" 
+            type="text" 
+            placeholder="000.000.000-00"
+            @blur="buscarPacientePorCPF"
+            @input="formatarCPF"
+            required
+          >
+          <div v-if="buscandoPaciente" class="loading">
+            <i class="fas fa-spinner fa-spin"></i> Buscando paciente...
+          </div>
+          <div v-if="pacienteEncontrado" class="success-message">
+            <i class="fas fa-check-circle"></i> Paciente encontrado! Dados preenchidos automaticamente.
+          </div>
+        </div>
+
         <div class="form-row">
           <div class="form-group">
             <label>Nome Completo *</label>
@@ -29,12 +49,12 @@
 
         <div class="form-row">
           <div class="form-group">
-            <label>CPF</label>
-            <input v-model="formulario.cpf" type="text" placeholder="000.000.000-00">
-          </div>
-          <div class="form-group">
             <label>Telefone *</label>
             <input v-model="formulario.telefone" type="tel" required placeholder="(00) 00000-0000">
+          </div>
+          <div class="form-group">
+            <label>Email</label>
+            <input v-model="formulario.email" type="email">
           </div>
         </div>
 
@@ -231,7 +251,7 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { db } from '../firebase.js'
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore'
+import { collection, addDoc, serverTimestamp, query, where, getDocs } from 'firebase/firestore'
 import { compressAnamneseImage } from '../utils/imageCompressor.js'
 import { uploadToCloudinary } from '../utils/cloudinary.js'
 import { useClinica } from '../composables/useClinica.js'
@@ -250,6 +270,10 @@ const success = ref('')
 const salvando = ref(false)
 const fotoFile = ref(null)
 const fotoPreview = ref(null)
+
+// Variáveis para busca por CPF
+const buscandoPaciente = ref(false)
+const pacienteEncontrado = ref(false)
 
 const formulario = ref({
   nome: '',
@@ -288,6 +312,58 @@ const handleFotoChange = (event) => {
       fotoPreview.value = e.target.result
     }
     reader.readAsDataURL(file)
+  }
+}
+
+// Função para formatar CPF
+const formatarCPF = (event) => {
+  let value = event.target.value.replace(/\D/g, '')
+  if (value.length <= 11) {
+    value = value.replace(/(\d{3})(\d)/, '$1.$2')
+    value = value.replace(/(\d{3})(\d)/, '$1.$2')
+    value = value.replace(/(\d{3})(\d{1,2})$/, '$1-$2')
+    formulario.value.cpf = value
+  }
+}
+
+// Função para buscar paciente por CPF
+const buscarPacientePorCPF = async () => {
+  const cpfLimpo = formulario.value.cpf.replace(/\D/g, '')
+  
+  if (cpfLimpo.length !== 11) {
+    return
+  }
+  
+  try {
+    buscandoPaciente.value = true
+    pacienteEncontrado.value = false
+    
+    // Buscar paciente na coleção de clientes
+    const clientesRef = collection(db, 'clientes')
+    const q = query(clientesRef, where('cpf', '==', cpfLimpo))
+    const querySnapshot = await getDocs(q)
+    
+    if (!querySnapshot.empty) {
+      const paciente = querySnapshot.docs[0].data()
+      
+      // Preencher formulário com dados encontrados
+      formulario.value.nome = paciente.nome || ''
+      formulario.value.dataNascimento = paciente.dataNascimento || ''
+      formulario.value.telefone = paciente.telefone || ''
+      formulario.value.email = paciente.email || ''
+      formulario.value.endereco = paciente.endereco || ''
+      
+      pacienteEncontrado.value = true
+      
+      // Mostrar mensagem de sucesso
+      setTimeout(() => {
+        pacienteEncontrado.value = false
+      }, 3000)
+    }
+  } catch (error) {
+    console.error('Erro ao buscar paciente:', error)
+  } finally {
+    buscandoPaciente.value = false
   }
 }
 
@@ -452,5 +528,51 @@ const salvarAnamnese = async () => {
   display: flex;
   align-items: center;
   gap: 12px;
+}
+
+/* Estilos para busca por CPF */
+.loading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #00A859;
+  font-size: 14px;
+  margin-top: 8px;
+  font-weight: 500;
+}
+
+.success-message {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #00A859;
+  font-size: 14px;
+  margin-top: 8px;
+  font-weight: 500;
+  background: #E8F5E8;
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 1px solid #00A859;
+}
+
+/* Aplicar tema Unimed */
+.form-group input:focus {
+  border-color: #00A859 !important;
+  box-shadow: 0 0 0 3px rgba(0, 168, 89, 0.1) !important;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #00A859 0%, #4CAF50 100%) !important;
+  color: white !important;
+}
+
+.btn-primary:hover {
+  background: linear-gradient(135deg, #007A42 0%, #00A859 100%) !important;
+}
+
+h2 {
+  color: #00A859 !important;
+  border-bottom: 2px solid #00A859 !important;
+  padding-bottom: 8px;
 }
 </style>
