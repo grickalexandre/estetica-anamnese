@@ -19,10 +19,6 @@
             <i class="fas fa-calendar-alt"></i>
             AGENDA
           </button>
-          <button class="card-btn secondary">
-            <i class="fas fa-user-plus"></i>
-            NOVO PACIENTE
-          </button>
         </div>
       </div>
     </div>
@@ -230,12 +226,12 @@ const formatarHora = (hora) => {
 
 .card-actions {
   display: flex;
+  justify-content: center;
   gap: 12px;
 }
 
 .card-btn {
-  flex: 1;
-  padding: 12px 16px;
+  padding: 12px 24px;
   border: none;
   border-radius: 12px;
   font-weight: bold;
@@ -246,6 +242,7 @@ const formatarHora = (hora) => {
   align-items: center;
   justify-content: center;
   gap: 6px;
+  min-width: 120px;
 }
 
 .card-btn.primary {
