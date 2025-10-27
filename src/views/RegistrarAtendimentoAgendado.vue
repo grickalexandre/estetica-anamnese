@@ -406,7 +406,20 @@ onMounted(async () => {
   if (agendamentoId) {
     const agendamento = agendamentos.value.find(a => a.id === agendamentoId)
     if (agendamento) {
-      registrarAtendimento(agendamento)
+      // Pré-selecionar o agendamento e abrir o modal de confirmação
+      agendamentoSelecionado.value = agendamento
+      
+      // Preencher formulário com dados do agendamento
+      formAtendimento.value = {
+        valorCobrado: agendamento.valorEstimado || 0,
+        formaPagamento: '',
+        status: 'realizado',
+        dataAtendimento: new Date().toISOString().slice(0, 16),
+        observacoes: ''
+      }
+      
+      // Abrir modal automaticamente
+      modalConfirmacao.value = true
     }
   }
 })
