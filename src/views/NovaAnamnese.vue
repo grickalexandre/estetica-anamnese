@@ -258,6 +258,7 @@ import { useClinica } from '../composables/useClinica.js'
 import { usePacientes } from '../composables/usePacientes.js'
 import { useFinanceiro } from '../composables/useFinanceiro.js'
 import { useConfiguracoes } from '../composables/useConfiguracoes'
+import { useNotifications } from '../composables/useNotifications.js'
 import VoltarHome from '../components/VoltarHome.vue'
 
 const router = useRouter()
@@ -265,6 +266,7 @@ const { clinicaId } = useClinica()
 const { buscarOuCriarCliente, atualizarCliente, incrementarAnamnese } = usePacientes()
 const { adicionarContaReceber } = useFinanceiro()
 const { configuracoes } = useConfiguracoes()
+const { showSuccess, showError } = useNotifications()
 const error = ref('')
 const success = ref('')
 const salvando = ref(false)
@@ -487,6 +489,9 @@ const salvarAnamnese = async () => {
     console.log('=== SALVAMENTO CONCLUÍDO COM SUCESSO ===')
     success.value = 'Anamnese salva com sucesso! Cliente cadastrado/atualizado automaticamente.'
     
+    // Exibir notificação de sucesso para o usuário
+    showSuccess('Anamnese criada com sucesso!', 'Sua anamnese foi registrada e será analisada pela nossa equipe.')
+    
     setTimeout(() => {
       router.push('/lista')
     }, 1500)
@@ -497,6 +502,9 @@ const salvarAnamnese = async () => {
     console.error('Mensagem:', err.message)
     console.error('Stack:', err.stack)
     error.value = `Erro ao salvar anamnese: ${err.message}. Verifique o console para mais detalhes.`
+    
+    // Exibir notificação de erro para o usuário
+    showError('Erro ao criar anamnese', 'Ocorreu um erro ao salvar sua anamnese. Tente novamente.')
   } finally {
     salvando.value = false
   }
