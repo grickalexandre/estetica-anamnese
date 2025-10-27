@@ -135,7 +135,7 @@ import { ref, onMounted, nextTick } from 'vue'
 import { db } from '../firebase.js'
 import { collection, getDocs, query, where, orderBy, limit } from 'firebase/firestore'
 import { useClinica } from '../composables/useClinica.js'
-import Chart from 'chart.js/auto'
+// Chart.js será carregado via CDN no index.html
 
 const { clinicaId, inicializarClinica } = useClinica()
 
@@ -397,6 +397,11 @@ const criarGraficos = (anamneses) => {
 }
 
 const criarGraficoAnamneses = (anamneses) => {
+  if (!window.Chart) {
+    console.error('Chart.js não está carregado!')
+    return
+  }
+  
   const ctx = anamnesesChart.value.getContext('2d')
   
   // Agrupar por data
@@ -410,7 +415,7 @@ const criarGraficoAnamneses = (anamneses) => {
   const labels = Object.keys(dadosPorData).sort()
   const dados = labels.map(label => dadosPorData[label])
   
-  anamnesesChartInstance = new Chart(ctx, {
+  anamnesesChartInstance = new window.Chart(ctx, {
     type: 'line',
     data: {
       labels: labels.map(label => new Date(label).toLocaleDateString('pt-BR')),
@@ -444,12 +449,17 @@ const criarGraficoAnamneses = (anamneses) => {
 }
 
 const criarGraficoOrigem = (anamneses) => {
+  if (!window.Chart) {
+    console.error('Chart.js não está carregado!')
+    return
+  }
+  
   const ctx = origemChart.value.getContext('2d')
   
   const porCliente = anamneses.filter(a => a.origem === 'cliente').length
   const porProfissional = anamneses.filter(a => a.origem === 'profissional').length
   
-  origemChartInstance = new Chart(ctx, {
+  origemChartInstance = new window.Chart(ctx, {
     type: 'doughnut',
     data: {
       labels: ['Cliente', 'Profissional'],
@@ -472,12 +482,17 @@ const criarGraficoOrigem = (anamneses) => {
 }
 
 const criarGraficoStatus = (anamneses) => {
+  if (!window.Chart) {
+    console.error('Chart.js não está carregado!')
+    return
+  }
+  
   const ctx = statusChart.value.getContext('2d')
   
   const pendentes = anamneses.filter(a => a.status === 'pendente').length
   const analisadas = anamneses.filter(a => a.status === 'analisada').length
   
-  statusChartInstance = new Chart(ctx, {
+  statusChartInstance = new window.Chart(ctx, {
     type: 'bar',
     data: {
       labels: ['Pendentes', 'Analisadas'],
@@ -508,6 +523,11 @@ const criarGraficoStatus = (anamneses) => {
 }
 
 const criarGraficoDiaSemana = (anamneses) => {
+  if (!window.Chart) {
+    console.error('Chart.js não está carregado!')
+    return
+  }
+  
   const ctx = diaSemanaChart.value.getContext('2d')
   
   const diasSemana = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
@@ -518,7 +538,7 @@ const criarGraficoDiaSemana = (anamneses) => {
     contadorDias[data.getDay()]++
   })
   
-  diaSemanaChartInstance = new Chart(ctx, {
+  diaSemanaChartInstance = new window.Chart(ctx, {
     type: 'bar',
     data: {
       labels: diasSemana,
