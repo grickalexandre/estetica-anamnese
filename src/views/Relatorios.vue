@@ -276,21 +276,49 @@ const gerarDadosDemo = () => {
 }
 
 const calcularMetricas = (anamneses) => {
-  totalPacientes.value = anamneses.length
+  // Total de anamneses (não pacientes únicos)
+  const totalAnamneses = anamneses.length
+  
+  // Anamneses por status
   anamnesesPendentes.value = anamneses.filter(a => a.status === 'pendente').length
   anamnesesAnalisadas.value = anamneses.filter(a => a.status === 'analisada').length
   
-  // Novos pacientes no período
+  // Total de pacientes únicos (baseado nos nomes únicos)
+  const pacientesUnicos = new Set(anamneses.map(a => a.pacienteNome)).size
+  totalPacientes.value = pacientesUnicos
+  
+  // Novos pacientes no período (pacientes únicos que fizeram primeira anamnese no período)
   const agora = new Date()
   const inicioPeriodo = new Date(agora.getTime() - (parseInt(periodoFiltro.value) * 24 * 60 * 60 * 1000))
-  novosPacientes.value = anamneses.filter(a => {
-    const dataCriacao = a.dataCriacao?.toDate ? a.dataCriacao.toDate() : new Date(a.dataCriacao)
+  
+  // Agrupar anamneses por paciente e pegar a primeira de cada
+  const anamnesesPorPaciente = {}
+  anamneses.forEach(anamnese => {
+    const nomePaciente = anamnese.pacienteNome
+    if (!anamnesesPorPaciente[nomePaciente]) {
+      anamnesesPorPaciente[nomePaciente] = anamnese
+    } else {
+      // Se já existe, pegar a mais antiga
+      const dataAtual = anamnese.dataCriacao?.toDate ? anamnese.dataCriacao.toDate() : new Date(anamnese.dataCriacao)
+      const dataExistente = anamnesesPorPaciente[nomePaciente].dataCriacao?.toDate ? 
+        anamnesesPorPaciente[nomePaciente].dataCriacao.toDate() : 
+        new Date(anamnesesPorPaciente[nomePaciente].dataCriacao)
+      
+      if (dataAtual < dataExistente) {
+        anamnesesPorPaciente[nomePaciente] = anamnese
+      }
+    }
+  })
+  
+  // Contar quantos pacientes fizeram primeira anamnese no período
+  novosPacientes.value = Object.values(anamnesesPorPaciente).filter(anamnese => {
+    const dataCriacao = anamnese.dataCriacao?.toDate ? anamnese.dataCriacao.toDate() : new Date(anamnese.dataCriacao)
     return dataCriacao >= inicioPeriodo
   }).length
 
-  // Taxa de análise
-  taxaAnalise.value = totalPacientes.value > 0 
-    ? Math.round((anamnesesAnalisadas.value / totalPacientes.value) * 100) 
+  // Taxa de análise (baseada no total de anamneses)
+  taxaAnalise.value = totalAnamneses > 0 
+    ? Math.round((anamnesesAnalisadas.value / totalAnamneses) * 100) 
     : 0
 
   // Anamneses por origem
