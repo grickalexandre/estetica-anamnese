@@ -250,24 +250,35 @@ const gerarDadosDemo = () => {
   const dados = []
   const agora = new Date()
   
-  // Gerar dados mais realistas - apenas alguns dias com poucas anamneses
-  const diasComAnamneses = [0, 2, 5, 7, 10, 12, 15, 18, 20, 25, 28] // Apenas alguns dias
+  // Gerar dados mais realistas com múltiplas anamneses por paciente
+  const pacientes = [
+    { nome: 'Maria Silva', anamneses: [0, 3] }, // Hoje e 3 dias atrás
+    { nome: 'João Santos', anamneses: [2, 5] }, // 2 e 5 dias atrás
+    { nome: 'Ana Costa', anamneses: [5] },      // 5 dias atrás
+    { nome: 'Pedro Lima', anamneses: [7, 10, 12] }, // 7, 10 e 12 dias atrás
+    { nome: 'Carla Oliveira', anamneses: [10] }, // 10 dias atrás
+    { nome: 'Roberto Ferreira', anamneses: [15, 18] }, // 15 e 18 dias atrás
+    { nome: 'Lucia Mendes', anamneses: [20] }, // 20 dias atrás
+    { nome: 'Carlos Souza', anamneses: [25, 28] }  // 25 e 28 dias atrás
+  ]
   
-  diasComAnamneses.forEach(diaOffset => {
-    const data = new Date(agora.getTime() - (diaOffset * 24 * 60 * 60 * 1000))
-    
-    // Gerar apenas 1 anamnese por dia (mais realista)
-    const statuses = ['pendente', 'analisada', 'analisada'] // Mais analisadas
-    const origens = ['site', 'whatsapp', 'indicacao']
-    const pacientes = ['Maria Silva', 'João Santos', 'Ana Costa', 'Pedro Lima', 'Carla Oliveira', 'Roberto Ferreira', 'Lucia Mendes', 'Carlos Souza']
-    
-    dados.push({
-      id: `demo_${diaOffset}`,
-      dataCriacao: data,
-      status: statuses[Math.floor(Math.random() * statuses.length)],
-      origem: origens[Math.floor(Math.random() * origens.length)],
-      pacienteNome: pacientes[Math.floor(Math.random() * pacientes.length)],
-      procedimento: ['Limpeza de Pele', 'Botox', 'Preenchimento'][Math.floor(Math.random() * 3)]
+  let idCounter = 0
+  pacientes.forEach(paciente => {
+    paciente.anamneses.forEach(diaOffset => {
+      const data = new Date(agora.getTime() - (diaOffset * 24 * 60 * 60 * 1000))
+      
+      // Status mais realista
+      const statuses = ['pendente', 'analisada', 'analisada', 'analisada'] // 75% analisadas
+      const origens = ['site', 'whatsapp', 'indicacao']
+      
+      dados.push({
+        id: `demo_${idCounter++}`,
+        dataCriacao: data,
+        status: statuses[Math.floor(Math.random() * statuses.length)],
+        origem: origens[Math.floor(Math.random() * origens.length)],
+        pacienteNome: paciente.nome,
+        procedimento: ['Limpeza de Pele', 'Botox', 'Preenchimento'][Math.floor(Math.random() * 3)]
+      })
     })
   })
   
@@ -286,34 +297,28 @@ const calcularMetricas = (anamneses) => {
   const pacientesUnicos = new Set(anamneses.map(a => a.pacienteNome)).size
   totalPacientes.value = pacientesUnicos
   
-  // Novos pacientes no período (pacientes únicos que fizeram primeira anamnese no período)
+  // Novos pacientes no período (pacientes únicos que fizeram pelo menos uma anamnese no período)
   const agora = new Date()
   const inicioPeriodo = new Date(agora.getTime() - (parseInt(periodoFiltro.value) * 24 * 60 * 60 * 1000))
   
-  // Agrupar anamneses por paciente e pegar a primeira de cada
-  const anamnesesPorPaciente = {}
-  anamneses.forEach(anamnese => {
-    const nomePaciente = anamnese.pacienteNome
-    if (!anamnesesPorPaciente[nomePaciente]) {
-      anamnesesPorPaciente[nomePaciente] = anamnese
-    } else {
-      // Se já existe, pegar a mais antiga
-      const dataAtual = anamnese.dataCriacao?.toDate ? anamnese.dataCriacao.toDate() : new Date(anamnese.dataCriacao)
-      const dataExistente = anamnesesPorPaciente[nomePaciente].dataCriacao?.toDate ? 
-        anamnesesPorPaciente[nomePaciente].dataCriacao.toDate() : 
-        new Date(anamnesesPorPaciente[nomePaciente].dataCriacao)
-      
-      if (dataAtual < dataExistente) {
-        anamnesesPorPaciente[nomePaciente] = anamnese
-      }
-    }
-  })
-  
-  // Contar quantos pacientes fizeram primeira anamnese no período
-  novosPacientes.value = Object.values(anamnesesPorPaciente).filter(anamnese => {
+  // Filtrar anamneses do período
+  const anamnesesDoPeriodo = anamneses.filter(anamnese => {
     const dataCriacao = anamnese.dataCriacao?.toDate ? anamnese.dataCriacao.toDate() : new Date(anamnese.dataCriacao)
     return dataCriacao >= inicioPeriodo
-  }).length
+  })
+  
+  // Contar pacientes únicos que fizeram anamnese no período
+  const pacientesDoPeriodo = new Set(anamnesesDoPeriodo.map(a => a.pacienteNome))
+  novosPacientes.value = pacientesDoPeriodo.size
+  
+  console.log('📊 Cálculo de métricas:', {
+    totalAnamneses,
+    pacientesUnicos,
+    novosPacientes: novosPacientes.value,
+    periodoDias: periodoFiltro.value,
+    inicioPeriodo: inicioPeriodo.toISOString().split('T')[0],
+    agora: agora.toISOString().split('T')[0]
+  })
 
   // Taxa de análise (baseada no total de anamneses)
   taxaAnalise.value = totalAnamneses > 0 
