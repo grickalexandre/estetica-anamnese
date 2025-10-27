@@ -621,22 +621,22 @@ const atualizarRelatorios = () => {
 onMounted(async () => {
   console.log('Iniciando carregamento de relatórios...')
   
-  // Por enquanto, sempre usar dados demo para garantir que funcione
-  console.log('Usando dados demo para demonstração...')
-  const dadosDemo = gerarDadosDemo()
-  console.log('Dados demo gerados:', dadosDemo.length, 'anamneses')
-  
-  calcularMetricas(dadosDemo)
-  await nextTick()
-  
-  carregando.value = false
-  console.log('Relatórios carregados com dados demo')
-  
-  // Aguardar um pouco para garantir que o DOM e Chart.js estejam prontos
-  setTimeout(() => {
-    console.log('Tentando criar gráficos após delay...')
+  try {
+    console.log('Inicializando clínica...')
+    await inicializarClinica()
+    console.log('Clínica inicializada:', clinicaId.value)
+    
+    console.log('Carregando dados reais do Firebase...')
+    await carregarDados()
+    console.log('Dados carregados com sucesso')
+  } catch (error) {
+    console.error('Erro no onMounted:', error)
+    console.log('Fallback para dados demo...')
+    const dadosDemo = gerarDadosDemo()
+    calcularMetricas(dadosDemo)
+    await nextTick()
     criarGraficos(dadosDemo)
-  }, 1000)
+  }
 })
 </script>
 
