@@ -250,27 +250,26 @@ const gerarDadosDemo = () => {
   const dados = []
   const agora = new Date()
   
-  // Gerar dados dos últimos 30 dias
-  for (let i = 0; i < 30; i++) {
-    const data = new Date(agora.getTime() - (i * 24 * 60 * 60 * 1000))
+  // Gerar dados mais realistas - apenas alguns dias com poucas anamneses
+  const diasComAnamneses = [0, 2, 5, 7, 10, 12, 15, 18, 20, 25, 28] // Apenas alguns dias
+  
+  diasComAnamneses.forEach(diaOffset => {
+    const data = new Date(agora.getTime() - (diaOffset * 24 * 60 * 60 * 1000))
     
-    // Gerar 1-3 anamneses por dia
-    const quantidade = Math.floor(Math.random() * 3) + 1
+    // Gerar apenas 1 anamnese por dia (mais realista)
+    const statuses = ['pendente', 'analisada', 'analisada'] // Mais analisadas
+    const origens = ['site', 'whatsapp', 'indicacao']
+    const pacientes = ['Maria Silva', 'João Santos', 'Ana Costa', 'Pedro Lima', 'Carla Oliveira', 'Roberto Ferreira', 'Lucia Mendes', 'Carlos Souza']
     
-    for (let j = 0; j < quantidade; j++) {
-      const statuses = ['pendente', 'analisada', 'analisada', 'analisada'] // Mais analisadas
-      const origens = ['site', 'whatsapp', 'indicacao', 'google']
-      
-      dados.push({
-        id: `demo_${i}_${j}`,
-        dataCriacao: data,
-        status: statuses[Math.floor(Math.random() * statuses.length)],
-        origem: origens[Math.floor(Math.random() * origens.length)],
-        pacienteNome: `Paciente ${i * 3 + j + 1}`,
-        procedimento: ['Limpeza de Pele', 'Botox', 'Preenchimento', 'Laser'][Math.floor(Math.random() * 4)]
-      })
-    }
-  }
+    dados.push({
+      id: `demo_${diaOffset}`,
+      dataCriacao: data,
+      status: statuses[Math.floor(Math.random() * statuses.length)],
+      origem: origens[Math.floor(Math.random() * origens.length)],
+      pacienteNome: pacientes[Math.floor(Math.random() * pacientes.length)],
+      procedimento: ['Limpeza de Pele', 'Botox', 'Preenchimento'][Math.floor(Math.random() * 3)]
+    })
+  })
   
   return dados
 }
