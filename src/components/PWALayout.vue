@@ -1,7 +1,7 @@
 <template>
   <div class="pwa-layout">
     <!-- Header minimalista -->
-    <PWAHeader :notification-count="notificationCount" />
+    <PWAHeader :notification-count="pendingCount" />
     
     <!-- Conteúdo principal -->
     <main class="main-content">
@@ -14,12 +14,12 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { inject } from 'vue'
 import PWAHeader from './PWAHeader.vue'
 import PWANavigation from './PWANavigation.vue'
 
-// Props para notificações
-const notificationCount = ref(0)
+// Receber pendingCount do App.vue via provide/inject
+const pendingCount = inject('pendingCount', 0)
 </script>
 
 <style scoped>

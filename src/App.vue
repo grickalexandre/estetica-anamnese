@@ -65,7 +65,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted } from 'vue'
+import { ref, computed, watch, onMounted, provide } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { db } from './firebase.js'
 import { collection, getDocs, query, where, orderBy, onSnapshot } from 'firebase/firestore'
@@ -82,6 +82,9 @@ import PWAInstall from './components/PWAInstall.vue'
 const route = useRoute()
 const router = useRouter()
 const pendingCount = ref(0)
+
+// Fornecer pendingCount para componentes filhos
+provide('pendingCount', pendingCount)
 
 const { clinicaId, inicializarClinica } = useClinica()
 const { isAuthenticated, isFree, isPaid, logout, initAuth } = useAuth()

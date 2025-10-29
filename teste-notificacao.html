@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste de Notificação - Sistema Estética</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f8f9fa;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .header h1 {
+            margin: 0;
+            color: #1d1d1f;
+            font-size: 24px;
+        }
+        .notification-bell {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 44px;
+            height: 44px;
+            background: rgba(255, 193, 7, 0.1);
+            border: 2px solid #ffc107;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: #ffc107;
+            font-size: 18px;
+        }
+        .notification-bell:hover {
+            background: rgba(255, 193, 7, 0.2);
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(255, 193, 7, 0.3);
+        }
+        .notification-bell .notification-badge {
+            position: absolute;
+            top: -6px;
+            right: -6px;
+            background: #ef4444;
+            color: white;
+            border-radius: 10px;
+            padding: 2px 6px;
+            font-size: 10px;
+            font-weight: 600;
+            min-width: 18px;
+            text-align: center;
+            line-height: 1;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        .test-section {
+            margin-bottom: 24px;
+            padding: 16px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #00A859;
+        }
+        .test-section h3 {
+            margin: 0 0 12px 0;
+            color: #1d1d1f;
+        }
+        .test-button {
+            background: #00A859;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        .test-button:hover {
+            background: #008a4a;
+            transform: translateY(-1px);
+        }
+        .status {
+            margin-top: 12px;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-weight: 500;
+        }
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><i class="fas fa-spa"></i> Teste de Notificação</h1>
+            <div class="notification-bell" onclick="testarNotificacao()">
+                <i class="fas fa-bell"></i>
+                <span class="notification-badge" id="badge">0</span>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3><i class="fas fa-bell"></i> Teste do Ícone de Notificação</h3>
+            <p>Este é um teste visual do ícone de notificação que foi implementado no header do sistema.</p>
+            <button class="test-button" onclick="simularNovaAnamnese()">
+                <i class="fas fa-plus"></i> Simular Nova Anamnese
+            </button>
+            <button class="test-button" onclick="limparNotificacoes()" style="background: #6c757d; margin-left: 8px;">
+                <i class="fas fa-trash"></i> Limpar Notificações
+            </button>
+            <div id="status" class="status" style="display: none;"></div>
+        </div>
+
+        <div class="test-section">
+            <h3><i class="fas fa-info-circle"></i> Como Funciona</h3>
+            <ul>
+                <li><strong>Ícone Amarelo:</strong> Aparece quando há anamneses pendentes</li>
+                <li><strong>Badge Vermelho:</strong> Mostra o número de anamneses pendentes</li>
+                <li><strong>Animação:</strong> O badge pulsa para chamar atenção</li>
+                <li><strong>Clique:</strong> Leva diretamente para a lista de anamneses</li>
+            </ul>
+        </div>
+
+        <div class="test-section">
+            <h3><i class="fas fa-code"></i> Implementação</h3>
+            <p>O sistema foi implementado com:</p>
+            <ul>
+                <li>Ícone de sino no <code>PWAHeader.vue</code></li>
+                <li>Contagem automática via <code>App.vue</code></li>
+                <li>Comunicação via <code>provide/inject</code></li>
+                <li>Estilos responsivos e animações</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        let contador = 0;
+
+        function simularNovaAnamnese() {
+            contador++;
+            document.getElementById('badge').textContent = contador;
+            document.getElementById('status').style.display = 'block';
+            document.getElementById('status').className = 'status success';
+            document.getElementById('status').textContent = `✅ Nova anamnese simulada! Total: ${contador}`;
+            
+            // Simular notificação do navegador
+            if (Notification.permission === 'granted') {
+                new Notification('Nova Anamnese Recebida', {
+                    body: `Paciente preencheu uma nova anamnese`,
+                    icon: '/favicon.ico'
+                });
+            }
+        }
+
+        function limparNotificacoes() {
+            contador = 0;
+            document.getElementById('badge').textContent = contador;
+            document.getElementById('status').style.display = 'block';
+            document.getElementById('status').className = 'status success';
+            document.getElementById('status').textContent = '✅ Notificações limpas!';
+        }
+
+        function testarNotificacao() {
+            alert(`Você clicou na notificação! Total de anamneses pendentes: ${contador}`);
+        }
+
+        // Solicitar permissão para notificações
+        if (Notification.permission === 'default') {
+            Notification.requestPermission();
+        }
+    </script>
+</body>
+</html>

@@ -87,6 +87,12 @@
 
       <!-- User Actions -->
       <div class="navbar-actions">
+        <!-- Notificação de Anamnese -->
+        <div v-if="isAuthenticated && pendingCount > 0" class="notification-bell" @click="irParaAnamneses">
+          <i class="fas fa-bell"></i>
+          <span class="notification-badge">{{ pendingCount }}</span>
+        </div>
+        
         <button v-if="isAuthenticated" @click="handleLogout" class="logout-btn">
           <i class="fas fa-sign-out-alt"></i>
           <span>Sair</span>
@@ -133,6 +139,11 @@ const setActiveMenu = (menu) => {
 const irParaHome = () => {
   router.push('/')
   setActiveMenu('dashboard')
+}
+
+const irParaAnamneses = () => {
+  router.push('/lista')
+  setActiveMenu('pacientes')
 }
 
 const handleLogout = async () => {
@@ -334,6 +345,50 @@ watch(() => route.path, detectActiveMenu, { immediate: true })
   display: flex;
   align-items: center;
   gap: 12px;
+}
+
+.notification-bell {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  background: rgba(255, 193, 7, 0.1);
+  border: 2px solid #ffc107;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  color: #ffc107;
+  font-size: 18px;
+}
+
+.notification-bell:hover {
+  background: rgba(255, 193, 7, 0.2);
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(255, 193, 7, 0.3);
+}
+
+.notification-bell .notification-badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  background: #ef4444;
+  color: white;
+  border-radius: 10px;
+  padding: 2px 6px;
+  font-size: 10px;
+  font-weight: 600;
+  min-width: 18px;
+  text-align: center;
+  line-height: 1;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); }
 }
 
 .logout-btn {
