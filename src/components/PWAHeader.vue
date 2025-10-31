@@ -18,9 +18,13 @@
       <!-- Área de ações -->
       <div class="header-actions">
         <!-- Notificação de Anamnese -->
-        <div v-if="notificationCount > 0" class="notification-bell" @click="irParaAnamneses">
+        <div 
+          class="notification-bell" 
+          :class="{ 'has-pending': notificationCount > 0 }"
+          @click="irParaAnamneses"
+        >
           <i class="fas fa-bell"></i>
-          <span class="notification-badge">{{ notificationCount }}</span>
+          <span v-if="notificationCount > 0" class="notification-badge">{{ notificationCount }}</span>
         </div>
         
         <!-- Dados da clínica -->
@@ -142,18 +146,29 @@ const showClinicInfo = () => {
   justify-content: center;
   width: 44px;
   height: 44px;
-  background: rgba(255, 193, 7, 0.1);
-  border: 2px solid #ffc107;
+  background: rgba(148, 163, 184, 0.12);
+  border: 2px solid rgba(148, 163, 184, 0.4);
   border-radius: 50%;
   cursor: pointer;
   transition: all 0.3s ease;
-  color: #ffc107;
+  color: #6b7280;
   font-size: 18px;
 }
 
 .notification-bell:hover {
-  background: rgba(255, 193, 7, 0.2);
+  background: rgba(148, 163, 184, 0.2);
   transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(148, 163, 184, 0.25);
+}
+
+.notification-bell.has-pending {
+  background: rgba(255, 193, 7, 0.1);
+  border-color: #ffc107;
+  color: #ffc107;
+}
+
+.notification-bell.has-pending:hover {
+  background: rgba(255, 193, 7, 0.2);
   box-shadow: 0 4px 12px rgba(255, 193, 7, 0.3);
 }
 
