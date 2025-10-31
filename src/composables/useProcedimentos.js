@@ -78,13 +78,23 @@ export function useProcedimentos() {
       carregando.value = true
       
       // 1. Registrar o atendimento
+      const numeroParcelas = Number(dados.numeroParcelas || 1)
+      const pagamentoJaRecebido = dados.pago === true || dados.pago === 'true'
+      const pagamentoStatusAtendimento = dados.pagamentoStatus || (pagamentoJaRecebido ? 'pago' : (numeroParcelas > 1 ? 'parcial' : 'pendente'))
+      const valorRecebidoAtendimento = pagamentoJaRecebido ? Number(dados.valorRecebido || dados.valorCobrado || 0) : null
+      const dataRecebimentoString = pagamentoJaRecebido ? (dados.dataRecebimento || dados.data) : null
       const atendimento = {
         ...dados,
         agendamentoId: dados.agendamentoId || null, // 🆕 FK para agendamentos
-        pagamentoStatus: dados.pagamentoStatus || 'pendente', // 🆕 'pendente', 'pago', 'parcial'
+        pagamentoStatus: pagamentoStatusAtendimento, // 🆕 'pendente', 'pago', 'parcial'
         contaReceberId: dados.contaReceberId || null, // 🆕 FK para contas_receber (será preenchido após criar a conta)
         clinicaId: clinicaId.value || 'demo',
         data: Timestamp.fromDate(new Date(dados.data)),
+        dataRecebimento: dataRecebimentoString ? Timestamp.fromDate(new Date(dataRecebimentoString)) : null,
+        valorRecebido: valorRecebidoAtendimento,
+        financeiroDescricao: dados.financeiroDescricao || null,
+        financeiroCategoria: dados.financeiroCategoria || null,
+        financeiroObservacoes: dados.financeiroObservacoes || null,
         dataCriacao: serverTimestamp()
       }
       
@@ -168,15 +178,22 @@ export function useProcedimentos() {
       // 5. Gestão financeira - Conta a Receber (com parcelamento)
       if (dados.valorCobrado && dados.valorCobrado > 0) {
         const { adicionarContaReceber, adicionarContaReceberParcelada } = await import('./useFinanceiro.js')
-        
+
+        const descricaoFinanceira = dados.financeiroDescricao || `Atendimento: ${dados.procedimentoNome} - ${dados.clienteNome}`
+        const categoriaFinanceira = dados.financeiroCategoria || 'atendimentos'
+        const observacoesFinanceiras = dados.financeiroObservacoes || dados.observacoes || ''
+        const dataVencimentoConta = dados.dataVencimento || new Date().toISOString().split('T')[0]
+        const dataRecebimentoConta = pagamentoJaRecebido ? (dados.dataRecebimento || dados.data || dataVencimentoConta) : null
+        const valorRecebidoConta = pagamentoJaRecebido ? Number(dados.valorRecebido || dados.valorCobrado || 0) : null
+
         const dadosFinanceiros = {
-          descricao: `Atendimento: ${dados.procedimentoNome} - ${dados.clienteNome}`,
-          categoria: 'atendimentos',
+          descricao: descricaoFinanceira,
+          categoria: categoriaFinanceira,
           clienteId: dados.clienteId,
           clienteNome: dados.clienteNome,
           atendimentoId: docRef.id,
           formaPagamento: dados.formaPagamento || 'dinheiro',
-          observacoes: dados.observacoes || ''
+          observacoes: observacoesFinanceiras
         }
 
         // Se parcelado, usar função de parcelamento
@@ -185,14 +202,14 @@ export function useProcedimentos() {
             ...dadosFinanceiros,
             valorTotal: dados.valorCobrado,
             numeroParcelas: dados.numeroParcelas,
-            dataVencimentoInicial: dados.dataVencimento || new Date().toISOString().split('T')[0]
+            dataVencimentoInicial: dataVencimentoConta
           })
           
           // 🆕 Atualizar atendimento com ID da primeira parcela
           if (resultadoConta.success && resultadoConta.parcelas && resultadoConta.parcelas.length > 0) {
             await updateDoc(doc(db, 'atendimentos', docRef.id), {
               contaReceberId: resultadoConta.parcelas[0], // Primeira parcela
-              pagamentoStatus: 'parcial'
+              pagamentoStatus: pagamentoStatusAtendimento
             })
           }
         } else {
@@ -200,15 +217,17 @@ export function useProcedimentos() {
           const resultadoConta = await adicionarContaReceber({
             ...dadosFinanceiros,
             valor: dados.valorCobrado,
-            dataVencimento: dados.dataVencimento || new Date().toISOString().split('T')[0],
-            status: dados.pago ? 'recebido' : 'pendente'
+            dataVencimento: dataVencimentoConta,
+            status: pagamentoJaRecebido ? 'recebido' : 'pendente',
+            dataRecebimento: dataRecebimentoConta,
+            valorRecebido: valorRecebidoConta
           })
           
           // 🆕 Atualizar atendimento com ID da conta a receber criada
           if (resultadoConta.success && resultadoConta.id) {
             await updateDoc(doc(db, 'atendimentos', docRef.id), {
               contaReceberId: resultadoConta.id,
-              pagamentoStatus: dados.pago ? 'pago' : 'pendente'
+              pagamentoStatus: pagamentoStatusAtendimento
             })
           }
         }

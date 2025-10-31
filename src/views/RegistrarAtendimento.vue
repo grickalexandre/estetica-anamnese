@@ -124,11 +124,11 @@
           <div class="form-group">
             <label>Status do Pagamento *</label>
             <select v-model="form.pago" required>
-              <option value="false">Pendente</option>
-              <option value="true">Pago</option>
+              <option :value="false">Pendente</option>
+              <option :value="true">Pago</option>
             </select>
           </div>
-          <div class="form-group" v-if="form.pago === 'false' && form.numeroParcelas === 1">
+          <div class="form-group" v-if="!form.pago && form.numeroParcelas === 1">
             <label>Data de Vencimento</label>
             <input v-model="form.dataVencimento" type="date">
             <small class="form-help">Deixe em branco para vencimento imediato</small>
@@ -214,6 +214,113 @@
       </form>
     </div>
 
+    <!-- Modal: Resumo Financeiro do Atendimento -->
+    <div v-if="modalResumoPagamento" class="modal-overlay" @click.self="fecharResumoPagamento">
+      <div class="modal-content modal-medium">
+        <div class="modal-header">
+          <h2><i class="fas fa-file-invoice-dollar"></i> Confirmar Detalhes Financeiros</h2>
+          <button type="button" class="btn-close" @click="fecharResumoPagamento" :disabled="salvando">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+
+        <div class="modal-body resumo-pagamento">
+          <section class="resumo-section">
+            <h3><i class="fas fa-receipt"></i> Resumo do Atendimento</h3>
+            <div class="resumo-grid">
+              <div class="resumo-card">
+                <span class="resumo-label">Paciente</span>
+                <span class="resumo-value">{{ clienteSelecionado?.nome || 'Não informado' }}</span>
+              </div>
+              <div class="resumo-card">
+                <span class="resumo-label">Profissional</span>
+                <span class="resumo-value">{{ profissionalSelecionado?.nome || 'Não informado' }}</span>
+              </div>
+              <div class="resumo-card">
+                <span class="resumo-label">Procedimentos</span>
+                <span class="resumo-value procedimentos">
+                  <span v-for="(proc, index) in form.procedimentos" :key="`proc-${index}`">
+                    {{ proc.procedimentoNome || 'Procedimento sem nome' }}<span v-if="index < form.procedimentos.length - 1"> • </span>
+                  </span>
+                </span>
+              </div>
+              <div class="resumo-card destaque">
+                <span class="resumo-label">Valor Total</span>
+                <span class="resumo-value total">R$ {{ formatarMoeda(form.valorCobrado) }}</span>
+              </div>
+              <div class="resumo-card">
+                <span class="resumo-label">Forma de Pagamento</span>
+                <span class="resumo-value">{{ textoFormaPagamento }}</span>
+              </div>
+              <div class="resumo-card">
+                <span class="resumo-label">Parcelas</span>
+                <span class="resumo-value">{{ form.numeroParcelas }}x</span>
+              </div>
+            </div>
+          </section>
+
+          <section class="resumo-section">
+            <h3><i class="fas fa-wallet"></i> Ajustes Financeiros</h3>
+            <div class="form-group">
+              <label>Descrição da Receita</label>
+              <input type="text" v-model="detalhesPagamento.descricao" placeholder="Descrição que aparecerá em Contas a Receber">
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label>Categoria</label>
+                <select v-model="detalhesPagamento.categoria">
+                  <option value="procedimentos">Procedimentos</option>
+                  <option value="consultas">Consultas</option>
+                  <option value="produtos">Produtos</option>
+                  <option value="pacotes">Pacotes</option>
+                  <option value="outros">Outros</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Data de Vencimento</label>
+                <input type="date" v-model="detalhesPagamento.dataVencimento" required>
+              </div>
+            </div>
+
+            <div class="form-group toggle">
+              <label class="toggle-label">
+                <input type="checkbox" v-model="detalhesPagamento.marcarComoRecebido" :disabled="!podeMarcarRecebido">
+                <span>Marcar como recebido agora</span>
+              </label>
+              <small v-if="!podeMarcarRecebido" class="form-help">Disponível apenas para pagamentos à vista (1 parcela).</small>
+              <small v-else class="form-help">Use para registrar pagamentos em dinheiro, PIX ou cartão débito recebidos na hora.</small>
+            </div>
+
+            <div class="form-row" v-if="detalhesPagamento.marcarComoRecebido">
+              <div class="form-group">
+                <label>Data do Recebimento</label>
+                <input type="date" v-model="detalhesPagamento.dataRecebimento">
+              </div>
+              <div class="form-group">
+                <label>Valor Recebido</label>
+                <input type="number" step="0.01" min="0" v-model.number="detalhesPagamento.valorRecebido">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>Observações para o Financeiro</label>
+              <textarea rows="3" v-model="detalhesPagamento.observacoesFinanceiras" placeholder="Informações adicionais sobre condições de pagamento, descontos ou observações internas"></textarea>
+            </div>
+          </section>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" @click="fecharResumoPagamento" :disabled="salvando">
+            Cancelar
+          </button>
+          <button type="button" class="btn btn-primary" @click="confirmarRegistroAtendimento" :disabled="salvando">
+            <i class="fas fa-check"></i> {{ salvando ? 'Salvando...' : 'Confirmar e Registrar' }}
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- Modal: Pesquisa de Paciente -->
     <div v-if="modalPesquisaCliente" class="modal-overlay" @click.self="fecharModalPesquisaCliente">
       <div class="modal-content modal-large">
@@ -284,7 +391,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useProcedimentos } from '../composables/useProcedimentos.js'
 import { usePacientes } from '../composables/usePacientes.js'
@@ -306,6 +413,16 @@ const salvando = ref(false)
 const clienteSelecionado = ref(null)
 const procedimentoSelecionado = ref(null)
 const profissionalSelecionado = ref(null)
+const modalResumoPagamento = ref(false)
+const detalhesPagamento = ref({
+  descricao: '',
+  categoria: 'procedimentos',
+  dataVencimento: '',
+  marcarComoRecebido: false,
+  dataRecebimento: '',
+  valorRecebido: 0,
+  observacoesFinanceiras: ''
+})
 
 const form = ref({
   clienteId: '',
@@ -317,10 +434,41 @@ const form = ref({
   valorCobrado: 0,
   formaPagamento: 'dinheiro',
   numeroParcelas: 1,
-  pago: 'false',
+  pago: false,
   dataVencimento: '',
   observacoes: '',
   produtosUtilizados: []
+})
+
+const mapaFormaPagamento = {
+  dinheiro: 'Dinheiro',
+  pix: 'PIX',
+  debito: 'Cartão Débito',
+  credito: 'Cartão Crédito',
+  boleto: 'Boleto',
+  promissoria: 'Promissória'
+}
+
+const formasRecebimentoImediato = ['dinheiro', 'pix', 'debito']
+const obterDataHoje = () => new Date().toISOString().split('T')[0]
+
+const textoFormaPagamento = computed(() => mapaFormaPagamento[form.value.formaPagamento] || '—')
+const podeMarcarRecebido = computed(() => form.value.numeroParcelas <= 1)
+
+watch(() => form.value.numeroParcelas, (novo) => {
+  if (novo > 1) {
+    detalhesPagamento.value.marcarComoRecebido = false
+  }
+})
+
+watch(() => detalhesPagamento.value.marcarComoRecebido, (marcar) => {
+  if (marcar && !detalhesPagamento.value.dataRecebimento) {
+    detalhesPagamento.value.dataRecebimento = obterDataHoje()
+  }
+
+  if (!marcar) {
+    detalhesPagamento.value.dataRecebimento = ''
+  }
 })
 
 const procedimentosDisponiveis = computed(() => {
@@ -519,6 +667,109 @@ const verificarEstoque = () => {
   })
 }
 
+const obterNomeProcedimento = (procedimentoId) => {
+  const proc = procedimentos.value.find(p => p.id === procedimentoId)
+  return proc ? proc.nome : ''
+}
+
+const prepararResumoPagamento = () => {
+  const hoje = obterDataHoje()
+  const nomesProcedimentos = form.value.procedimentos.map(proc => proc.procedimentoNome || obterNomeProcedimento(proc.procedimentoId) || 'Procedimento')
+  const descricaoProcedimentos = nomesProcedimentos.filter(Boolean).join(' + ') || 'Atendimento'
+  const descricaoPadrao = `Atendimento: ${descricaoProcedimentos}${clienteSelecionado.value ? ` - ${clienteSelecionado.value.nome}` : ''}`
+  const valorTotal = Number(form.value.valorCobrado || 0)
+  const sugestaoRecebido = form.value.pago === true || (podeMarcarRecebido.value && formasRecebimentoImediato.includes(form.value.formaPagamento))
+
+  detalhesPagamento.value = {
+    descricao: descricaoPadrao,
+    categoria: 'procedimentos',
+    dataVencimento: form.value.dataVencimento || hoje,
+    marcarComoRecebido: podeMarcarRecebido.value ? sugestaoRecebido : false,
+    dataRecebimento: podeMarcarRecebido.value && sugestaoRecebido ? hoje : '',
+    valorRecebido: valorTotal,
+    observacoesFinanceiras: ''
+  }
+
+  if (!podeMarcarRecebido.value) {
+    detalhesPagamento.value.dataRecebimento = ''
+  }
+
+  modalResumoPagamento.value = true
+}
+
+const fecharResumoPagamento = () => {
+  if (!salvando.value) {
+    modalResumoPagamento.value = false
+  }
+}
+
+const confirmarRegistroAtendimento = async () => {
+  try {
+    salvando.value = true
+
+    const hoje = obterDataHoje()
+    const nomesProcedimentos = form.value.procedimentos.map(proc => proc.procedimentoNome || obterNomeProcedimento(proc.procedimentoId) || 'Procedimento')
+    const descricaoProcedimentos = nomesProcedimentos.filter(Boolean).join(' + ') || 'Atendimento'
+    const observacoesFinanceiras = (detalhesPagamento.value.observacoesFinanceiras || '').trim()
+    const observacoesPartes = []
+
+    if (form.value.observacoes) {
+      observacoesPartes.push(form.value.observacoes)
+    }
+
+    if (observacoesFinanceiras) {
+      observacoesPartes.push(`Financeiro: ${observacoesFinanceiras}`)
+    }
+
+    const observacoesCombinadas = observacoesPartes.join('\n\n')
+    const numeroParcelasNormalizado = Number(form.value.numeroParcelas || 1)
+    const valorCobradoNormalizado = Number(form.value.valorCobrado || 0)
+    const pagamentoMarcado = detalhesPagamento.value.marcarComoRecebido && podeMarcarRecebido.value
+    const valorRecebidoNormalizado = pagamentoMarcado
+      ? Number(detalhesPagamento.value.valorRecebido || valorCobradoNormalizado)
+      : null
+    const dataVencimentoFinal = detalhesPagamento.value.dataVencimento || hoje
+    const dataRecebimentoFinal = pagamentoMarcado
+      ? (detalhesPagamento.value.dataRecebimento || hoje)
+      : null
+
+    const dadosAtendimento = {
+      ...form.value,
+      procedimentoNome: descricaoProcedimentos,
+      numeroParcelas: numeroParcelasNormalizado,
+      valorCobrado: valorCobradoNormalizado,
+      pago: pagamentoMarcado,
+      dataVencimento: dataVencimentoFinal,
+      observacoes: observacoesCombinadas,
+      financeiroDescricao: detalhesPagamento.value.descricao,
+      financeiroCategoria: detalhesPagamento.value.categoria,
+      financeiroObservacoes: observacoesFinanceiras,
+      dataRecebimento: dataRecebimentoFinal,
+      valorRecebido: valorRecebidoNormalizado
+    }
+
+    dadosAtendimento.pagamentoStatus = pagamentoMarcado
+      ? 'pago'
+      : (numeroParcelasNormalizado > 1 ? 'parcial' : 'pendente')
+
+    const resultado = await registrarAtendimento(dadosAtendimento)
+
+    if (resultado.success) {
+      form.value.pago = pagamentoMarcado
+      modalResumoPagamento.value = false
+      showSuccess('Atendimento registrado com sucesso! Financeiro atualizado automaticamente.', 'Sucesso!')
+      router.push('/agenda')
+    } else {
+      showError('Erro ao registrar atendimento: ' + resultado.error)
+    }
+  } catch (err) {
+    console.error('Erro ao confirmar atendimento:', err)
+    showError('Erro ao salvar atendimento. Tente novamente.')
+  } finally {
+    salvando.value = false
+  }
+}
+
 const salvar = async () => {
   try {
     if (form.value.procedimentos.length === 0) {
@@ -537,32 +788,16 @@ const salvar = async () => {
           confirmIcon: 'fas fa-exclamation-triangle'
         }
       )
-      
+
       if (!confirmado) {
         return
       }
     }
 
-    salvando.value = true
-    
-    // Preparar dados com lista de procedimentos
-    const dadosAtendimento = {
-      ...form.value,
-      procedimentoNome: form.value.procedimentos.map(p => p.procedimentoNome).join(' + ')
-    }
-    
-    const resultado = await registrarAtendimento(dadosAtendimento)
-    
-    if (resultado.success) {
-      showSuccess('Atendimento registrado com sucesso! Estoque atualizado automaticamente.', 'Sucesso!')
-      router.push('/agenda')
-    } else {
-      showError('Erro ao registrar atendimento: ' + resultado.error)
-    }
+    prepararResumoPagamento()
   } catch (err) {
-    showError('Erro ao salvar atendimento. Tente novamente.')
-  } finally {
-    salvando.value = false
+    console.error('Erro ao preparar resumo financeiro do atendimento:', err)
+    showError('Erro ao preparar o resumo financeiro do atendimento.')
   }
 }
 
@@ -661,10 +896,25 @@ const calcularDataParcela = (numeroParcela) => {
 .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 20px; }
 .modal-content { background: white; border-radius: 16px; width: 100%; max-height: 90vh; overflow-y: auto; }
 .modal-large { max-width: 800px; }
+.modal-medium { max-width: 640px; }
 .modal-header { display: flex; justify-content: space-between; padding: 24px; border-bottom: 1px solid #e5e5ea; }
 .modal-header h2 { font-size: 20px; display: flex; align-items: center; gap: 10px; }
 .btn-close { width: 32px; height: 32px; border-radius: 50%; border: none; background: #f5f5f7; cursor: pointer; }
 .modal-content form { padding: 24px; }
+.resumo-pagamento { padding: 24px; display: flex; flex-direction: column; gap: 24px; }
+.resumo-section { display: flex; flex-direction: column; gap: 16px; }
+.resumo-section h3 { margin: 0; font-size: 16px; color: #1d1d1f; display: flex; align-items: center; gap: 8px; }
+.resumo-section h3 i { color: #2563eb; }
+.resumo-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; }
+.resumo-card { background: #f8f9fa; border: 1px solid #e5e5ea; border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 6px; }
+.resumo-card.destaque { background: rgba(52, 199, 89, 0.1); border-color: rgba(52, 199, 89, 0.3); }
+.resumo-card .resumo-label { font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; color: #6b7280; font-weight: 700; }
+.resumo-card .resumo-value { font-size: 16px; font-weight: 600; color: #1d1d1f; }
+.resumo-card .resumo-value.total { font-size: 20px; color: #34c759; }
+.resumo-card .resumo-value.procedimentos { display: flex; flex-wrap: wrap; gap: 4px 8px; font-weight: 500; }
+.form-group.toggle { display: flex; flex-direction: column; gap: 6px; }
+.toggle-label { display: flex; align-items: center; gap: 8px; font-weight: 600; color: #1d1d1f; }
+.toggle-label input { width: 18px; height: 18px; }
 .modal-actions { display: flex; gap: 12px; justify-content: flex-end; margin-top: 24px; padding-top: 20px; border-top: 1px solid #e5e5ea; }
 .loading, .empty-state { text-align: center; padding: 60px; color: #6e6e73; }
 .empty-state i { font-size: 64px; color: #d2d2d7; margin-bottom: 16px; }
