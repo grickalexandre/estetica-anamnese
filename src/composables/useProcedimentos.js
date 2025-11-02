@@ -267,28 +267,54 @@ export function useProcedimentos() {
   const buscarAtendimentos = async (dataInicio, dataFim, clienteId = null) => {
     try {
       carregando.value = true
+      console.log('=== BUSCANDO ATENDIMENTOS ===')
+      console.log('clinicaId:', clinicaId.value)
+      console.log('dataInicio:', dataInicio)
+      console.log('dataFim:', dataFim)
+      
       let q = query(
         collection(db, 'atendimentos'),
         where('clinicaId', '==', clinicaId.value || 'demo')
       )
 
-      if (dataInicio && dataFim) {
-        q = query(
-          q,
-          where('data', '>=', Timestamp.fromDate(new Date(dataInicio))),
-          where('data', '<=', Timestamp.fromDate(new Date(dataFim)))
-        )
-      }
+      // TEMPORÁRIO: Buscar sem filtro de data para verificar se existem dados
+      console.log('Buscando atendimentos SEM filtro de data (temporário para debug)')
+      
+      // TODO: Reativar após criar índice no Firestore
+      // if (dataInicio && dataFim) {
+      //   q = query(
+      //     q,
+      //     where('data', '>=', Timestamp.fromDate(new Date(dataInicio))),
+      //     where('data', '<=', Timestamp.fromDate(new Date(dataFim)))
+      //   )
+      // }
 
       if (clienteId) {
         q = query(q, where('clienteId', '==', clienteId))
       }
 
+      console.log('Executando query...')
       const snapshot = await getDocs(q)
       atendimentos.value = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+      
+      console.log('Total de atendimentos encontrados:', atendimentos.value.length)
+      if (atendimentos.value.length > 0) {
+        console.log('Primeiros 3 atendimentos:', atendimentos.value.slice(0, 3).map(a => ({
+          id: a.id,
+          cliente: a.clienteNome,
+          procedimento: a.procedimentoNome,
+          valor: a.valorCobrado,
+          data: a.data
+        })))
+      } else {
+        console.log('⚠️ Nenhum atendimento encontrado na coleção "atendimentos"')
+      }
+      
       return atendimentos.value
     } catch (err) {
-      console.error('Erro ao buscar atendimentos:', err)
+      console.error('❌ ERRO ao buscar atendimentos:', err)
+      console.error('Tipo do erro:', err.name)
+      console.error('Mensagem:', err.message)
       return []
     } finally {
       carregando.value = false
