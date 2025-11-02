@@ -436,7 +436,8 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
+import { useRouter } from 'vue-router'
 import { useAgendamento } from '../composables/useAgendamento.js'
 import { useClinica } from '../composables/useClinica.js'
 import { useProfissionais } from '../composables/useProfissionais.js'
@@ -444,6 +445,7 @@ import { useProcedimentos } from '../composables/useProcedimentos.js'
 import { usePacientes } from '../composables/usePacientes.js'
 import { useNotifications } from '../composables/useNotifications.js'
 
+const router = useRouter()
 const { clinicaId, inicializarClinica } = useClinica()
 const { 
   agendamentos, 
