@@ -41,6 +41,7 @@ import PrecificacaoProcedimentos from './views/PrecificacaoProcedimentos.vue'
 import ProntuarioEletronico from './views/ProntuarioEletronico.vue'
 import PWAHome from './views/PWAHome.vue'
 import AtendimentosRealizados from './views/AtendimentosRealizados.vue'
+import MigracaoAtendimentos from './views/MigracaoAtendimentos.vue'
 import { auth } from './firebase.js'
 import './style.css'
 import './styles/unimed-theme.css'
@@ -93,6 +94,7 @@ const routes = [
   
   // Rotas de administração
   { path: '/limpeza-dados', component: LimpezaDados, meta: { requiresAuth: true } },
+  { path: '/migracao-atendimentos', component: MigracaoAtendimentos, meta: { requiresAuth: true } },
   
   // Rotas de pagamentos
   { path: '/pagamentos', component: Pagamentos, meta: { requiresAuth: true } },
