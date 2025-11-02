@@ -87,6 +87,12 @@
           </div>
           <span>Agendamentos</span>
         </div>
+        <div class="service-item highlight-atendimentos" @click="navigateTo('/atendimentos-realizados')">
+          <div class="service-icon atendimentos">
+            <i class="fas fa-clipboard-check"></i>
+          </div>
+          <span>Atendimentos Realizados</span>
+        </div>
         <div class="service-item" @click="navigateTo('/lista')">
           <div class="service-icon">
             <i class="fas fa-user-friends"></i>
@@ -488,6 +494,16 @@ const formatarHora = (hora) => {
   font-weight: bold;
 }
 
+.service-item.highlight-atendimentos {
+  border: 2px solid #007AFF;
+  background: rgba(0, 122, 255, 0.05);
+}
+
+.service-item.highlight-atendimentos span {
+  color: #007AFF;
+  font-weight: 600;
+}
+
 .service-icon {
   width: 56px;
   height: 56px;
@@ -499,6 +515,10 @@ const formatarHora = (hora) => {
   color: white;
   font-size: 24px;
   margin-bottom: 12px;
+}
+
+.service-icon.atendimentos {
+  background: linear-gradient(135deg, #007AFF 0%, #5AC8FA 100%);
 }
 
 .service-item span {

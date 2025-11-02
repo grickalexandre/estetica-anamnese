@@ -40,6 +40,7 @@ import MinhaAssinatura from './views/MinhaAssinatura.vue'
 import PrecificacaoProcedimentos from './views/PrecificacaoProcedimentos.vue'
 import ProntuarioEletronico from './views/ProntuarioEletronico.vue'
 import PWAHome from './views/PWAHome.vue'
+import AtendimentosRealizados from './views/AtendimentosRealizados.vue'
 import { auth } from './firebase.js'
 import './style.css'
 import './styles/unimed-theme.css'
@@ -86,6 +87,7 @@ const routes = [
   
   // Rotas de atendimento
   { path: '/registrar-atendimento-agendado', component: RegistrarAtendimentoAgendado, meta: { requiresAuth: true } },
+  { path: '/atendimentos-realizados', component: AtendimentosRealizados, meta: { requiresAuth: true } },
   { path: '/editar-paciente/:id', component: EditarPaciente, meta: { requiresAuth: true } },
   { path: '/relatorio-atendimentos', component: RelatorioAtendimentos, meta: { requiresAuth: true } },
   
