@@ -337,25 +337,75 @@ const confirmarAtendimento = async () => {
       return
     }
     
-    // Atualizar agendamento com dados do atendimento
-    await atualizarAgendamento(agendamentoSelecionado.value.id, {
-      status: formAtendimento.value.status,
+    const agend = agendamentoSelecionado.value
+    
+    // 1. CRIAR REGISTRO DE ATENDIMENTO na coleção 'atendimentos'
+    const { registrarAtendimento: criarAtendimento } = await import('../composables/useProcedimentos.js')
+    
+    const dadosAtendimento = {
+      // Dados do cliente
+      clienteId: agend.clienteId,
+      clienteNome: agend.clienteNome || agend.pacienteNome,
+      
+      // Dados do profissional
+      profissionalId: agend.profissionalId,
+      profissionalNome: agend.profissional,
+      
+      // Dados do procedimento
+      procedimentoId: agend.procedimentoId,
+      procedimentoNome: agend.procedimento,
+      procedimentos: agend.procedimentoId ? [{
+        procedimentoId: agend.procedimentoId,
+        procedimentoNome: agend.procedimento,
+        valor: formAtendimento.value.valorCobrado,
+        duracao: agend.duracao || 60
+      }] : [],
+      
+      // Dados financeiros
+      data: formAtendimento.value.dataAtendimento ? new Date(formAtendimento.value.dataAtendimento).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+      valorCobrado: formAtendimento.value.valorCobrado,
+      formaPagamento: formAtendimento.value.formaPagamento,
+      numeroParcelas: 1,
+      pago: true, // Marcado como pago ao registrar
+      dataVencimento: new Date().toISOString().split('T')[0],
+      observacoes: formAtendimento.value.observacoes || '',
+      
+      // Referência ao agendamento
+      agendamentoId: agend.id,
+      
+      // Produtos utilizados (vazio por enquanto)
+      produtosUtilizados: []
+    }
+    
+    console.log('Registrando atendimento:', dadosAtendimento)
+    const resultado = await criarAtendimento(dadosAtendimento)
+    
+    if (!resultado.success) {
+      throw new Error(resultado.error || 'Erro ao criar atendimento')
+    }
+    
+    console.log('Atendimento criado com sucesso! ID:', resultado.id)
+    
+    // 2. ATUALIZAR STATUS DO AGENDAMENTO
+    await atualizarAgendamento(agend.id, {
+      status: 'realizado',
       valorCobrado: formAtendimento.value.valorCobrado,
       formaPagamento: formAtendimento.value.formaPagamento,
       dataAtendimento: formAtendimento.value.dataAtendimento ? new Date(formAtendimento.value.dataAtendimento) : new Date(),
-      observacoes: formAtendimento.value.observacoes
+      observacoes: formAtendimento.value.observacoes,
+      atendimentoId: resultado.id // Referência ao atendimento criado
     })
     
-    // Recarregar agendamentos
+    // 3. Recarregar agendamentos
     await carregarAgendamentos()
     
-    // Fechar modal
+    // 4. Fechar modal
     fecharModal()
     
-    alert('Atendimento registrado com sucesso!')
+    alert('Atendimento registrado com sucesso! Financeiro atualizado automaticamente.')
   } catch (error) {
     console.error('Erro ao registrar atendimento:', error)
-    alert('Erro ao registrar atendimento. Tente novamente.')
+    alert('Erro ao registrar atendimento: ' + (error.message || 'Tente novamente.'))
   } finally {
     processando.value = false
   }
