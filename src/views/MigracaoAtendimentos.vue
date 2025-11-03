@@ -124,7 +124,7 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useClinica } from '../composables/useClinica.js'
-import { executarMigracao } from '../utils/migrarAgendamentosRealizados.js'
+import { executarMigracao as executarMigracaoScript } from '../utils/migrarAgendamentosRealizados.js'
 import VoltarHome from '../components/VoltarHome.vue'
 
 const router = useRouter()
@@ -139,7 +139,7 @@ const executarMigracao = async () => {
     resultado.value = null
     
     console.log('Iniciando migração...')
-    const res = await executarMigracao()
+    const res = await executarMigracaoScript()
     
     resultado.value = res
     
